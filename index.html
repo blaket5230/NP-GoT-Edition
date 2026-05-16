@@ -4,26 +4,60 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Westeros</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-deep: #0a0a18;
-    --bg-panel: #14142a;
-    --bg-elevated: #1a1a2e;
-    --border: #2a2a44;
-    --border-strong: #3a3a55;
-    --text: #e8e8e8;
-    --text-muted: #888;
-    --text-faint: #555;
-    --accent: #C9A84C;
-    --accent-bright: #d6b85c;
-    --error: #e57373;
-    --success: #81c784;
+    /* ── Backgrounds ─────────────────────────────── */
+    --bg-deep:     #06070e;
+    --bg-panel:    #0b0d17;
+    --bg-elevated: #12151f;
+    --bg-hover:    #191d2c;
+
+    /* ── Borders ─────────────────────────────────── */
+    --border:        #1e2235;
+    --border-strong: #2a2f45;
+    --border-gold:   rgba(201,168,76,0.35);
+
+    /* ── Text ────────────────────────────────────── */
+    --text:       #ddd6c8;
+    --text-muted: #7a7060;
+    --text-faint: #363028;
+
+    /* ── Accent (gold) ───────────────────────────── */
+    --accent:       #C9A84C;
+    --accent-bright:#e8c96d;
+    --accent-dim:   #5c4820;
+
+    /* ── Status ──────────────────────────────────── */
+    --error:   #c04040;
+    --success: #3a7a3a;
+    --info:    #2a5080;
+
+    /* ── Tier colors ─────────────────────────────── */
     --tier-1: #C9A84C;
-    --tier-2: #4a6fa5;
-    --tier-3: #6b6b8a;
+    --tier-2: #7090c0;
+    --tier-3: #8a7060;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: var(--bg-deep); color: var(--text); overflow: hidden; }
+  html, body { height: 100%; font-family: 'EB Garamond', Georgia, serif; background: var(--bg-deep); color: var(--text); overflow: hidden; }
+
+  /* ── Gold divider utility ──────────────────────── */
+  .gold-rule { height:1px; background:linear-gradient(90deg,transparent,var(--border-gold) 20%,var(--border-gold) 80%,transparent); margin:8px 0; }
+
+  /* ── Section titles ────────────────────────────── */
+  .section-title {
+    font-family:'Cinzel',Georgia,serif;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    padding:8px 0 4px;
+    border-bottom:1px solid var(--border-gold);
+    margin-bottom:8px;
+  }
 
   /* ===== AUTH SCREEN ===== */
   .auth-screen {
@@ -923,7 +957,68 @@
     flex-shrink: 0; margin-left: 6px; transition: all 0.1s;
   }
   .section-help-trigger:hover { color: var(--accent); border-color: var(--accent); }
-  tr.analysis-divider td { border-top: 1px solid var(--border); padding-top: 10px; }
+  .settings-section { border:1px solid var(--border); border-radius:6px; padding:12px; margin-bottom:12px; }
+  .settings-section-title { font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--accent); text-transform:uppercase; margin-bottom:10px; }
+  .form-row { display:flex; gap:10px; }
+  .form-row .form-group { margin-bottom:8px; }
+  .range-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(100,210,255,0.55);
+    background: radial-gradient(circle, rgba(100,210,255,0.04) 0%, rgba(100,210,255,0.01) 70%, transparent 100%);
+    pointer-events: none;
+    z-index: 3;
+    transform: translate(-50%,-50%);
+    animation: ringPulse 3s ease-in-out infinite;
+  }
+  @keyframes ringPulse {
+    0%,100% { border-color: rgba(100,210,255,0.45); }
+    50%      { border-color: rgba(100,210,255,0.85); box-shadow: 0 0 16px rgba(100,210,255,0.12) inset; }
+  }
+  .marker.out-of-range { opacity: 0.32; }
+  .marker.out-of-range .dot  { background: #555 !important; }
+  .marker.out-of-range .ring { border-color: #444 !important; }
+  /* Commander portrait chip on map markers */
+  .cmd-chip {
+    position:absolute; top:-22px; left:50%; transform:translateX(-50%);
+    width:20px; height:20px; border-radius:50%;
+    border:1.5px solid var(--cmd-color,#c9a84c);
+    background:radial-gradient(circle at 35% 35%, color-mix(in srgb,var(--cmd-color,#c9a84c) 20%,#06070e),#06070e);
+    overflow:hidden; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 6px var(--cmd-color,#c9a84c)66;
+    font-family:'Cinzel',Georgia,serif;
+    font-size:8px; font-weight:900;
+    color:var(--cmd-color,#c9a84c);
+    z-index:4;
+  }
+  .cmd-chip-img { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;opacity:0;border-radius:50%; }
+  .cmd-chip-init { position:relative;z-index:1; }
+  .cmd-chip-count {
+    position:absolute; top:-4px; right:-5px;
+    background:var(--cmd-color,#c9a84c); color:#06070e;
+    border-radius:6px; font-size:7px; font-weight:900;
+    padding:0 2px; line-height:12px; min-width:12px; text-align:center;
+  }
+  /* ── House sigil badge ───────────────────────────────────── */
+  .house-sigil-badge {
+    width:68px; height:68px; flex-shrink:0;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    border:2px solid var(--hb-color, currentColor);
+    box-shadow:0 0 18px var(--hb-glow, rgba(201,168,76,.35)), 0 0 0 1px rgba(255,255,255,.04) inset;
+    background:radial-gradient(circle at 38% 38%, color-mix(in srgb,var(--hb-color,#c9a84c) 18%,#06070e), #06070e);
+    padding:8px;
+  }
+  .house-sigil-badge svg { width:100%; height:100%; }
+  .house-sigil-sm {
+    width:26px; height:26px; flex-shrink:0;
+    display:inline-flex; align-items:center; justify-content:center;
+    vertical-align:middle;
+  }
+  .house-sigil-sm svg { width:100%; height:100%; }
+  .status-pill.cancelled { background: rgba(180,50,50,0.3); color: var(--error); }
+  .status-pill.finished  { background: rgba(201,168,76,0.3); color: var(--accent); }
   tr.analysis-divider + tr td { padding-top: 4px; }
   .help-article { font-size: 12px; line-height: 1.65; color: var(--text); }
   .help-article p { margin: 0 0 10px; color: var(--text-muted); }
@@ -1329,24 +1424,68 @@
     margin-bottom: 8px;
   }
 
-  /* Recruit modal pool list */
+  /* Recruit modal — card grid */
   .recruit-pool-list {
-    max-height: 280px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    max-height: 420px;
     overflow-y: auto;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    background: var(--bg-deep);
+    padding: 2px;
   }
-  .recruit-pool-row {
-    padding: 9px 12px;
-    border-bottom: 1px solid var(--border);
+  .recruit-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 12px;
     cursor: pointer;
-    font-size: 13px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 8px;
-    transition: background 0.1s;
+    text-align: center;
+    transition: border-color .15s, background .15s;
+    position: relative;
   }
+  .recruit-card:hover { background: #16192a; border-color: var(--border-strong); }
+  .recruit-card.selected {
+    border-color: var(--accent);
+    background: rgba(201,168,76,.07);
+    box-shadow: 0 0 0 1px var(--accent)44 inset;
+  }
+  .recruit-card .rc-check {
+    position: absolute; top: 8px; right: 8px;
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .recruit-card.selected .rc-check {
+    background: var(--accent); border-color: var(--accent);
+  }
+  .recruit-card.selected .rc-check::after {
+    content: ''; width: 6px; height: 6px;
+    background: var(--bg-deep); border-radius: 50%;
+  }
+  .rc-portrait {
+    width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+    position: relative; overflow: hidden;
+    border: 2px solid var(--portrait-color, var(--accent));
+    box-shadow: 0 0 10px rgba(0,0,0,.6);
+    background: radial-gradient(circle at 35% 35%, color-mix(in srgb,var(--portrait-color,#c9a84c) 22%,#06070e), #06070e);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel',Georgia,serif; font-size: 18px; font-weight: 900;
+    color: var(--portrait-color, var(--accent));
+  }
+  .rc-portrait .portrait-photo { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:50%;opacity:0;transition:opacity .2s; }
+  .rc-portrait .portrait-photo.portrait-loaded { opacity:1; }
+  .rc-portrait .portrait-photo.portrait-missing { display:none; }
+  .rc-portrait .portrait-fallback { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1; }
+  .rc-portrait .portrait-photo.portrait-loaded ~ .portrait-fallback { opacity:0; }
+  .rc-portrait .rc-sigil-bg { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.16; }
+  .rc-name { font-family:'Cinzel',Georgia,serif; font-size:11px; font-weight:700; color:var(--text); line-height:1.3; }
+  .rc-house { font-size:9px; color:var(--portrait-color,var(--accent)); font-family:'Cinzel',Georgia,serif; letter-spacing:.04em; margin-top:1px; }
+  .rc-bio { font-family:'EB Garamond',Georgia,serif; font-style:italic; font-size:10px; color:var(--text-muted); line-height:1.4; margin-top:2px; }
   .recruit-pool-row:last-child { border-bottom: none; }
   .recruit-pool-row:hover { background: var(--bg-elevated); }
   .recruit-pool-row.selected {
@@ -1499,6 +1638,400 @@
   }
   .start-game-btn:hover:not(:disabled) { background: var(--accent-bright); }
   .start-game-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  /* ══════════════════════════════════════════════════════
+     DARK CITADEL THEME — UI OVERRIDES
+  ══════════════════════════════════════════════════════ */
+
+  /* ── WESTEROS title (top-left branding) ──────────── */
+  .game-title {
+    font-family:'Cinzel Decorative',Georgia,serif !important;
+    font-size:13px !important;
+    letter-spacing:.08em !important;
+    background:linear-gradient(180deg,#f0e0a0 0%,#c9a84c 50%,#a07830 100%) !important;
+    -webkit-background-clip:text !important;
+    -webkit-text-fill-color:transparent !important;
+    background-clip:text !important;
+    text-shadow:none !important;
+  }
+
+  /* ── LEFT SIDEBAR ────────────────────────────────── */
+  .sidebar {
+    background:linear-gradient(180deg, #0a0c16 0%, #080a12 100%) !important;
+    border-right:1px solid var(--border-gold) !important;
+  }
+  .sidebar-nav-list { padding:4px 0; }
+  .sidebar-nav-item {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 14px;
+    cursor:pointer;
+    font-family:'Cinzel',Georgia,serif;
+    font-size:10.5px;
+    font-weight:600;
+    letter-spacing:.06em;
+    color:var(--text-muted);
+    border-left:2px solid transparent;
+    transition:all .18s ease;
+    position:relative;
+  }
+  .sidebar-nav-item:hover {
+    background:var(--bg-hover) !important;
+    color:var(--accent-bright) !important;
+    border-left-color:var(--accent-dim) !important;
+  }
+  .sidebar-nav-item.active {
+    color:var(--accent) !important;
+    border-left-color:var(--accent) !important;
+    background:rgba(201,168,76,.06) !important;
+  }
+  .snav-icon { width:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .snav-icon svg { width:16px; height:16px; }
+  .sidebar-nav-divider { height:1px; background:linear-gradient(90deg,transparent,var(--border-gold),transparent); margin:6px 12px; }
+
+  /* Section back button */
+  .section-back {
+    font-family:'Cinzel',Georgia,serif;
+    font-size:10px;
+    letter-spacing:.06em;
+    color:var(--accent);
+    padding:10px 14px;
+    cursor:pointer;
+    border-bottom:1px solid var(--border-gold);
+    display:flex; align-items:center; gap:6px;
+  }
+  .section-back:hover { color:var(--accent-bright); }
+
+  /* ── TOP BAR ─────────────────────────────────────── */
+  .top-bar {
+    background:linear-gradient(180deg, #0d0f1c 0%, #080a15 100%) !important;
+    border-bottom:1px solid var(--border-gold) !important;
+  }
+  .game-name-pill {
+    font-family:'Cinzel',Georgia,serif;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.04em;
+    background:rgba(201,168,76,.1);
+    border:1px solid var(--border-gold);
+    padding:4px 14px;
+    border-radius:3px;
+    color:var(--accent);
+  }
+  .resource-pill {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:11px !important;
+    font-weight:600 !important;
+    letter-spacing:.03em !important;
+  }
+  .cycle-pill {
+    font-family:'Cinzel',Georgia,serif !important;
+    border:1px solid var(--border-gold) !important;
+    padding:3px 10px !important;
+    border-radius:3px !important;
+    background:rgba(201,168,76,.06) !important;
+    color:var(--accent) !important;
+    font-size:10px !important;
+    font-weight:600 !important;
+    letter-spacing:.05em !important;
+  }
+
+  /* ── CASTLE INFO PANEL ───────────────────────────── */
+  .castle-name {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:16px !important;
+    font-weight:700 !important;
+    letter-spacing:.04em !important;
+    color:var(--text) !important;
+    line-height:1.2 !important;
+  }
+  .castle-region {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:9px !important;
+    letter-spacing:.12em !important;
+    text-transform:uppercase !important;
+    color:var(--text-muted) !important;
+    margin-top:2px !important;
+  }
+  .castle-owner-bar {
+    border-left:3px solid var(--owner-color, var(--border)) !important;
+    background:linear-gradient(90deg, rgba(var(--owner-color-rgb,100,100,100),.08) 0%, transparent 100%) !important;
+    padding:8px 10px !important;
+    border-radius:0 4px 4px 0 !important;
+    margin-bottom:10px !important;
+  }
+  .owner-name {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:12px !important;
+    font-weight:700 !important;
+    letter-spacing:.04em !important;
+  }
+  .owner-meta { font-size:10px !important; color:var(--text-muted) !important; font-family:'EB Garamond',Georgia,serif !important; }
+
+  /* Stat grid */
+  .stat-cell {
+    background:var(--bg-elevated) !important;
+    border:1px solid var(--border) !important;
+    border-radius:4px !important;
+    padding:8px 6px !important;
+  }
+  .stat-label {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:8px !important;
+    letter-spacing:.12em !important;
+    text-transform:uppercase !important;
+    color:var(--text-muted) !important;
+    margin-bottom:4px !important;
+  }
+  .stat-value { font-family:'Cinzel',Georgia,serif !important; font-size:18px !important; font-weight:700 !important; color:var(--text) !important; }
+  .stat-cell.troops .stat-value { color:var(--accent) !important; }
+
+  /* Infrastructure rows */
+  .upgrade-row {
+    background:var(--bg-elevated) !important;
+    border:1px solid var(--border) !important;
+    border-radius:4px !important;
+    padding:8px 10px !important;
+    margin-bottom:5px !important;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .upgrade-row .icon {
+    width:26px; height:26px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Cinzel',Georgia,serif;
+    font-size:11px; font-weight:700;
+    flex-shrink:0;
+  }
+  .upgrade-row.treasury .icon  { background:rgba(201,168,76,.2); color:var(--accent); border:1px solid var(--border-gold); }
+  .upgrade-row.recruitment .icon { background:rgba(180,60,60,.2); color:#e07070; border:1px solid rgba(180,60,60,.3); }
+  .upgrade-row.prestige .icon  { background:rgba(100,80,180,.2); color:#a090e0; border:1px solid rgba(100,80,180,.3); }
+  .upgrade-row .label { font-family:'Cinzel',Georgia,serif !important; font-size:10px !important; font-weight:700 !important; letter-spacing:.04em !important; color:var(--text) !important; }
+  .upgrade-row .level { font-size:11px !important; color:var(--text-muted) !important; margin-top:2px; }
+  .upgrade-row .info { display:flex; align-items:center; gap:8px; flex:1; }
+
+  /* Upgrade buttons */
+  .upgrade-btn {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:9px !important;
+    font-weight:700 !important;
+    letter-spacing:.06em !important;
+    text-transform:uppercase !important;
+    padding:6px 10px !important;
+    border-radius:3px !important;
+    background:linear-gradient(180deg,#1a2030,#101520) !important;
+    border:1px solid var(--border-gold) !important;
+    color:var(--accent) !important;
+    cursor:pointer !important;
+    white-space:nowrap !important;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    transition:all .15s !important;
+    flex-shrink:0;
+  }
+  .upgrade-btn:hover:not(:disabled) { background:linear-gradient(180deg,#2a3040,#181d28) !important; color:var(--accent-bright) !important; }
+  .upgrade-btn:disabled { opacity:.35 !important; cursor:not-allowed !important; }
+  .upgrade-btn .cost { font-family:'EB Garamond',Georgia,serif !important; font-size:9px !important; color:var(--text-muted); font-weight:400 !important; letter-spacing:0 !important; text-transform:none !important; }
+
+  /* ── COMMANDER PORTRAITS ─────────────────────────── */
+  .commander-portrait-card {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    border-radius:5px;
+    padding:10px 12px;
+    margin-bottom:6px;
+    position:relative;
+    overflow:hidden;
+  }
+  .commander-portrait-card::before {
+    content:'';
+    position:absolute;
+    top:0; left:0; bottom:0; width:3px;
+    background:var(--portrait-color, var(--accent));
+  }
+  .commander-portrait-card.dead { opacity:.5; }
+  .portrait-medallion {
+    width:44px; height:44px;
+    border-radius:50%;
+    flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Cinzel',Georgia,serif;
+    font-size:16px; font-weight:900;
+    position:relative;
+    overflow:hidden;
+    background:radial-gradient(circle at 35% 35%, color-mix(in srgb,var(--portrait-color,#c9a84c) 30%,#0a0c18), #0a0c18);
+    border:2px solid var(--portrait-color, var(--accent));
+    color:var(--portrait-color, var(--accent));
+    box-shadow:0 0 12px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.05) inset;
+  }
+  /* Photo fills the medallion circle */
+  .portrait-photo {
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover; object-position:center top;
+    border-radius:50%;
+    z-index:2;
+    opacity:0; /* hidden until confirmed loaded */
+    transition:opacity .25s;
+  }
+  .portrait-photo.portrait-loaded { opacity:1; }
+  /* When photo fails, keep hidden */
+  .portrait-photo.portrait-missing { display:none; }
+  /* Fallback: always rendered, hidden only when photo loaded */
+  .portrait-fallback {
+    display:flex;
+    position:absolute; inset:0;
+    align-items:center; justify-content:center;
+    z-index:1;
+    transition:opacity .25s;
+  }
+  .portrait-photo.portrait-loaded ~ .portrait-fallback { opacity:0; pointer-events:none; }
+  /* Level badge sits on top of everything */
+  .portrait-level-badge { z-index:3; }
+  .portrait-level-badge {
+    position:absolute; bottom:-3px; right:-3px;
+    background:var(--bg-deep);
+    border:1px solid var(--portrait-color,var(--accent));
+    border-radius:10px;
+    font-family:'Cinzel',Georgia,serif;
+    font-size:8px; font-weight:700;
+    color:var(--portrait-color,var(--accent));
+    padding:1px 4px;
+    line-height:1.4;
+  }
+  .portrait-name { font-family:'Cinzel',Georgia,serif; font-size:12px; font-weight:700; letter-spacing:.03em; color:var(--text); }
+  .portrait-sub  { font-size:10px; color:var(--text-muted); margin-top:2px; font-family:'EB Garamond',Georgia,serif; }
+  .portrait-actions { display:flex; flex-direction:column; gap:5px; margin-left:auto; flex-shrink:0; }
+
+  /* ── ACTION BUTTONS (send forces, recruit, etc.) ─── */
+  .send-forces-btn {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:10px !important;
+    font-weight:700 !important;
+    letter-spacing:.06em !important;
+    text-transform:uppercase !important;
+    border-radius:3px !important;
+    padding:8px 14px !important;
+    transition:all .15s !important;
+    border:none !important;
+  }
+  .action-btn-row { margin-top:6px; }
+
+  /* ── TIER BADGE ──────────────────────────────────── */
+  .tier-badge {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:9px !important;
+    font-weight:700 !important;
+    letter-spacing:.1em !important;
+    text-transform:uppercase !important;
+    border-radius:2px !important;
+    padding:3px 8px !important;
+  }
+
+  /* ── TOAST ───────────────────────────────────────── */
+  .toast {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:11px !important;
+    letter-spacing:.04em !important;
+    border-radius:3px !important;
+    border-left:3px solid var(--accent) !important;
+    background:rgba(12,14,22,.95) !important;
+    backdrop-filter:blur(8px) !important;
+  }
+  .toast.error-toast { border-left-color:var(--error) !important; }
+
+  /* ── MODALS ──────────────────────────────────────── */
+  .modal { border:1px solid var(--border-gold) !important; background:var(--bg-panel) !important; }
+  .modal h2 {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:15px !important;
+    font-weight:700 !important;
+    letter-spacing:.06em !important;
+    color:var(--accent) !important;
+    border-bottom:1px solid var(--border-gold) !important;
+    padding-bottom:12px !important;
+    margin-bottom:16px !important;
+  }
+
+  /* ── LEADERBOARD ─────────────────────────────────── */
+  .lb-row { border-bottom:1px solid var(--border) !important; }
+  .lb-rank { font-family:'Cinzel',Georgia,serif !important; font-weight:700 !important; color:var(--accent) !important; }
+
+  /* ── HOUSE OPTION CARDS ──────────────────────────── */
+  .house-option { border:1px solid var(--border) !important; background:var(--bg-elevated) !important; border-radius:4px !important; }
+  .house-option.selected { border-color:var(--accent) !important; background:rgba(201,168,76,.08) !important; }
+  .house-name { font-family:'Cinzel',Georgia,serif !important; font-size:12px !important; font-weight:700 !important; }
+  .house-words { font-family:'EB Garamond',Georgia,serif !important; font-style:italic !important; color:var(--text-muted) !important; }
+
+  /* ── GAME CARDS (lobby) ──────────────────────────── */
+  .game-card { border-radius:4px !important; border:1px solid var(--border) !important; }
+  .game-card .name { font-family:'Cinzel',Georgia,serif !important; font-size:12px !important; font-weight:700 !important; }
+  .status-pill.active { background:rgba(58,122,58,.35) !important; color:#70c870 !important; border:1px solid rgba(58,122,58,.5) !important; }
+  .status-pill.lobby  { background:rgba(42,80,128,.35) !important; color:#70a8e0 !important; border:1px solid rgba(42,80,128,.5) !important; }
+
+  /* ── FORM ELEMENTS ───────────────────────────────── */
+  .form-group label { font-family:'Cinzel',Georgia,serif !important; font-size:9px !important; letter-spacing:.1em !important; text-transform:uppercase !important; color:var(--accent) !important; font-weight:600 !important; }
+  .form-group input, .form-group select { font-family:'EB Garamond',Georgia,serif !important; font-size:13px !important; border-color:var(--border-strong) !important; }
+  .form-group input:focus, .form-group select:focus { border-color:var(--accent) !important; }
+  .settings-section-title { font-family:'Cinzel',Georgia,serif !important; }
+
+  /* ── SIDEBAR SECTION HEADERS ─────────────────────── */
+  .sidebar > div > div[style*="font-weight:700"],
+  [style*="font-weight: 700"][style*="font-size: 11px"],
+  .sidebar-header { font-family:'Cinzel',Georgia,serif !important; letter-spacing:.06em !important; }
+
+  /* ── BUTTONS (general) ───────────────────────────── */
+  .btn-primary {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:11px !important;
+    letter-spacing:.08em !important;
+    text-transform:uppercase !important;
+    border-radius:3px !important;
+    background:linear-gradient(180deg,#c9a84c,#a07830) !important;
+    color:#06070e !important;
+  }
+  .btn-secondary {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:11px !important;
+    letter-spacing:.06em !important;
+    border:1px solid var(--border-gold) !important;
+    color:var(--accent) !important;
+  }
+
+  /* ── INFO PANEL wrapper ──────────────────────────── */
+  .info-panel { border-left:1px solid var(--border-gold) !important; background:linear-gradient(180deg,#0a0c18,#06070e) !important; }
+  .info-panel-body { padding:12px !important; }
+
+  /* ── Rookery button ──────────────────────────────── */
+  #rookeryBtn {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:10px !important;
+    letter-spacing:.06em !important;
+    border:1px solid var(--border-gold) !important;
+    background:rgba(201,168,76,.08) !important;
+    color:var(--accent) !important;
+    border-radius:3px !important;
+    padding:5px 14px !important;
+  }
+  #rookeryBtn:hover { background:rgba(201,168,76,.16) !important; }
+
+  /* ── Exit game btn ───────────────────────────────── */
+  #exitGameBtn {
+    font-family:'Cinzel',Georgia,serif !important;
+    font-size:10px !important;
+    letter-spacing:.06em !important;
+    border:1px solid var(--border) !important;
+    background:transparent !important;
+    color:var(--text-muted) !important;
+    border-radius:3px !important;
+    padding:5px 14px !important;
+  }
+  #exitGameBtn:hover { color:var(--text) !important; border-color:var(--border-strong) !important; }
+
 </style>
 </head>
 <body>
@@ -1742,54 +2275,192 @@
 
 <!-- =================== MODALS =================== -->
 <div class="modal-overlay" id="createGameModal">
-  <div class="modal">
+  <div class="modal" style="max-width:520px;max-height:90vh;overflow-y:auto;">
     <h2>Create Game</h2>
     <form id="createGameForm">
-      <div class="form-group">
-        <label>Game Name</label>
-        <input type="text" id="newGameName" required placeholder="e.g. Game of Thrones #1">
+
+      <!-- ── BASICS ── -->
+      <div class="settings-section">
+        <div class="settings-section-title">Game Basics</div>
+        <div class="form-group">
+          <label>Game Name</label>
+          <input type="text" id="newGameName" required placeholder="e.g. Game of Thrones #1">
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>Tick Speed</label>
+            <select id="newGameTickSpeed">
+              <option value="normal">Normal (1 hr/tick)</option>
+              <option value="slow">Slow (2 hr/tick)</option>
+              <option value="fast">Fast (30 min/tick)</option>
+              <option value="quad">Quad (15 min/tick)</option>
+              <option value="turn_based">Turn Based</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Production Cycle</label>
+            <select id="newGameCycleTicks">
+              <option value="8">Every 8 ticks (fast)</option>
+              <option value="12" selected>Every 12 ticks (standard)</option>
+              <option value="16">Every 16 ticks (slow)</option>
+              <option value="24">Every 24 ticks (epic)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>Max Players (2–9)</label>
+            <input type="number" id="newGameMaxPlayers" value="9" min="2" max="9">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Commander Speed</label>
+            <select id="newGameCmdSpeed">
+              <option value="0.5">Slow (½×)</option>
+              <option value="1.0" selected>Standard (1×)</option>
+              <option value="1.5">Fast (1.5×)</option>
+              <option value="2.0">Blitz (2×)</option>
+            </select>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Tick Speed</label>
-        <select id="newGameTickSpeed">
-          <option value="normal">Normal (1 hour / tick)</option>
-          <option value="slow">Slow (2 hours / tick)</option>
-          <option value="fast">Fast (30 min / tick)</option>
-          <option value="quad">Quad (15 min / tick)</option>
-          <option value="turn_based">Turn Based (24h timeout)</option>
-        </select>
+
+      <!-- ── WIN CONDITION ── -->
+      <div class="settings-section">
+        <div class="settings-section-title">Win Condition</div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>Castles for Victory</label>
+            <select id="newGameVictoryPct">
+              <option value="0.25">25% (~47 castles)</option>
+              <option value="0.33">33% (~62 castles)</option>
+              <option value="0.50" selected>50% (~94 castles)</option>
+              <option value="0.66">66% (~124 castles)</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding-bottom:4px;">
+              <input type="checkbox" id="newGameFogOfWar" style="width:auto;">
+              Fog of War
+            </label>
+            <div style="font-size:10px;color:var(--text-muted);line-height:1.4;">Enemy troop counts hidden outside scan range</div>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Balance Mode</label>
-        <select id="newGameBalance">
-          <option value="standard">Standard</option>
-          <option value="expansion">Expansion</option>
-          <option value="compressed">Compressed</option>
-        </select>
+
+      <!-- ── STARTING CONDITIONS ── -->
+      <div class="settings-section">
+        <div class="settings-section-title">Starting Conditions</div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>Starting Gold</label>
+            <select id="newGameStartGold">
+              <option value="250">250 gold (poor)</option>
+              <option value="500" selected>500 gold (standard)</option>
+              <option value="1000">1000 gold (wealthy)</option>
+              <option value="2000">2000 gold (rich)</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Starting Garrison</label>
+            <select id="newGameStartGarrison">
+              <option value="10" selected>10 troops (standard)</option>
+              <option value="25">25 troops</option>
+              <option value="50">50 troops</option>
+              <option value="100">100 troops (wartime)</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Seat Castle Starting Infrastructure</div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>Treasury Level</label>
+            <select id="newGameStartGoldLevel">
+              <option value="0">0 (none)</option>
+              <option value="5">5</option>
+              <option value="10" selected>10 (standard)</option>
+              <option value="15">15</option>
+              <option value="20">20 (rich)</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Recruitment Level</label>
+            <select id="newGameStartIndustryLevel">
+              <option value="0">0 (none)</option>
+              <option value="5" selected>5 (standard)</option>
+              <option value="10">10</option>
+              <option value="15">15</option>
+              <option value="20">20 (wartime)</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Prestige Level</label>
+            <select id="newGameStartPrestigeLevel">
+              <option value="0">0 (none)</option>
+              <option value="2" selected>2 (standard)</option>
+              <option value="4">4</option>
+              <option value="5">5 (legendary)</option>
+            </select>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Max Players (2-9)</label>
-        <input type="number" id="newGameMaxPlayers" value="9" min="2" max="9">
+
+      <!-- ── COSTS ── -->
+      <div class="settings-section">
+        <div class="settings-section-title">Costs</div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>Infrastructure Costs</label>
+            <select id="newGameInfraCost">
+              <option value="0.5">Cheap (½×)</option>
+              <option value="1.0" selected>Standard (1×)</option>
+              <option value="2.0">Expensive (2×)</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Council Training Costs</label>
+            <select id="newGameCouncilCost">
+              <option value="0.5">Cheap (½×)</option>
+              <option value="1.0" selected>Standard (1×)</option>
+              <option value="2.0">Expensive (2×)</option>
+            </select>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>
-          <input type="checkbox" id="newGameFillAI" checked style="width: auto;"> Fill empty slots with AI
-        </label>
+
+      <!-- ── AI ── -->
+      <div class="settings-section">
+        <div class="settings-section-title">AI Players</div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="newGameFillAI" checked style="width:auto;"> Fill empty slots with AI
+          </label>
+        </div>
+        <div class="form-group" id="aiDifficultyGroup">
+          <label>AI Difficulty</label>
+          <select id="newGameAIDifficulty">
+            <option value="1">1 — Craven (expand only, never attacks)</option>
+            <option value="2">2 — Bannerman (expand, attacks at 3:1)</option>
+            <option value="3" selected>3 — Lord (attacks at 2:1, builds)</option>
+            <option value="4">4 — Hand (strategic, targets leaders)</option>
+            <option value="5">5 — Small Council (full adaptive, dangerous)</option>
+          </select>
+        </div>
       </div>
+
       <div class="modal-actions">
         <button type="button" class="btn-secondary" id="cancelCreateGame">Cancel</button>
-        <button type="submit" class="btn-primary" style="width: auto;">Create</button>
+        <button type="submit" class="btn-primary" style="width:auto;">Create Game</button>
       </div>
     </form>
   </div>
 </div>
 
 <div class="modal-overlay" id="recruitCommanderModal">
-  <div class="modal">
+  <div class="modal" style="max-width:560px;">
     <h2>Recruit Commander</h2>
     <div id="recruitInfo" style="font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px;"></div>
     <div id="recruitPoolWrap" style="margin-bottom: 14px;">
-      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.08em;">Choose a Commander</div>
+      <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.1em;">Choose a Commander</div>
       <div id="recruitPoolList" class="recruit-pool-list"></div>
     </div>
     <div id="recruitGenerateWrap" style="display: none; margin-bottom: 14px;">
@@ -2120,12 +2791,26 @@ async function onAuthChange(session) {
   state.user = session.user;
   el.userEmail.textContent = session.user.email;
   showMainScreen();
-  // The map needs to fit AFTER the main screen becomes visible (so the
-  // container has real dimensions). The image's own onload runs while the
-  // screen is still hidden, so we refit here.
   requestAnimationFrame(() => fitToScreen());
   await loadReferenceData();
   await loadGames();
+
+  // Auto-open join modal if URL contains ?join=GAME_ID
+  const joinId = new URLSearchParams(location.search).get('join');
+  if (joinId) {
+    const gameId = parseInt(joinId);
+    const game = state.games.find(g => g.id === gameId);
+    if (game) {
+      // Already a player → enter directly
+      const userIn = (game.game_players || []).some(p => p.user_id === state.user.id);
+      if (game.status === 'active' && userIn) enterGameMode(gameId);
+      else openJoinGameModal(gameId);
+    } else {
+      toast('Game not found — it may have been cancelled or already finished.', true);
+    }
+    // Clean URL without reloading
+    history.replaceState(null, '', location.pathname);
+  }
 }
 
 // Also refit if the window is resized (keeps the map sensible)
@@ -2178,7 +2863,6 @@ function positionMarkers() {
   const iw = el.mapImage.naturalWidth;
   const ih = el.mapImage.naturalHeight;
   if (!iw || !ih) return;
-  const containerRect = el.mapContainer.getBoundingClientRect();
   el.markerLayer.querySelectorAll('.marker').forEach(marker => {
     const mx = parseFloat(marker.dataset.mapx);
     const my = parseFloat(marker.dataset.mapy);
@@ -2187,14 +2871,27 @@ function positionMarkers() {
     const y = my * ih * state.zoom + state.panY;
     marker.style.left = x + 'px';
     marker.style.top = y + 'px';
-    // If the marker is near the top of the viewport, the label would clip off-screen.
-    // Flip it to appear below the marker instead.
     if (y < 60) {
       marker.classList.add('label-below');
     } else {
       marker.classList.remove('label-below');
     }
   });
+
+  // Position the range ring (if visible) — uses native map px radius → screen px
+  const ring = document.getElementById('rangeRingEl');
+  if (ring) {
+    const mx = parseFloat(ring.dataset.mapx);
+    const my = parseFloat(ring.dataset.mapy);
+    const radiusNative = parseFloat(ring.dataset.radius);  // px in 672×1560 space
+    const screenX   = mx * iw * state.zoom + state.panX;
+    const screenY   = my * ih * state.zoom + state.panY;
+    const screenR   = radiusNative * (iw * state.zoom / MAP_NATIVE_W);
+    ring.style.left   = screenX + 'px';
+    ring.style.top    = screenY + 'px';
+    ring.style.width  = (screenR * 2) + 'px';
+    ring.style.height = (screenR * 2) + 'px';
+  }
 }
 function setZoom(newZoom, focusX, focusY) {
   newZoom = Math.max(0.2, Math.min(5, newZoom));
@@ -2221,6 +2918,23 @@ function fitToScreen() {
 
 function renderMarkers() {
   el.markerLayer.innerHTML = '';
+
+  // ── Range ring (injected first so it renders behind all castle markers) ──
+  if (state.isPickingDestination && state.pickingForCommanderId) {
+    const cmd = state.commanders.find(c => c.id === state.pickingForCommanderId);
+    const src = cmd && state.castles.find(c => c.slug === cmd.current_castle_slug);
+    if (src && src.map_x != null) {
+      const whispLv  = state.councilSeats.find(s => s.seat === 'whisperers')?.level || 0;
+      const radiusPx = FOG_SCAN_BASE + whispLv * FOG_SCAN_PER_LV;
+      const ringEl   = document.createElement('div');
+      ringEl.id      = 'rangeRingEl';
+      ringEl.className = 'range-ring';
+      ringEl.dataset.mapx   = src.map_x;
+      ringEl.dataset.mapy   = src.map_y;
+      ringEl.dataset.radius = radiusPx;
+      el.markerLayer.appendChild(ringEl);
+    }
+  }
 
   // Build lookup tables for game mode
   let castleStateMap = null;
@@ -2273,7 +2987,12 @@ function renderMarkers() {
               ownerColor = house.color;
               if (player.user_id === state.user.id) cls += ' you-own';
             }
-            troops = gc.troops;
+            // In fog-of-war games, hide enemy troop counts outside scan range
+            const isMine = player.user_id === state.user.id;
+            const inScan = !visibleSlugs || visibleSlugs.has(castle.slug);
+            if (isMine || inScan || !state.activeGame?.fog_of_war) {
+              troops = gc.troops;
+            }
           }
         }
       }
@@ -2290,11 +3009,29 @@ function renderMarkers() {
     marker.style.setProperty('--halo-size', haloSize(effectiveInfluence) + 'px');
     if (ownerColor) marker.style.setProperty('--owner-color', ownerColor);
 
+    // Commander chip: show first stationed commander's portrait
+    let cmdChipHtml = '';
+    if (commanderCastles && commanderCastles.has(castle.slug)) {
+      const cmdsHere = state.commanders.filter(c => c.current_castle_slug === castle.slug && c.status !== 'dead' && c.status !== 'moving');
+      if (cmdsHere.length > 0) {
+        const lc = cmdsHere[0];
+        const lcHouse = houseMap ? houseMap.get(playerMap.get(lc.owner_player_id)?.house_slug) : null;
+        const lcColor = lcHouse ? lcHouse.color : '#c9a84c';
+        const lcSrc = nameToPortrait(lc.name);
+        const lcInit = (lc.name||'?')[0];
+        cmdChipHtml = `<div class="cmd-chip" style="--cmd-color:${lcColor}">
+          <img src="${lcSrc}" class="cmd-chip-img" alt="" onload="this.style.opacity=1" onerror="this.style.display='none'">
+          <span class="cmd-chip-init">${lcInit}</span>
+          ${cmdsHere.length > 1 ? `<div class="cmd-chip-count">+${cmdsHere.length-1}</div>` : ''}
+        </div>`;
+      }
+    }
     marker.innerHTML = `
       <div class="halo"></div>
       <div class="ring"></div>
       <div class="dot"></div>
       ${troops !== null && troops > 0 ? `<div class="troops">${troops}</div>` : ''}
+      ${cmdChipHtml}
       <div class="marker-label">${escapeHtml(castle.name)}</div>
     `;
 
@@ -2344,8 +3081,9 @@ function renderCastleInfo() {
 
     // Compute upgrade costs for player-owned castles
     function upgradeCost(currentLevel, base) {
-      const infl = gc ? Math.max(1, gc.effective_influence) : 1;
-      return Math.floor(base * (currentLevel + 1) / infl);
+      const infl     = gc ? Math.max(1, gc.effective_influence) : 1;
+      const costMult = state.activeGame?.infra_cost_mult ?? 1.0;
+      return Math.floor(base * (currentLevel + 1) / infl * costMult);
     }
     const goldCost = gc ? upgradeCost(gc.gold_level, 500) : 0;
     const industryCost = gc ? upgradeCost(gc.industry_level, 1000) : 0;
@@ -2360,9 +3098,12 @@ function renderCastleInfo() {
       </div>
 
       <div class="castle-owner-bar ${owner ? '' : 'unowned'}" style="--owner-color: ${ownerHouse ? ownerHouse.color : 'var(--border)'}">
-        <div>
-          <div class="owner-name">${owner ? escapeHtml(ownerHouse ? ownerHouse.name : 'Unknown') : 'Unowned'}</div>
-          <div class="owner-meta">${owner ? escapeHtml(owner.display_name || (owner.is_ai ? 'AI' : 'Player')) : 'No house claims this castle'}</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${ownerHouse ? `<div class="house-sigil-sm" style="color:${ownerHouse.color}">${HOUSE_SIGILS[ownerHouse.slug] || ''}</div>` : ''}
+          <div>
+            <div class="owner-name">${owner ? escapeHtml(ownerHouse ? ownerHouse.name : 'Unknown') : 'Unowned'}</div>
+            <div class="owner-meta">${owner ? escapeHtml(owner.display_name || (owner.is_ai ? 'AI Lord' : 'Player')) : 'No house claims this castle'}</div>
+          </div>
         </div>
       </div>
 
@@ -2438,36 +3179,55 @@ function renderCastleInfo() {
       ` : ''}
 
       ${commandersHere.length > 0 ? `
-        <div class="section-title" style="margin-top: 6px;">Commanders Here</div>
+        <div class="section-title" style="margin-top:10px;">Commanders Here</div>
         ${commandersHere.map(cmd => {
-          const isDead = cmd.status === 'dead';
-          const isYours = youOwnThis && !isDead;
+          const isDead   = cmd.status === 'dead';
+          const isYours  = youOwnThis && !isDead;
+          const cmdOwner = state.gamePlayers.find(p => p.id === cmd.owner_player_id);
+          const cmdHouse = cmdOwner ? state.houses.find(h => h.slug === cmdOwner.house_slug) : null;
+          const portraitColor = cmdHouse ? cmdHouse.color : (ownerHouse ? ownerHouse.color : 'var(--accent)');
+          const initial  = (cmd.name || '?')[0].toUpperCase();
+          const sigilSlug = cmdHouse ? cmdHouse.slug : (ownerHouse ? ownerHouse.slug : '');
+          const portraitSrc = nameToPortrait(cmd.name);
           return `
-            <div class="info-row">
-              <span class="label">${isDead ? '💀' : '⚔'} ${escapeHtml(cmd.name)}${isDead ? ' <span class="commander-dead">(fallen)</span>' : ''}</span>
-              <span class="value">${isDead ? '—' : `Lvl ${cmd.level}`}</span>
+            <div class="commander-portrait-card${isDead ? ' dead' : ''}" style="--portrait-color:${portraitColor}">
+              <div class="portrait-medallion" style="--portrait-color:${portraitColor}">
+                <img src="${portraitSrc}" class="portrait-photo" alt="${escapeHtml(cmd.name)}"
+                  onload="this.classList.add('portrait-loaded')"
+                  onerror="this.classList.add('portrait-missing')">
+                <div class="portrait-fallback">
+                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.18;color:${portraitColor}">${HOUSE_SIGILS[sigilSlug] || ''}</div>
+                  <div style="position:relative;z-index:1;font-size:18px;font-weight:900;">${initial}</div>
+                </div>
+                <div class="portrait-level-badge">L${cmd.level}</div>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div class="portrait-name">${escapeHtml(cmd.name)}${isDead ? ' <span style="color:var(--error);font-size:9px;letter-spacing:.08em;"> FALLEN</span>' : ''}</div>
+                <div class="portrait-sub">${cmdHouse ? cmdHouse.name : 'Unknown House'} · ${isDead ? 'Slain in battle' : 'Level ' + cmd.level + ' Commander'}</div>
+                ${isYours ? `
+                <div class="portrait-actions" style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;">
+                  <button class="send-forces-btn" data-action="send" data-commander-id="${cmd.id}"
+                    style="background:linear-gradient(180deg,#c9a84c,#8a6020);color:#06070e;font-size:9px;padding:5px 10px;"
+                    ${(!gc || gc.troops <= 0) ? 'disabled' : ''}>
+                    ${gc && gc.troops > 0 ? `⚔ March (${gc.troops})` : 'No troops'}
+                  </button>
+                  <button class="send-forces-btn" data-action="route" data-commander-id="${cmd.id}"
+                    style="background:linear-gradient(180deg,#2a4a7a,#1a3060);color:#90b8e8;font-size:9px;padding:5px 10px;">
+                    🗺 Route
+                  </button>
+                </div>` : ''}
+              </div>
             </div>
-            ${isYours ? `
-              <div class="action-btn-row">
-                <button class="send-forces-btn" data-action="send" data-commander-id="${cmd.id}" ${(!gc || gc.troops <= 0) ? 'disabled' : ''}>
-                  ${gc && gc.troops > 0 ? `Send Forces (${gc.troops} available)` : 'No troops to send'}
-                </button>
-              </div>
-              <div class="action-btn-row">
-                <button class="send-forces-btn" data-action="route" data-commander-id="${cmd.id}"
-                  style="background:linear-gradient(180deg,#5a8fd0,#3a6faf);font-size:11px;padding:7px;">
-                  🗺 Plan Multi-Stop Route
-                </button>
-              </div>
-            ` : ''}
           `;
         }).join('')}
       ` : ''}
 
       ${youOwnThis ? `
-        <div class="action-btn-row" style="margin-top: 10px;">
-          <button class="send-forces-btn" data-action="recruit" data-castle="${castle.slug}" style="background: linear-gradient(180deg, #7b6dd9, #5c4fb5);" ${myGold < 100 ? 'disabled' : ''}>
-            + Recruit Commander${myGold < 100 ? ' (need 100 gold)' : ' (100 gold)'}
+        <div class="action-btn-row" style="margin-top:10px;">
+          <button class="send-forces-btn" data-action="recruit" data-castle="${castle.slug}"
+            style="background:linear-gradient(180deg,#3a2a6a,#221840);color:#c0a8f0;border:1px solid rgba(160,128,240,.3);width:100%;font-size:10px;padding:9px;"
+            ${myGold < 100 ? 'disabled' : ''}>
+            ✦ Recruit Commander ${myGold < 100 ? '(need 100 gold)' : '(100 gold)'}
           </button>
         </div>
       ` : ''}
@@ -2603,7 +3363,7 @@ async function loadGames() {
     const { data, error } = await supabase
       .from('games')
       .select('*, game_players!game_id(*)')
-      .in('status', ['lobby', 'active'])
+      .in('status', ['lobby', 'active', 'cancelled', 'finished'])
       .order('created_at', { ascending: false });
     if (error) throw error;
     state.games = data;
@@ -2615,13 +3375,10 @@ async function loadGames() {
 }
 
 function renderGamesList() {
-  // Show: all lobby games (so people can join them) +
-  //       active games where the user is a player
   const visibleGames = state.games.filter(game => {
     if (game.status === 'lobby') return true;
-    if (game.status === 'active') {
-      return (game.game_players || []).some(p => p.user_id === state.user.id);
-    }
+    if (game.status === 'active') return (game.game_players || []).some(p => p.user_id === state.user.id);
+    if (game.status === 'cancelled' || game.status === 'finished') return game.created_by === state.user.id;
     return false;
   });
 
@@ -2629,29 +3386,82 @@ function renderGamesList() {
     el.gamesList.innerHTML = '<div class="empty-state">No games yet. Create one to get started.</div>';
     return;
   }
+
   el.gamesList.innerHTML = visibleGames.map(game => {
-    const players = game.game_players || [];
-    const userInGame = players.some(p => p.user_id === state.user.id);
-    const playerCount = players.length;
+    const players   = game.game_players || [];
+    const userIn    = players.some(p => p.user_id === state.user.id);
     const isCreator = game.created_by === state.user.id;
-    return `
-      <div class="game-card${userInGame ? ' joined' : ''}" data-game-id="${game.id}">
-        <div class="name">${escapeHtml(game.name)}<span class="status-pill ${game.status}">${game.status}</span>${isCreator ? '<span class="status-pill" style="background:var(--accent);color:var(--bg-deep);">host</span>' : ''}</div>
-        <div class="meta">${playerCount}/${game.max_players} players · ${escapeHtml(game.tick_speed)}${userInGame && game.status === 'active' ? ' · click to play' : ''}</div>
+    const isActive  = game.status === 'active';
+    const isDone    = game.status === 'cancelled' || game.status === 'finished';
+    const inviteUrl = `${location.origin}${location.pathname}?join=${game.id}`;
+
+    return `<div class="game-card${userIn ? ' joined' : ''}${isDone ? ' done' : ''}" data-game-id="${game.id}">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span class="name" style="flex:1;">${escapeHtml(game.name)}</span>
+        <span class="status-pill ${game.status}">${game.status}</span>
+        ${isCreator ? '<span class="status-pill" style="background:var(--accent);color:var(--bg-deep);">host</span>' : ''}
       </div>
-    `;
+      <div class="meta">${players.length}/${game.max_players} players · ${escapeHtml(game.tick_speed)}${userIn && isActive ? ' · click to play' : ''}</div>
+      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+        ${!isDone ? `<button class="action-link invite-btn" data-invite="${inviteUrl}" data-game-name="${escapeHtml(game.name)}" title="Copy invite link">📋 Copy Invite</button>` : ''}
+        ${isCreator && isActive ? `<button class="action-link cancel-game-btn" data-game-id="${game.id}" style="color:var(--error);">⏹ Cancel</button>` : ''}
+        ${isCreator && isDone   ? `<button class="action-link delete-game-btn" data-game-id="${game.id}" style="color:var(--error);">🗑 Delete</button>` : ''}
+      </div>
+    </div>`;
   }).join('');
+
+  // Click on card body → enter or join
   el.gamesList.querySelectorAll('.game-card').forEach(card => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', e => {
+      if (e.target.closest('button')) return;  // ignore button clicks
       const gameId = parseInt(card.dataset.gameId);
       const game = state.games.find(g => g.id === gameId);
-      if (!game) return;
-      const userInGame = (game.game_players || []).some(p => p.user_id === state.user.id);
-      if (game.status === 'active' && userInGame) {
-        enterGameMode(gameId);
-      } else {
-        openJoinGameModal(gameId);
-      }
+      if (!game || game.status === 'cancelled' || game.status === 'finished') return;
+      const userIn = (game.game_players || []).some(p => p.user_id === state.user.id);
+      if (game.status === 'active' && userIn) enterGameMode(gameId);
+      else openJoinGameModal(gameId);
+    });
+  });
+
+  // Invite copy buttons
+  el.gamesList.querySelectorAll('.invite-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(btn.dataset.invite).then(() => {
+        toast(`Invite link copied — share it to let friends join ${btn.dataset.gameName}`);
+      }).catch(() => {
+        prompt('Copy this invite link:', btn.dataset.invite);
+      });
+    });
+  });
+
+  // Cancel game buttons
+  el.gamesList.querySelectorAll('.cancel-game-btn').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      if (!confirm('Cancel this game? All players will be notified and the game will stop ticking.')) return;
+      btn.disabled = true;
+      try {
+        const { error } = await supabase.rpc('cancel_game', { p_game_id: parseInt(btn.dataset.gameId) });
+        if (error) throw error;
+        toast('Game cancelled');
+        await loadGames();
+      } catch (err) { toast(`Failed: ${err.message}`, true); btn.disabled = false; }
+    });
+  });
+
+  // Delete game buttons
+  el.gamesList.querySelectorAll('.delete-game-btn').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      if (!confirm('Permanently delete this game and all its data? This cannot be undone.')) return;
+      btn.disabled = true;
+      try {
+        const { error } = await supabase.rpc('delete_game', { p_game_id: parseInt(btn.dataset.gameId) });
+        if (error) throw error;
+        toast('Game deleted');
+        await loadGames();
+      } catch (err) { toast(`Failed: ${err.message}`, true); btn.disabled = false; }
     });
   });
 }
@@ -2667,23 +3477,46 @@ el.createGameBtn.addEventListener('click', () => {
 document.getElementById('cancelCreateGame').addEventListener('click', () => {
   el.createGameModal.classList.remove('open');
 });
+// Show/hide AI difficulty based on fill AI checkbox
+document.getElementById('newGameFillAI')?.addEventListener('change', e => {
+  const grp = document.getElementById('aiDifficultyGroup');
+  if (grp) grp.style.display = e.target.checked ? '' : 'none';
+});
+
 el.createGameForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const name = document.getElementById('newGameName').value.trim();
-  const tickSpeed = document.getElementById('newGameTickSpeed').value;
-  const balanceMode = document.getElementById('newGameBalance').value;
-  const maxPlayers = parseInt(document.getElementById('newGameMaxPlayers').value);
-  const fillAI = document.getElementById('newGameFillAI').checked;
+  const name         = document.getElementById('newGameName').value.trim();
+  const tickSpeed    = document.getElementById('newGameTickSpeed').value;
+  const maxPlayers   = parseInt(document.getElementById('newGameMaxPlayers').value);
+  const fillAI       = document.getElementById('newGameFillAI').checked;
+  const aiDifficulty = parseInt(document.getElementById('newGameAIDifficulty')?.value || '3');
+  const victoryPct   = parseFloat(document.getElementById('newGameVictoryPct').value);
+  const fogOfWar     = document.getElementById('newGameFogOfWar').checked;
+  const startGold    = parseInt(document.getElementById('newGameStartGold').value);
+  const startGarrison = parseInt(document.getElementById('newGameStartGarrison').value);
+  const startGoldLv  = parseInt(document.getElementById('newGameStartGoldLevel').value);
+  const startIndLv   = parseInt(document.getElementById('newGameStartIndustryLevel').value);
+  const startPresLv  = parseInt(document.getElementById('newGameStartPrestigeLevel').value);
+  const cycleTicks   = parseInt(document.getElementById('newGameCycleTicks').value);
+  const cmdSpeed     = parseFloat(document.getElementById('newGameCmdSpeed').value);
+  const infraCost    = parseFloat(document.getElementById('newGameInfraCost').value);
+  const councilCost  = parseFloat(document.getElementById('newGameCouncilCost').value);
+
   try {
     const { data, error } = await supabase
       .from('games')
       .insert({
         name, status: 'lobby', tick_speed: tickSpeed,
-        balance_mode: balanceMode, max_players: maxPlayers,
-        fill_with_ai: fillAI, created_by: state.user.id,
+        max_players: maxPlayers, fill_with_ai: fillAI,
+        created_by: state.user.id, ai_difficulty: aiDifficulty,
+        victory_pct: victoryPct, fog_of_war: fogOfWar,
+        starting_gold: startGold, starting_garrison: startGarrison,
+        starting_gold_level: startGoldLv, starting_industry_level: startIndLv,
+        starting_prestige_level: startPresLv,
+        production_cycle_ticks: cycleTicks, commander_speed_mult: cmdSpeed,
+        infra_cost_mult: infraCost, council_cost_mult: councilCost,
       })
-      .select()
-      .single();
+      .select().single();
     if (error) throw error;
     el.createGameModal.classList.remove('open');
     el.createGameForm.reset();
@@ -2726,11 +3559,15 @@ function openJoinGameModal(gameId) {
     const isYours = userPlayer && userPlayer.house_slug === house.slug;
     const ownerLabel = owner ? (owner.display_name || (owner.is_ai ? 'AI' : 'player')) : '';
     return `
-      <div class="house-option${taken ? ' taken' : ''}${isYours ? ' selected' : ''}" data-house="${house.slug}">
-        <div class="house-color" style="background:${house.color}"></div>
-        <div>
-          <div class="house-name">${escapeHtml(house.name)}${isYours ? ' (you)' : taken ? ` — ${escapeHtml(ownerLabel)}` : ''}</div>
-          <div class="house-words">"${escapeHtml(house.words)}"</div>
+      <div class="house-option${taken ? ' taken' : ''}${isYours ? ' selected' : ''}" data-house="${house.slug}"
+           style="--hb-color:${house.color};--hb-glow:${house.color}44;border-left:3px solid ${house.color}88;">
+        <div class="house-sigil-badge" style="color:${house.color};--hb-color:${house.color};--hb-glow:${house.color}44;">
+          ${HOUSE_SIGILS[house.slug] || ''}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div class="house-name" style="color:${house.color};font-size:15px;">${escapeHtml(house.name)}</div>
+          <div class="house-words" style="margin-top:3px;">"${escapeHtml(house.words)}"</div>
+          ${taken ? `<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${isYours ? '★ Your house' : '— ' + escapeHtml(ownerLabel)}</div>` : ''}
         </div>
       </div>
     `;
@@ -2817,12 +3654,13 @@ el.startGameBtn.addEventListener('click', async () => {
   try {
     const { data, error } = await supabase.rpc('start_game', { p_game_id: gameId });
     if (error) throw error;
+    // Apply custom starting conditions (gold, garrison, infrastructure)
+    await supabase.rpc('apply_game_settings', { p_game_id: gameId }).then(null, () => {});
     el.joinGameModal.classList.remove('open');
     toast(`Game started with ${data.total_players} players (${data.ai_players} AI)`);
     await loadGames();
     await enterGameMode(gameId);
-    // Take tick-0 baseline snapshot for Intel charts
-    supabase.rpc('record_intel_snapshot', { p_game_id: gameId }).catch(() => {});
+    supabase.rpc('record_intel_snapshot', { p_game_id: gameId }).then(null, () => {});
   } catch (err) {
     toast(`Failed to start game: ${err.message}`, true);
     el.startGameBtn.disabled = false;
@@ -2868,7 +3706,7 @@ async function enterGameMode(gameId) {
     // Subscribe to live updates for this game
     subscribeRealtime(state.activeGame.id);
     document.querySelector('.map-area').classList.add('game-mode');
-    el.stageLabel.textContent = `v1.0 · Playing`;
+    el.stageLabel.textContent = `v0.4 · Playing`;
     el.gameName.textContent = game.name;
 
     // Process any pending ticks before loading state, so the player sees the latest
@@ -2974,7 +3812,7 @@ async function processTicks(gameId, { quiet = false } = {}) {
     }
     // Record intel snapshot after any cycle fires
     if ((data.cycles_fired || 0) > 0 && state.activeGame) {
-      supabase.rpc('record_intel_snapshot', { p_game_id: gameId }).catch(() => {});
+      supabase.rpc('record_intel_snapshot', { p_game_id: gameId }).then(null, () => {});
     }
     return data;
   } catch (err) {
@@ -3103,6 +3941,17 @@ function buildCombatBody(body) {
     return c ? c.name : body.castle_slug;
   })();
 
+  const atkSrc = nameToPortrait(body.attacker_name || '');
+  const defSrc = body.defender_cmd && body.defender_cmd !== 'none' ? nameToPortrait(body.defender_cmd) : null;
+  const atkHouse = state.houses.find(h => state.gamePlayers.find(p => p.id === body.attacker_player_id)?.house_slug === h.slug);
+  const atkColor = atkHouse ? atkHouse.color : '#c84040';
+  function miniPortrait(src, initial, color) {
+    if (!src) return '';
+    return `<div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:1.5px solid ${color};background:radial-gradient(circle,color-mix(in srgb,${color} 20%,#06070e),#06070e);display:inline-flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:10px;font-weight:900;color:${color};vertical-align:middle;flex-shrink:0;position:relative;">
+      <img src="${src}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;opacity:0;" onload="this.style.opacity=1" onerror="this.style.display='none'">
+      <span style="position:relative;z-index:1">${initial}</span>
+    </div>`;
+  }
   return `
     <table class="combat-table">
       <thead>
@@ -3117,7 +3966,7 @@ function buildCombatBody(body) {
       <tbody>
         <tr>
           <td>⚔</td>
-          <td>${escapeHtml(body.attacker_name)}</td>
+          <td>${miniPortrait(atkSrc,(body.attacker_name||'?')[0],atkColor)} ${escapeHtml(body.attacker_name)}</td>
           <td>${body.attacker_troops}</td>
           <td>${body.attacker_level}</td>
           <td style="color: var(--text-muted);">${body.attacker_str}</td>
@@ -3266,6 +4115,8 @@ const MAP_NATIVE_H    = 1560;
 
 function computeVisibleSlugs() {
   if (state.mode !== 'game' || !state.currentPlayer) return null;
+  // If fog of war is disabled for this game, all castles are visible
+  if (!state.activeGame?.fog_of_war) return null;
 
   const whispLv = (state.councilSeats.find(s => s.seat === 'whisperers')?.level) || 0;
   const castleScanPx = FOG_SCAN_BASE + whispLv * FOG_SCAN_PER_LV;
@@ -3396,7 +4247,8 @@ function renderGameResources() {
   // Year/tick context
   const tick = state.activeGame.current_tick;
   const year = Math.floor(tick / 12);
-  const nextCycleTick = (year + 1) * 12;
+  const cycleLen    = state.activeGame?.production_cycle_ticks ?? 12;
+  const nextCycleTick = Math.ceil((tick + 1) / cycleLen) * cycleLen;
   const ticksToNext = nextCycleTick - tick;
   if (el.gameYearLabel) el.gameYearLabel.textContent = `Year ${year} · Tick ${tick}`;
   if (el.cycleCountdown) el.cycleCountdown.textContent = `Cycle in ${ticksToNext}t`;
@@ -3432,7 +4284,7 @@ function exitGameMode() {
   el.gameOverOverlay?.classList.add('hidden');
   unsubscribeRealtime();
   document.querySelector('.map-area').classList.remove('game-mode');
-  el.stageLabel.textContent = 'v1.0 · Lobby';
+  el.stageLabel.textContent = 'v0.3 · Lobby';
 
   renderMarkers();
   renderCastleInfo();
@@ -3515,6 +4367,154 @@ async function openRecruitModal(castleSlug) {
   }
 }
 
+
+const COMMANDER_BIOS = {
+  // Stark
+  'Eddard Stark':       'Lord of Winterfell, Warden of the North. Honourable to a fault.',
+  'Robb Stark':         'The Young Wolf. Undefeated in battle, beloved by his bannermen.',
+  'Jon Snow':           'Bastard of Winterfell, raised to lead. Knows nothing — until he does.',
+  'Rodrik Cassel':      'Master-at-Arms of Winterfell. Gruff, loyal, decades of service.',
+  'Brynden Tully':      'The Blackfish. Veteran knight, never surrenders without a fight.',
+  'Maege Mormont':      'Lady of Bear Island. Fights with a mace, leads with iron will.',
+  'Greatjon Umber':     'Fierce lord of Last Hearth. First to call Robb King in the North.',
+  'Rickard Karstark':   'Lord of Karhold. Proud and vengeful, a formidable battlefield commander.',
+  'Roose Bolton':       'Lord of the Dreadfort. Cold, calculating, utterly ruthless.',
+  'Wyman Manderly':     'Lord of White Harbor. Jovial lord with hidden depths and fierce loyalty.',
+  'Galbart Glover':     'Master of Deepwood Motte. Steady, reliable bannerman.',
+  'Helman Tallhart':    'Co-castellan of Torrhen\'s Square. Experienced northern soldier.',
+  'Jonos Bracken':      'Lord of Stone Hedge. Long-running feud with House Blackwood.',
+  'Howland Reed':       'Lord of Greywater Watch. Crannogman, saved Ned Stark\'s life.',
+  'Halys Hornwood':     'Lord of Hornwood. Quiet but steadfast Northern vassal.',
+  // Lannister
+  'Tywin Lannister':    'Lord of Casterly Rock. The most powerful lord in Westeros. Cold genius.',
+  'Jaime Lannister':    'The Kingslayer. Finest sword in the realm, complex and dangerous.',
+  'Kevan Lannister':    'Tywin\'s loyal brother. Steady, dependable, excellent logistics man.',
+  'Gregor Clegane':     'The Mountain That Rides. Eight feet of brutal, unstoppable violence.',
+  'Sandor Clegane':     'The Hound. Terrifying warrior, quietly honourable beneath the scars.',
+  'Addam Marbrand':     'Commander of Lannister outriders. Fast, aggressive cavalry leader.',
+  'Daven Lannister':    'Tywin\'s nephew. Strong fighter, loyal to the family cause.',
+  'Forley Prester':     'Veteran Lannister officer, dependable field commander.',
+  'Andros Brax':        'Lord of Hornvale. Solid Lannister bannerman.',
+  'Lyle Crakehall':     'Known as Strongboar. Big, loud, devastatingly effective in melee.',
+  'Damon Marbrand':     'Lord of Ashemark. Experienced Lannister commander.',
+  'Leo Lefford':        'Lord of the Golden Tooth. Controls key western passage.',
+  'Stafford Lannister': 'Tywin\'s cousin tasked with raising a new host.',
+  'Lyman Darry':        'Young lord of Darry, sworn to the Lannisters.',
+  'Harys Swyft':        'Father-in-law to Kevan Lannister. Minor but connected lord.',
+  // Tyrell
+  'Mace Tyrell':        'Lord of Highgarden. Pompous but commands vast wealth and armies.',
+  'Loras Tyrell':       'The Knight of Flowers. Brilliant jouster, bold and reckless in battle.',
+  'Garlan Tyrell':      'Garlan the Gallant. Better swordsman than Loras, steady head.',
+  'Randyll Tarly':      'Lord of Horn Hill. Finest battlefield commander in the south.',
+  'Mathis Rowan':       'Lord of Goldengrove. Experienced Reach commander and strategist.',
+  'Paxter Redwyne':     'Lord of the Arbor. Commands the largest fleet in Westeros.',
+  'Tanton Fossoway':    'Knight of House Fossoway. Green apple branch of the family.',
+  'Bryan Fossoway':     'Knight of House Fossoway. Red apple branch, rival to his cousin.',
+  'Hosteen Frey':       'Ser Hosteen. One of Walder Frey\'s most capable fighting sons.',
+  'Leyton Hightower':   'Lord of the Hightower. Elder lord of Oldtown, rarely leaves his tower.',
+  'Baelor Hightower':   'Ser Baelor Brightsmile. Popular and skilled Hightower knight.',
+  'Humfrey Hewett':     'Lord of Oakenshield. Island lord loyal to the Reach.',
+  'Tommard Heddle':     'Knight of the Reach. Solid garrison commander.',
+  'Arwyn Oakheart':     'Lady of Old Oak. Fierce and proud noblewoman warrior.',
+  'Alesander Florent':  'Of House Florent, sworn to Highgarden despite Stannis connections.',
+  // Baratheon
+  'Robert Baratheon':   'King of the Seven Kingdoms. Legendary warrior, now a faded giant.',
+  'Renly Baratheon':    'Lord of Storm\'s End. Charming, popular, commands vast southern support.',
+  'Stannis Baratheon':  'Lord of Dragonstone. Iron will, uncompromising, never gives up.',
+  'Barristan Selmy':    'Barristan the Bold. Greatest living knight, unmatched in honour.',
+  'Davos Seaworth':     'The Onion Knight. Smuggler-turned-lord, Stannis\'s most trusted man.',
+  'Beric Dondarrion':   'Lord of Blackhaven. Lightning Lord, resurrected, leads the Brotherhood.',
+  'Cortnay Penrose':    'Castellan of Storm\'s End. Loyal to the last, unbending.',
+  'Gilbert Farring':    'Castellan under Stannis. Steady garrison commander.',
+  'Bryen Caron':        'Lord of Nightsong. Stormlands lord, died at the Blackwater.',
+  'Robar Royce':        'Ser Robar. Served Renly\'s Rainbow Guard. Skilled knight.',
+  'Guyard Morrigen':    'Ser Guyard the Green. Rainbow Guard, fought for Renly.',
+  'Parmen Crane':       'Ser Parmen the Purple. One of Renly\'s finest knights.',
+  'Lomas Estermont':    'Lord of Greenstone. Stannis\'s loyal uncle.',
+  'Eldon Estermont':    'Ser Eldon. Stannis bannerman from Estermont island.',
+  'Ardrian Celtigar':   'Lord of Claw Isle. Fiercely loyal Stannis supporter.',
+  // Arryn
+  'Jon Arryn':          'Lord of the Eyrie, Hand of the King. Discovered the truth, died for it.',
+  'Yohn Royce':         'Bronze Yohn. Powerful lord of Runestone, Voice of the Vale.',
+  'Nestor Royce':       'High Steward of the Vale. Keeps the Gates of the Moon.',
+  'Lyn Corbray':        'Ser Lyn. Dangerous, unpredictable knight who carries Lady Forlorn.',
+  'Lyonel Corbray':     'Ser Lyonel. More cautious brother to the infamous Lyn Corbray.',
+  'Anya Waynwood':      'Lady of Ironoaks. Shrewd noblewoman, influential Vale voice.',
+  'Morton Waynwood':    'Ser Morton. Loyal Waynwood knight of the Vale.',
+  'Donnel Waynwood':    'Ser Donnel. Young Waynwood knight eager to prove himself.',
+  'Symond Templeton':   'Ser Symond. Knight of Ninestars, experienced Vale commander.',
+  'Eon Hunter':         'Lord Hunter. Old lord of Longbow Hall, suitor to Lysa Arryn.',
+  'Gilwood Hunter':     'Eldest son of Lord Hunter, heir to Longbow Hall.',
+  'Horton Redfort':     'Lord of Redfort. Experienced Vale lord and warrior.',
+  'Mychel Redfort':     'Ser Mychel. Young Redfort knight, formidable with a sword.',
+  'Marwyn Belmore':     'Lord of Strongsong. Loyal Vale bannerman.',
+  'Andar Royce':        'Son of Bronze Yohn. Strong Royce heir.',
+  // Tully
+  'Hoster Tully':       'Lord of Riverrun. Ailing patriarch who built alliances through marriage.',
+  'Edmure Tully':       'Heir to Riverrun. Well-meaning lord, better heart than head.',
+  'Jason Mallister':    'Lord of Seagard. Fierce fighter, legendary for defeating Ironborn.',
+  'Patrek Mallister':   'Ser Patrek. Son of Jason, continues Mallister fighting tradition.',
+  'Tytos Blackwood':    'Lord of Raventree Hall. Ancient noble house, bitter Bracken rivals.',
+  'Brynden Blackwood':  'Young Blackwood lord. Carries on an ancient feud with the Brackens.',
+  'Hendry Bracken':     'Ser Hendry. Young Bracken knight, sworn enemy of the Blackwoods.',
+  'Karyl Vance':        'Lord of Wayfarer\'s Rest. Veteran Riverlands commander.',
+  'Marq Piper':         'Young lord, eager and hot-headed. Loyal Tully bannerman.',
+  'Clement Piper':      'Lord of Pinkmaiden Castle. Father to the fiery Marq Piper.',
+  'Norbert Vance':      'Lord of Atranta. Blind lord of the Riverlands, experienced strategist.',
+  'Robin Ryger':        'Captain of the Riverrun guard. Reliable castle defender.',
+  'Halmon Paege':       'Lord of House Paege. Minor Riverlands lord.',
+  // Greyjoy
+  'Balon Greyjoy':      'Lord of the Iron Islands. Bitter, proud, obsessed with independence.',
+  'Victarion Greyjoy':  'Lord Captain of the Iron Fleet. Brutal, powerful, fiercely loyal.',
+  'Euron Greyjoy':      'Crow\'s Eye. Brilliantly mad captain, sailed to the edge of the world.',
+  'Asha Greyjoy':       'Fierce Ironborn commander. Holds Deepwood Motte with iron grip.',
+  'Aeron Greyjoy':      'Damphair. High priest of the Drowned God, Balon\'s holy brother.',
+  'Theon Greyjoy':      'Prince of the Iron Islands, ward of Winterfell. Torn between worlds.',
+  'Rodrik Harlaw':      'The Reader. Most learned of the Ironborn, Asha\'s great-uncle.',
+  'Dagmer Cleftjaw':    'Theon\'s loyal man. Fierce reaver with a split face and split loyalties.',
+  'Gorold Goodbrother': 'Lord of Hammerhorn. Powerful Ironborn lord of Great Wyk.',
+  'Andrik the Unsmiling':'Huge Ironborn warrior. Never smiles. Terrifying in combat.',
+  'Stonehand Drumm':    'Of House Drumm, bearers of Nightfall. Ancient Ironborn warriors.',
+  'Maron Volmark':      'Lord of Volmark. Ironborn lord from Harlaw island.',
+  'Sawane Botley':      'Lord of Lordsport. Ironborn port lord, reaved many shores.',
+  'Lucas Codd':         'Of the Codds, lowly but cruel. Known for viciousness at sea.',
+  'Erik Ironmaker':     'Ironmake Erik. Legendary reaver, old and fierce as iron.',
+  // Martell
+  'Doran Martell':      'Prince of Dorne. Patient planner. His plans span decades.',
+  'Oberyn Martell':     'The Red Viper. Brilliant, deadly, fights with poisoned spear.',
+  'Areo Hotah':         'Captain of the Sunspear Guard. Dornish giant with a longaxe.',
+  'Anders Yronwood':    'Lord of Yronwood. Head of Dorne\'s most powerful vassal house.',
+  'Harmen Uller':       'Lord of Hellholt. Dornish lord famous for cruelty and cunning.',
+  'Ulwyck Uller':       'Ser Ulwyck. Of House Uller, fierce and dangerous Dornishman.',
+  'Daemon Sand':        'The Sand Dog. Bastard knight, loyal companion to Oberyn.',
+  'Manfrey Martell':    'Castellan of Sunspear. Keeps the seat of Dornish power.',
+  'Gerold Dayne':       'Darkstar. Vain, dangerous knight of House Dayne. Crosses lines.',
+  'Quentyn Martell':    'Doran\'s dutiful son. Earnest, honourable, sent on a desperate quest.',
+  'Trystane Martell':   'Youngest Martell prince. Kind-hearted, betrothed to Myrcella.',
+  'Arianne Martell':    'Dornish princess. Passionate, scheming, destined to rule Dorne.',
+  'Cletus Yronwood':    'Ser Cletus. Young Yronwood, accompanied Quentyn on his quest.',
+  'Franklyn Fowler':    'Lord of Skyreach. One of Dorne\'s two Marshals of the Boneway.',
+  'Symon Santagar':     'Ser Symon the Knight of Spottswood. Skilled Dornish knight.',
+  // Targaryen
+  'Daenerys Targaryen': 'Mother of Dragons, Breaker of Chains. Three dragons. Unstoppable.',
+  'Viserys Targaryen':  'The Beggar King. Dreams of reclaiming the Iron Throne.',
+  'Jorah Mormont':      'Exiled knight, devoted to Daenerys. Former Lord of Bear Island.',
+  'Strong Belwas':      'Former pit fighter of Meereen. Massive and gleefully violent.',
+  'Grey Worm':          'Commander of the Unsullied. Elite soldier, unbreakable loyalty.',
+  'Daario Naharis':     'Sellsword captain. Bold, flamboyant, besotted with Daenerys.',
+  'Ben Plumm':          'Brown Ben Plumm. Sellsword with a famous lucky streak.',
+  'Mero of Braavos':    'The Titan\'s Bastard. Crude, brutal sellsword captain.',
+  'Prendahl na Ghezn':  'Captain of the Stormcrows. Killed by Daario in a leadership dispute.',
+  'Sallor the Bald':    'Captain of the Stormcrows, shared command with Prendahl.',
+  'Aggo':               'Dothraki bloodrider, sworn to Daenerys after Drogo\'s death.',
+  'Jhogo':              'Daenerys\'s ko and bloodrider. Fierce Dothraki outrider.',
+  'Rakharo':            'Bloodrider to Daenerys. Skilled with arakh and bow.',
+  'Kovarro':            'Ko of Daenerys\'s khalasar. Scouted for the Undying in Qarth.',
+};
+function getCommanderBio(name) {
+  return COMMANDER_BIOS[name] || null;
+}
+
 function renderRecruitPool() {
   const pool = _recruitState.pool;
   if (pool.length === 0) {
@@ -3526,21 +4526,37 @@ function renderRecruitPool() {
   }
   el.recruitPoolWrap.style.display = '';
   el.recruitGenerateWrap.style.display = 'none';
-  el.generateRecruit.style.display = 'none';   // hide while pool has options
+  el.generateRecruit.style.display = 'none';
   el.confirmRecruit.style.display = '';
 
-  el.recruitPoolList.innerHTML = pool.map(c => `
-    <div class="recruit-pool-row" data-name="${escapeHtml(c.name)}">
-      <div class="check"></div>
-      <div>${escapeHtml(c.name)}</div>
-    </div>
-  `).join('');
+  el.recruitPoolList.innerHTML = pool.map(c => {
+    const rHouse = state.houses.find(h => h.slug === c.house_slug);
+    const rColor = rHouse ? rHouse.color : 'var(--accent)';
+    const rInitial = (c.name || '?')[0].toUpperCase();
+    const rSrc = nameToPortrait(c.name);
+    const rBio = getCommanderBio(c.name);
+    const rSigil = rHouse ? (HOUSE_SIGILS[rHouse.slug] || '') : '';
+    return `
+    <div class="recruit-card" data-name="${escapeHtml(c.name)}">
+      <div class="rc-check"></div>
+      <div class="rc-portrait" style="--portrait-color:${rColor}">
+        <div class="rc-sigil-bg" style="color:${rColor}">${rSigil}</div>
+        <img src="${rSrc}" class="portrait-photo" alt="${escapeHtml(c.name)}"
+          onload="this.classList.add('portrait-loaded')"
+          onerror="this.classList.add('portrait-missing')">
+        <div class="portrait-fallback" style="font-size:18px;font-weight:900;font-family:'Cinzel',Georgia,serif;">${rInitial}</div>
+      </div>
+      <div class="rc-name">${escapeHtml(c.name)}</div>
+      ${rHouse ? `<div class="rc-house" style="color:${rColor}">${escapeHtml(rHouse.name)}</div>` : ''}
+      ${rBio ? `<div class="rc-bio">${escapeHtml(rBio)}</div>` : ''}
+    </div>`;
+  }).join('');
 
-  el.recruitPoolList.querySelectorAll('.recruit-pool-row').forEach(row => {
-    row.addEventListener('click', () => {
-      _recruitState.selectedName = row.dataset.name;
-      el.recruitPoolList.querySelectorAll('.recruit-pool-row').forEach(r => r.classList.remove('selected'));
-      row.classList.add('selected');
+  el.recruitPoolList.querySelectorAll('.recruit-card').forEach(card => {
+    card.addEventListener('click', () => {
+      _recruitState.selectedName = card.dataset.name;
+      el.recruitPoolList.querySelectorAll('.recruit-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
       el.confirmRecruit.disabled = false;
     });
   });
@@ -3586,7 +4602,7 @@ el.generateRecruit.addEventListener('click', () => {
 // =====================================================
 const MAP_NATIVE_WIDTH = 672;   // source dimensions used by send_commander to compute distance
 const MAP_NATIVE_HEIGHT = 1560;
-const COMMANDER_SPEED_PX_PER_TICK = 17.5;
+const COMMANDER_SPEED_PX_PER_TICK = 17.5 * (state.activeGame?.commander_speed_mult ?? 1.0);
 
 function estimateTravelTicks(fromCastle, toCastle) {
   const dx = (toCastle.map_x - fromCastle.map_x) * MAP_NATIVE_WIDTH;
@@ -3609,20 +4625,20 @@ function formatDuration(ticks, tickSpeed) {
 function startPickingDestination(commanderId) {
   const commander = state.commanders.find(c => c.id === commanderId);
   if (!commander) return;
-  state.isPickingDestination = true;
-  state.pickingForCommanderId = commanderId;
+  state.isPickingDestination   = true;
+  state.pickingForCommanderId  = commanderId;
   el.destCommanderName.textContent = commander.name;
   el.destinationBanner.classList.add('open');
   document.querySelector('.map-area').classList.add('selecting-destination');
-  renderMarkers();  // re-render to apply highlights
+  renderMarkers();  // ring is created inside renderMarkers when isPickingDestination=true
 }
 
 function cancelPickingDestination() {
-  state.isPickingDestination = false;
-  state.pickingForCommanderId = null;
+  state.isPickingDestination   = false;
+  state.pickingForCommanderId  = null;
   el.destinationBanner.classList.remove('open');
   document.querySelector('.map-area').classList.remove('selecting-destination');
-  renderMarkers();
+  renderMarkers();  // re-render without ring
 }
 
 el.cancelDestBtn.addEventListener('click', cancelPickingDestination);
@@ -3631,21 +4647,38 @@ function applyDestinationHighlights() {
   if (!state.pickingForCommanderId) return;
   const commander = state.commanders.find(c => c.id === state.pickingForCommanderId);
   if (!commander) return;
+
+  const srcCastle = state.castles.find(c => c.slug === commander.current_castle_slug);
+  const whispLv   = state.councilSeats.find(s => s.seat === 'whisperers')?.level || 0;
+  const radiusPx  = FOG_SCAN_BASE + whispLv * FOG_SCAN_PER_LV;
+
   el.markerLayer.querySelectorAll('.marker').forEach(marker => {
     const slug = marker.dataset.slug;
     if (slug === commander.current_castle_slug) {
       marker.classList.add('invalid-target');
       return;
     }
+
+    // Range check
+    const tgtCastle = state.castles.find(c => c.slug === slug);
+    let inRange = true;
+    if (srcCastle && tgtCastle && srcCastle.map_x != null && tgtCastle.map_x != null) {
+      const dx   = (tgtCastle.map_x - srcCastle.map_x) * MAP_NATIVE_W;
+      const dy   = (tgtCastle.map_y - srcCastle.map_y) * MAP_NATIVE_H;
+      inRange = Math.hypot(dx, dy) <= radiusPx;
+    }
+
+    if (!inRange) {
+      marker.classList.add('out-of-range');
+      return;
+    }
+
     const gc = state.gameCastles.find(g => g.castle_slug === slug);
     if (!gc || gc.owner_player_id === null) {
-      // Neutral: free take
       marker.classList.add('valid-target');
     } else if (gc.owner_player_id === state.currentPlayer.id) {
-      // Own castle: reinforce
       marker.classList.add('valid-target');
     } else {
-      // Enemy: assault
       marker.classList.add('hostile-target');
     }
   });
@@ -3658,6 +4691,20 @@ function handleDestinationPick(castle) {
     toast("That's where the commander already is.", true);
     return;
   }
+
+  // Range enforcement
+  const srcCastle = state.castles.find(c => c.slug === commander.current_castle_slug);
+  if (srcCastle && castle.map_x != null && srcCastle.map_x != null) {
+    const whispLv  = state.councilSeats.find(s => s.seat === 'whisperers')?.level || 0;
+    const radiusPx = FOG_SCAN_BASE + whispLv * FOG_SCAN_PER_LV;
+    const dx = (castle.map_x - srcCastle.map_x) * MAP_NATIVE_W;
+    const dy = (castle.map_y - srcCastle.map_y) * MAP_NATIVE_H;
+    if (Math.hypot(dx, dy) > radiusPx) {
+      toast('⚠ Out of range — capture an intermediate castle, or level up Master of Whisperers to extend reach.', true);
+      return;
+    }
+  }
+
   // If we're building a route (waypoints already started), add the waypoint
   if (_routeCommanderId !== null) {
     handleRouteDestinationPick(castle);
@@ -4046,18 +5093,63 @@ function hideStackPicker() {
 // =====================================================
 // SIDEBAR NAVIGATION SYSTEM
 // =====================================================
+const _svg = (path, vb='0 0 24 24') => `<svg viewBox="${vb}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+
+function nameToPortrait(name) {
+  return './portraits/' + (name || '').toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '') + '.jpg';
+}
+// ── HOUSE SIGILS (hand-crafted SVG for all 9 Great Houses) ──────
+const HOUSE_SIGIL_SVGS = {
+  stark:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="30,44 16,6 46,34" fill="currentColor"/><polygon points="70,44 84,6 54,34" fill="currentColor"/><polygon points="14,52 22,78 34,90 66,90 78,78 86,52 70,40 50,36 30,40" fill="currentColor"/><ellipse cx="36" cy="56" rx="7" ry="5.5" fill="rgba(0,0,0,.65)"/><circle cx="34" cy="55" r="2.5" fill="rgba(255,255,255,.82)"/><ellipse cx="64" cy="56" rx="7" ry="5.5" fill="rgba(0,0,0,.65)"/><circle cx="62" cy="55" r="2.5" fill="rgba(255,255,255,.82)"/><ellipse cx="50" cy="74" rx="6" ry="4" fill="rgba(0,0,0,.5)"/><path d="M40,68 L43,73 M57,68 L54,73" stroke="rgba(0,0,0,.3)" stroke-width="2" stroke-linecap="round" fill="none"/></svg>`,
+  lannister:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="56" r="42" fill="currentColor" opacity="0.22"/><polygon points="30,38 35,22 43,32 50,18 57,32 65,22 70,38 66,43 34,43" fill="currentColor" opacity="0.9"/><polygon points="28,46 20,26 40,38" fill="currentColor"/><polygon points="72,46 80,26 60,38" fill="currentColor"/><circle cx="50" cy="58" r="28" fill="currentColor"/><ellipse cx="39" cy="52" rx="6.5" ry="5" fill="rgba(0,0,0,.62)"/><circle cx="37.5" cy="51" r="2.2" fill="rgba(255,255,255,.78)"/><ellipse cx="61" cy="52" rx="6.5" ry="5" fill="rgba(0,0,0,.62)"/><circle cx="59.5" cy="51" r="2.2" fill="rgba(255,255,255,.78)"/><path d="M43,63 Q50,68 57,63 L55,59 Q50,61 45,59 Z" fill="rgba(0,0,0,.5)"/><path d="M26,58 Q34,55 38,60 M74,58 Q66,55 62,60" stroke="rgba(0,0,0,.18)" stroke-width="2" fill="none"/></svg>`,
+  baratheon:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="70" rx="22" ry="22" fill="currentColor"/><ellipse cx="50" cy="85" rx="14" ry="10" fill="currentColor"/><rect x="26" y="30" width="9" height="30" rx="4.5" fill="currentColor"/><rect x="8"  y="12" width="7" height="24" rx="3.5" transform="rotate(-18 8  12)" fill="currentColor"/><rect x="20" y="8"  width="7" height="22" rx="3.5" transform="rotate(8  20 8)"  fill="currentColor"/><rect x="30" y="4"  width="6" height="18" rx="3"   transform="rotate(28 30 4)"  fill="currentColor"/><rect x="65" y="30" width="9" height="30" rx="4.5" fill="currentColor"/><rect x="82" y="12" width="7" height="24" rx="3.5" transform="rotate(18 82 12)"  fill="currentColor"/><rect x="70" y="8"  width="7" height="22" rx="3.5" transform="rotate(-8 70 8)"  fill="currentColor"/><rect x="62" y="4"  width="6" height="18" rx="3"   transform="rotate(-28 62 4)" fill="currentColor"/><circle cx="40" cy="67" r="4.5" fill="rgba(0,0,0,.55)"/><circle cx="39" cy="66" r="1.8" fill="rgba(255,255,255,.7)"/><circle cx="60" cy="67" r="4.5" fill="rgba(0,0,0,.55)"/><circle cx="59" cy="66" r="1.8" fill="rgba(255,255,255,.7)"/><ellipse cx="44" cy="84" rx="3.5" ry="2.2" fill="rgba(0,0,0,.4)"/><ellipse cx="56" cy="84" rx="3.5" ry="2.2" fill="rgba(0,0,0,.4)"/><path d="M28,36 L33,26 L40,34 L50,22 L60,34 L67,26 L72,36" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.88"/></svg>`,
+  targaryen:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50,56 L4,18 L12,40 L2,46 L16,54 L4,64 L20,60 Z" fill="currentColor" opacity="0.88"/><path d="M50,56 L96,18 L88,40 L98,46 L84,54 L96,64 L80,60 Z" fill="currentColor" opacity="0.88"/><path d="M50,56 L4,18 M50,56 L12,40 M50,56 L16,54" stroke="rgba(0,0,0,.16)" stroke-width="1.2" fill="none"/><path d="M50,56 L96,18 M50,56 L88,40 M50,56 L84,54" stroke="rgba(0,0,0,.16)" stroke-width="1.2" fill="none"/><ellipse cx="50" cy="66" rx="15" ry="18" fill="currentColor"/><path d="M50,82 Q62,92 58,98 Q52,100 50,96 Q54,92 48,86 Z" fill="currentColor"/><path d="M50,50 Q48,38 50,28" stroke="currentColor" stroke-width="10" fill="none" stroke-linecap="round"/><ellipse cx="50" cy="24" rx="10" ry="8" fill="currentColor"/><path d="M42,56 Q30,44 26,32" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round"/><ellipse cx="24" cy="28" rx="9" ry="7" fill="currentColor"/><path d="M58,56 Q70,44 74,32" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round"/><ellipse cx="76" cy="28" rx="9" ry="7" fill="currentColor"/><circle cx="48" cy="23" r="3" fill="rgba(255,210,0,.92)"/><circle cx="22" cy="27" r="2.5" fill="rgba(255,210,0,.92)"/><circle cx="78" cy="27" r="2.5" fill="rgba(255,210,0,.92)"/><polygon points="44,18 42,8 48,15" fill="currentColor"/><polygon points="56,18 58,8 52,15" fill="currentColor"/></svg>`,
+  greyjoy:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="28" rx="22" ry="24" fill="currentColor"/><path d="M28,22 Q16,14 18,26 L28,28 Z" fill="currentColor"/><path d="M72,22 Q84,14 82,26 L72,28 Z" fill="currentColor"/><circle cx="42" cy="24" r="5.5" fill="rgba(0,0,0,.52)"/><circle cx="41" cy="23" r="2.2" fill="rgba(255,255,255,.72)"/><circle cx="58" cy="24" r="5.5" fill="rgba(0,0,0,.52)"/><circle cx="57" cy="23" r="2.2" fill="rgba(255,255,255,.72)"/><path d="M43,42 L50,48 L57,42 Q50,46 43,42 Z" fill="rgba(0,0,0,.42)"/><path d="M34,50 Q16,62 12,82 Q14,90 22,90 Q24,80 22,68 Q30,60 38,56 Z" fill="currentColor"/><path d="M40,52 Q28,68 24,88 Q28,94 36,92 Q36,80 40,70 Q42,62 44,56 Z" fill="currentColor"/><path d="M47,54 Q44,72 42,90 Q46,96 52,90 Q50,72 50,54 Z" fill="currentColor"/><path d="M53,54 Q56,70 58,88 Q62,94 68,90 Q64,78 60,68 Q58,62 56,56 Z" fill="currentColor"/><path d="M60,52 Q70,64 76,82 Q72,92 64,90 Q64,78 60,68 Q60,60 60,54 Z" fill="currentColor"/><path d="M66,50 Q80,60 88,76 Q88,86 80,88 Q76,76 70,66 Q66,58 64,54 Z" fill="currentColor"/></svg>`,
+  tully:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="50" rx="28" ry="13" fill="currentColor" transform="rotate(-22 50 50)"/><path d="M68,64 L80,52 L76,72 L86,76 L72,80 Z" fill="currentColor" transform="rotate(-22 68 64)"/><path d="M38,35 L32,20 L48,26 L52,18 L58,30" fill="currentColor" opacity="0.82"/><path d="M56,54 L68,46 L64,60 Z" fill="currentColor" opacity="0.78"/><ellipse cx="46" cy="52" rx="20" ry="7" fill="rgba(255,255,255,.14)" transform="rotate(-22 46 52)"/><circle cx="31" cy="44" r="5.5" fill="rgba(0,0,0,.52)" transform="rotate(-22 31 44)"/><circle cx="30" cy="43" r="2.2" fill="rgba(255,255,255,.72)"/><path d="M28,78 Q34,70 40,76 Q46,68 52,74 Q58,66 64,72 Q70,66 76,72" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.45"/></svg>`,
+  arryn:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50,80 Q28,78 22,60 Q18,42 36,30 Q18,34 12,54 Q6,74 26,86 Q38,94 50,90 Z" fill="currentColor" opacity="0.45"/><path d="M44,44 L4,24 L14,44 L2,52 L18,50 L30,58 L44,52 Z" fill="currentColor"/><path d="M56,44 L96,24 L86,44 L98,52 L82,50 L70,58 L56,52 Z" fill="currentColor"/><path d="M44,44 L18,32 M44,46 L14,46 M44,49 L18,52" stroke="rgba(0,0,0,.15)" stroke-width="1.2" fill="none"/><path d="M56,44 L82,32 M56,46 L86,46 M56,49 L82,52" stroke="rgba(0,0,0,.15)" stroke-width="1.2" fill="none"/><ellipse cx="50" cy="48" rx="8" ry="13" fill="currentColor"/><path d="M44,60 L38,74 L50,68 L62,74 L56,60 Z" fill="currentColor"/><circle cx="50" cy="32" r="11" fill="currentColor"/><path d="M50,37 L44,42 Q42,46 46,47 L52,42 Z" fill="rgba(0,0,0,.42)"/><circle cx="45" cy="30" r="4" fill="rgba(0,0,0,.55)"/><circle cx="44" cy="29" r="1.6" fill="rgba(255,255,255,.82)"/></svg>`,
+  tyrell:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="24" rx="10" ry="18" fill="currentColor" opacity="0.68"/><ellipse cx="50" cy="24" rx="10" ry="18" fill="currentColor" opacity="0.68" transform="rotate(72 50 50)"/><ellipse cx="50" cy="24" rx="10" ry="18" fill="currentColor" opacity="0.68" transform="rotate(144 50 50)"/><ellipse cx="50" cy="24" rx="10" ry="18" fill="currentColor" opacity="0.68" transform="rotate(216 50 50)"/><ellipse cx="50" cy="24" rx="10" ry="18" fill="currentColor" opacity="0.68" transform="rotate(288 50 50)"/><ellipse cx="50" cy="28" rx="8" ry="14" fill="currentColor" opacity="0.88" transform="rotate(36 50 50)"/><ellipse cx="50" cy="28" rx="8" ry="14" fill="currentColor" opacity="0.88" transform="rotate(108 50 50)"/><ellipse cx="50" cy="28" rx="8" ry="14" fill="currentColor" opacity="0.88" transform="rotate(180 50 50)"/><ellipse cx="50" cy="28" rx="8" ry="14" fill="currentColor" opacity="0.88" transform="rotate(252 50 50)"/><ellipse cx="50" cy="28" rx="8" ry="14" fill="currentColor" opacity="0.88" transform="rotate(324 50 50)"/><circle cx="50" cy="50" r="15" fill="currentColor"/><circle cx="50" cy="50" r="9" fill="rgba(0,0,0,.18)"/><path d="M50,44 Q57,46 57,50 Q57,57 50,57 Q43,57 43,50 Q43,44 48,43" stroke="rgba(0,0,0,.28)" stroke-width="1.5" fill="none"/><path d="M50,65 Q42,76 38,90 L50,84 L62,90 Q58,76 50,65 Z" fill="currentColor" opacity="0.55"/></svg>`,
+  martell:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-linecap="round"><line x1="50" y1="4"  x2="50" y2="22" stroke-width="6"/><line x1="50" y1="78" x2="50" y2="96" stroke-width="6"/><line x1="4"  y1="50" x2="22" y2="50" stroke-width="6"/><line x1="78" y1="50" x2="96" y2="50" stroke-width="6"/><line x1="14" y1="14" x2="28" y2="28" stroke-width="5"/><line x1="72" y1="72" x2="86" y2="86" stroke-width="5"/><line x1="86" y1="14" x2="72" y2="28" stroke-width="5"/><line x1="14" y1="86" x2="28" y2="72" stroke-width="5"/></g><circle cx="50" cy="50" r="26" fill="currentColor"/><circle cx="50" cy="50" r="18" fill="rgba(255,255,255,.16)"/><circle cx="50" cy="50" r="10" fill="rgba(0,0,0,.12)"/><line x1="10" y1="90" x2="90" y2="10" stroke="rgba(0,0,0,.62)" stroke-width="7" stroke-linecap="round"/><polygon points="86,8 96,4 92,14" fill="rgba(0,0,0,.62)"/><circle cx="12" cy="88" r="4" fill="rgba(0,0,0,.62)"/></svg>`,
+};
+
+// ── Sigil image helper — uses PNG files, SVG as fallback ───────────────────
+function sigilFallback(el, slug) {
+  const svg = HOUSE_SIGIL_SVGS[slug] || '';
+  el.outerHTML = svg;
+}
+const HOUSE_SIGILS = Object.fromEntries(
+  Object.keys(HOUSE_SIGIL_SVGS).map(slug => [slug,
+    `<img src="./sigils/${slug}.png"
+       style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .15s;"
+       onload="this.style.opacity=1"
+       onerror="sigilFallback(this,'${slug}')">`
+  ])
+);
+const NAV_ICONS = {
+  leaderboard:  _svg('<path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>'),
+  houses:       _svg('<path d="M3 22V10l9-8 9 8v12"/><path d="M9 22V16h6v6"/><rect x="9" y="10" width="6" height="4" rx="0.5"/>'),
+  council:      _svg('<circle cx="12" cy="8" r="3"/><path d="M6 20c0-4 2.7-6 6-6s6 2 6 6"/><path d="M2 20h4M18 20h4"/><circle cx="5" cy="11" r="2"/><circle cx="19" cy="11" r="2"/>'),
+  realms:       _svg('<polygon points="3,22 3,2 14,7 21,2 21,22 14,17"/><line x1="14" y1="7" x2="14" y2="17"/>'),
+  ledger:       _svg('<path d="M4 4h16v16H4z M4 9h16 M9 4v16"/><line x1="9" y1="12" x2="16" y2="12"/><line x1="9" y1="15" x2="16" y2="15"/>'),
+  intel:        _svg('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),
+  analysis:     _svg('<polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>'),
+  options:      _svg('<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>'),
+  help:         _svg('<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'),
+  main_menu:    _svg('<path d="M19 12H5"/><polyline points="12,19 5,12 12,5"/>'),
+};
 const SIDEBAR_SECTIONS = [
-  { id: 'leaderboard', icon: '👑', label: 'Leaderboard',   help: null        },
-  { id: 'houses',      icon: '🏠', label: 'Houses',        help: null        },
-  { id: 'council',     icon: '⚜',  label: 'Small Council', help: 'council'   },
-  { id: 'realms',      icon: '🗺',  label: 'Realms',        help: 'castles'   },
-  { id: 'ledger',      icon: '📚', label: 'Ledger',         help: 'trade'     },
-  { id: 'intel',       icon: '👁',  label: 'Intel',         help: 'intel'     },
-  { id: 'analysis',    icon: '📊', label: 'Analysis',       help: null        },
-  { id: 'options',     icon: '⚙',  label: 'Options',        help: null        },
-  { id: 'help',        icon: '❓', label: 'Help',           help: null        },
+  { id: 'leaderboard', icon: NAV_ICONS.leaderboard, label: 'Leaderboard',   help: null        },
+  { id: 'houses',      icon: NAV_ICONS.houses,      label: 'Houses',        help: null        },
+  { id: 'council',     icon: NAV_ICONS.council,     label: 'Small Council', help: 'council'   },
+  { id: 'realms',      icon: NAV_ICONS.realms,      label: 'Realms',        help: 'castles'   },
+  { id: 'ledger',      icon: NAV_ICONS.ledger,      label: 'Ledger',        help: 'trade'     },
+  { id: 'intel',       icon: NAV_ICONS.intel,       label: 'Intel',         help: 'intel'     },
+  { id: 'analysis',    icon: NAV_ICONS.analysis,    label: 'Analysis',      help: null        },
+  { id: 'options',     icon: NAV_ICONS.options,     label: 'Options',       help: null        },
+  { id: 'help',        icon: NAV_ICONS.help,        label: 'Help',          help: null        },
   { id: 'divider' },
-  { id: 'main_menu',   icon: '⬅',  label: 'Main Menu',     help: null        },
+  { id: 'main_menu',   icon: NAV_ICONS.main_menu,   label: 'Main Menu',     help: null        },
 ];
 
 let _sidebarSection = null;
@@ -4073,8 +5165,24 @@ function renderSidebar() {
 }
 
 function renderSidebarNav() {
+  const myPlayer = state.currentPlayer;
+  const myHouse  = myPlayer ? state.houses.find(h => h.slug === myPlayer.house_slug) : null;
+  const houseHeaderHtml = myHouse ? `
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 14px 10px;border-bottom:1px solid var(--border-gold);margin-bottom:4px;">
+      <div style="width:42px;height:42px;border-radius:50%;border:2px solid ${myHouse.color};
+           box-shadow:0 0 14px ${myHouse.color}44;
+           background:radial-gradient(circle at 38% 38%,color-mix(in srgb,${myHouse.color} 18%,#06070e),#06070e);
+           color:${myHouse.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:6px;">
+        ${HOUSE_SIGILS[myHouse.slug]||''}
+      </div>
+      <div style="min-width:0;">
+        <div style="font-family:'Cinzel',Georgia,serif;font-size:12px;font-weight:700;color:${myHouse.color};letter-spacing:.04em;">${escapeHtml(myHouse.name)}</div>
+        <div style="font-family:'EB Garamond',Georgia,serif;font-style:italic;font-size:11px;color:var(--text-muted);margin-top:1px;">"${escapeHtml(myHouse.words)}"</div>
+      </div>
+    </div>` : '';
   el.sidebarContent.innerHTML = `
     <div class="sidebar-nav-list">
+      ${houseHeaderHtml}
       ${SIDEBAR_SECTIONS.map(s => {
         if (s.id === 'divider') return '<div class="sidebar-nav-divider"></div>';
         return `<div class="sidebar-nav-item" data-section="${s.id}">
@@ -4218,9 +5326,9 @@ function buildLeaderboardHtml() {
       const elim = player.eliminated_at_tick != null;
       return `
         <div class="scoreboard-row${isYou ? ' is-you' : ''}${player.is_ai ? ' is-ai' : ''}${elim ? ' eliminated' : ''}">
-          <div class="house-color" style="background:${house ? house.color : '#888'}"></div>
+          <div class="house-sigil-sm" style="color:${house ? house.color : '#888'};width:30px;height:30px;flex-shrink:0;">${house ? (HOUSE_SIGILS[house.slug]||'') : ''}</div>
           <div style="flex:1;min-width:0;">
-            <div class="name">${escapeHtml(house ? house.name : player.house_slug)}${isYou ? ' (you)' : ''}</div>
+            <div class="name" style="color:${house ? house.color : 'var(--text)'};">${escapeHtml(house ? house.name : player.house_slug)}${isYou ? ' (you)' : ''}</div>
             <div class="meta">${escapeHtml(player.display_name || (player.is_ai ? 'AI' : 'Player'))}${elim ? ' ☠ Eliminated' : ''}</div>
           </div>
           <div class="stat-cluster">
@@ -4482,8 +5590,8 @@ function housesPlayerRows(colsFn) {
       `<button class="ht-eye view-player-btn" data-player-id="${p.id}" title="View profile">👁</button>`;
     const nameCell = `<td>
       <div class="ht-name">
-        <div class="ht-dot" style="background:${house?.color||'#888'}"></div>
-        ${escapeHtml(house?.name || p.house_slug)}${isMe ? ' ★' : ''}
+        <div class="house-sigil-sm" style="color:${house?.color||'#888'};width:22px;height:22px;">${house ? (HOUSE_SIGILS[house.slug]||'') : ''}</div>
+        <span style="color:${house?.color||'var(--text)'};">${escapeHtml(house?.name || p.house_slug)}${isMe ? ' ★' : ''}</span>
         ${eyeBtn}
       </div>
     </td>`;
@@ -4628,7 +5736,8 @@ function wireHousesTabs() {
 
 
 function trainingCost(currentLevel) {
-  return 72 * Math.pow(2, currentLevel);  // 72, 144, 288, 576, 1152
+  const mult = state.activeGame?.council_cost_mult ?? 1.0;
+  return Math.round(72 * Math.pow(2, currentLevel) * mult);  // 72, 144, 288, 576, 1152 × mult
 }
 
 const COUNCIL_DESC = {
@@ -5476,6 +6585,7 @@ function wireAnalysisSection() {
 function buildOptionsHtml() {
   if (!state.activeGame) return '';
   const speeds = { slow: '2 hr/tick', normal: '1 hr/tick', fast: '30 min/tick', quad: '15 min/tick', turn_based: '24 hr/tick' };
+  const diffLabels = { 1:'Craven', 2:'Bannerman', 3:'Lord', 4:'Hand', 5:'Small Council' };
   const tick = state.activeGame.current_tick;
   const year = Math.floor(tick / 12);
   const p = state.prefs;
@@ -5516,6 +6626,13 @@ function buildOptionsHtml() {
         <div><strong style="color:var(--text);">Speed:</strong> ${speeds[state.activeGame.tick_speed] || state.activeGame.tick_speed}</div>
         <div><strong style="color:var(--text);">Tick / Year:</strong> ${tick} / Year ${year}</div>
         <div><strong style="color:var(--text);">Players:</strong> ${state.gamePlayers.length}</div>
+        <div><strong style="color:var(--text);">AI Difficulty:</strong> ${state.activeGame.ai_difficulty || 3} — ${diffLabels[state.activeGame.ai_difficulty || 3] || 'Lord'}</div>
+        <div><strong style="color:var(--text);">Win Condition:</strong> ${Math.round((state.activeGame.victory_pct || 0.5) * 100)}% of castles (~${Math.round((state.activeGame.victory_pct || 0.5) * 188)})</div>
+        <div><strong style="color:var(--text);">Production Cycle:</strong> Every ${state.activeGame.production_cycle_ticks || 12} ticks</div>
+        <div><strong style="color:var(--text);">Commander Speed:</strong> ${state.activeGame.commander_speed_mult || 1}× (${(17.5 * (state.activeGame.commander_speed_mult || 1)).toFixed(1)} px/tick)</div>
+        <div><strong style="color:var(--text);">Infrastructure Costs:</strong> ${state.activeGame.infra_cost_mult === 0.5 ? 'Cheap ½×' : state.activeGame.infra_cost_mult === 2.0 ? 'Expensive 2×' : 'Standard 1×'}</div>
+        <div><strong style="color:var(--text);">Council Costs:</strong> ${state.activeGame.council_cost_mult === 0.5 ? 'Cheap ½×' : state.activeGame.council_cost_mult === 2.0 ? 'Expensive 2×' : 'Standard 1×'}</div>
+        <div><strong style="color:var(--text);">Fog of War:</strong> ${state.activeGame.fog_of_war ? '🌫 Enabled' : 'Disabled'}</div>
       </div>`)}
 
     ${optSect('Map Display', `
@@ -5550,11 +6667,16 @@ function buildOptionsHtml() {
       </div>
       <button class="send-forces-btn" id="pauseGameBtn"
         style="width:100%;font-size:11px;padding:6px;background:rgba(60,80,140,0.3);
-        border:1px solid rgba(100,120,200,0.4);color:#a0b0e0;">
+        border:1px solid rgba(100,120,200,0.4);color:#a0b0e0;margin-bottom:6px;">
         ${state.activeGame.status === 'paused' ? '▶ Resume Game' : '⏸ Pause Game'}
       </button>
-      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">
-        Pausing stops tick advancement for all players.
+      <button class="send-forces-btn" id="cancelGameBtn"
+        style="width:100%;font-size:11px;padding:6px;background:rgba(180,50,50,0.15);
+        border:1px solid rgba(180,80,80,0.4);color:var(--error);margin-bottom:4px;">
+        ⏹ Cancel Game
+      </button>
+      <div style="font-size:10px;color:var(--text-muted);">
+        Notifies all players and stops tick advancement. You can delete the game from the lobby afterward.
       </div>
     `)}`;
 }
@@ -5584,7 +6706,9 @@ function wireOptionsSidebar() {
           }, i * 600);
         });
       }
-      if ((data.cycles_fired || 0) > 0) supabase.rpc('record_intel_snapshot', { p_game_id: state.activeGame.id }).catch(() => {});
+      if ((data.cycles_fired || 0) > 0) supabase.rpc('record_intel_snapshot', { p_game_id: state.activeGame.id }).then(null, () => {});
+      // Trigger AI turns after forced ticks (force_ticks bypasses process_all_active_games)
+      await supabase.rpc('process_ai_turns', { p_game_id: state.activeGame.id }).then(null, () => {});
       await refreshGameState(state.activeGame.id);
       renderSidebarSection('options');
     } catch (err) { toast(`Force ticks failed: ${err.message}`, true); }
@@ -5606,7 +6730,18 @@ function wireOptionsSidebar() {
     } catch (err) { toast(`Failed: ${err.message}`, true); btn.disabled = false; }
   });
 
-  // Map display toggles
+  // Cancel game
+  document.getElementById('cancelGameBtn')?.addEventListener('click', async () => {
+    if (!confirm('Cancel this game? All players will be notified and ticking will stop.')) return;
+    const btn = document.getElementById('cancelGameBtn');
+    btn.disabled = true;
+    try {
+      const { error } = await supabase.rpc('cancel_game', { p_game_id: state.activeGame.id });
+      if (error) throw error;
+      toast('Game cancelled — returning to lobby');
+      setTimeout(() => exitGameMode(), 1500);
+    } catch (err) { toast(`Failed: ${err.message}`, true); btn.disabled = false; }
+  });
   const prefToggles = ['showTroopCounts', 'showCastleNames', 'showInfraLevels'];
   prefToggles.forEach(key => {
     document.getElementById(`pref_${key}`)?.addEventListener('change', e => {
