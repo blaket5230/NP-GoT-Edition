@@ -6,6 +6,7 @@
 <title>Westeros</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -209,7 +210,222 @@
     grid-template-columns: 320px 1fr 360px;
     grid-template-areas: "header header header" "sidebar map info";
     height: 100vh;
+    position: relative;
   }
+  /* Game mode: full-width map, sidebar becomes an overlay panel */
+  .main-screen.game-mode {
+    grid-template-rows: 48px 1fr;
+    grid-template-columns: 1fr;
+    grid-template-areas: "header" "map";
+  }
+  .main-screen.game-mode .header {
+    height: 48px;
+    min-height: 48px;
+    padding: 0;
+    gap: 0;
+  }
+  .main-screen.game-mode .stage { display: none; }
+  .main-screen.game-mode .sidebar { top: 48px; }
+  .main-screen.game-mode .sidebar {
+    grid-area: unset;
+    position: absolute;
+    left: 0; top: 38px; bottom: 0;
+    width: 460px;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform .22s cubic-bezier(.4,0,.2,1);
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-gold);
+  }
+  .main-screen.game-mode .sidebar.panel-open { transform: translateX(0); }
+  .main-screen.game-mode .info-panel { display: none !important; }
+  /* Panel overlay — dims the map when panel is open */
+  .panel-overlay {
+    display: none; /* overlay removed — map stays fully interactive */
+  }
+  .panel-overlay.visible { display: none; }
+
+  /* NP-style info bar above castle — shows infra levels */
+  .marker-info-bar {
+    position: absolute;
+    bottom: calc(50% + 30px);   /* above the label which is at +18px */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+    z-index: 6;
+    font-size: 9px;
+    font-weight: 700;
+    font-family: 'Cinzel', Georgia, serif;
+  }
+  .marker.label-below .marker-info-bar {
+    bottom: auto;
+    top: calc(50% + 42px);
+  }
+  .marker.show-info-bar .marker-info-bar { opacity: 1; }
+  .marker.selected .marker-info-bar { opacity: 1; }
+  .info-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    color: #fff;
+    text-shadow: 0 0 4px rgba(0,0,0,0.95), 1px 1px 2px rgba(0,0,0,0.95);
+  }
+  .info-bar-item .ibi-icon { opacity: .7; }
+  .info-bar-item .ibi-val  { color: var(--owner-color, #C9A84C); }
+  .info-bar-sep { color: rgba(255,255,255,.35); font-size: 7px; }
+  /* Owner label below castle (when zoomed in) */
+  .marker-owner-label {
+    position: absolute;
+    top: calc(50% + 42px);     /* below troop count at +12px, below army shield at +40px */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    font-family: 'Cinzel', Georgia, serif;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--owner-color, #888);
+    text-shadow: 0 0 3px rgba(0,0,0,0.95), 1px 1px 2px rgba(0,0,0,0.95);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+    z-index: 5;
+  }
+  .marker.show-info-bar .marker-owner-label { opacity: 1; }
+  .marker.selected .marker-owner-label { opacity: 1; }
+
+  /* NP-style panel header */
+  .np-panel-header {
+    height: 48px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-gold);
+    background: var(--bg-deep);
+  }
+  .np-panel-back, .np-panel-close {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .np-panel-back:hover, .np-panel-close:hover { color: var(--accent); border-color: var(--accent); }
+  .np-panel-title {
+    flex: 1;
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: .04em;
+  }
+  /* Compact topbar stat groups */
+  .tb-sep-v { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; margin: 0 10px; }
+  .tb-stat-group { display: flex; align-items: center; gap: 4px; }
+  .tb-stat-group strong { font-size: 13px; color: var(--accent); }
+  .tb-rate-sm { font-size: 9px; color: var(--text-faint); }
+  .tb-year { font-size: 12px; color: var(--text-muted); }
+  .tb-cycle-sm { font-size: 12px; color: var(--text-muted); }
+  .tb-menu-btn {
+    width: 48px; height: 100%;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: color .15s;
+  }
+  .tb-menu-btn:hover { color: var(--accent); background: var(--bg-elevated); }
+  .tb-house-dot {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    font-family: 'Cinzel', Georgia, serif;
+    flex-shrink: 0;
+  }
+  .tb-brand-wrap {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 16px 0 12px;
+    border-right: 1px solid var(--border);
+    height: 100%; flex-shrink: 0;
+  }
+  .tb-vsep { width: 1px; height: 26px; background: var(--border); flex-shrink: 0; margin: 0 14px; }
+  .tb-game-info { display: flex; flex-direction: column; justify-content: center; gap: 2px; flex-shrink: 0; }
+  .tb-game-name {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 13px; font-weight: 600; color: var(--text);
+    letter-spacing: .04em; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; max-width: 150px;
+  }
+  .tb-year-tick { font-size: 10px; color: var(--text-muted); letter-spacing: .05em; white-space: nowrap; }
+  .tb-stat-block { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+  .tb-stat-block i { font-size: 18px; color: var(--accent); flex-shrink: 0; }
+  .tb-stat-vals { display: flex; flex-direction: column; justify-content: center; gap: 1px; }
+  .tb-stat-vals strong {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 17px; font-weight: 700; color: var(--accent); line-height: 1;
+  }
+  .tb-stat-vals span { font-size: 10px; color: var(--text-muted); line-height: 1; }
+  .tb-cycle-block {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: 5px; padding: 5px 10px; flex-shrink: 0;
+  }
+  .tb-cycle-block i { font-size: 14px; color: var(--text-muted); }
+  .tb-cycle-block span { font-size: 12px; color: var(--text); letter-spacing: .03em; }
+  .tb-cycle-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; line-height: 1; display: block; }
+  #cycleCountdown { font-family: 'Cinzel', Georgia, serif; font-size: 14px; color: var(--accent); font-weight: 700; line-height: 1.2; display: block; }
+  .tb-moon-svg {
+    width: 22px; height: 22px; flex-shrink: 0;
+    color: var(--accent);
+    animation: moon-spin 20s linear infinite;
+    transform-origin: center;
+  }
+  @keyframes moon-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  .rookery-btn.compact { padding: 4px 10px; font-size: 11px; }
+  .rookery-btn.compact .rookery-text { display: none; }
+  .btn-secondary.compact { padding: 4px 10px; font-size: 11px; }
+  /* sidebarContent scrollable inside panel */
+  .main-screen.game-mode #gameContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .main-screen.game-mode #sidebarContent {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+  .main-screen.game-mode .sidebar-toolbar { flex-shrink: 0; border-bottom: 1px solid var(--border); }
   .header {
     grid-area: header;
     background: var(--bg-panel);
@@ -259,7 +475,7 @@
   .gold-pill { border-color: rgba(201,168,76,0.35); }
   .cycle-pill { font-size: 11px; color: var(--text-muted); font-weight: 400; }
   .rp-icon { font-size: 11px; }
-  .rp-rate { font-size: 10px; color: var(--text-muted); font-weight: 400; margin-left: 1px; }
+  .rp-rate { font-size: 12px; color: var(--text-muted); font-weight: 400; margin-left: 1px; }
   /* Rookery — prominent button that glows amber when unread */
   .rookery-btn {
     position: relative;
@@ -415,112 +631,217 @@
     width: 44px; height: 44px;
   }
   /* Influence halo: faint outer circle whose size = base influence */
-  .halo {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.18);
-    background: rgba(0,0,0,0.15);
-    pointer-events: none;
-    /* width and height set inline via --halo-size */
-    width: var(--halo-size, 14px);
-    height: var(--halo-size, 14px);
-    z-index: 1;
-  }
+  .halo { display: none; } /* removed — castle icons carry all visual weight */
   /* Ownership ring: colored ring around the dot when owned */
   .ring {
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     border-radius: 50%;
-    border: 2px solid transparent;
-    width: 14px; height: 14px;
+    border: 1.5px solid rgba(255,255,255,0.22);
+    width: 20px; height: 20px;
     pointer-events: none;
     z-index: 2;
-    transition: width 0.1s, height 0.1s;
+    transition: width 0.15s, height 0.15s;
   }
   .marker.owned .ring {
     border-color: var(--owner-color);
-    background: rgba(0,0,0,0.4);
-    box-shadow: 0 0 6px var(--owner-color);
+    box-shadow: 0 0 4px var(--owner-color)66;
   }
   .marker.you-own .ring {
+    width: 22px; height: 22px;
     border-color: var(--owner-color);
-    box-shadow: 0 0 0 1.5px #fff, 0 0 8px var(--owner-color);
+    border-width: 2.5px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.12),
+      0 0 6px var(--owner-color)88;
   }
-  /* The dot itself: SAME size for all castles */
+  /* Neutral castle — small base dot hidden under castle icon (castle icon replaces it) */
   .dot {
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 6px; height: 6px;
+    width: 4px; height: 4px;
     border-radius: 50%;
-    background: #fff;
-    border: 1.5px solid #000;
+    background: rgba(255,255,255,0.5);
+    border: none;
+    box-shadow: none;
     pointer-events: none;
-    z-index: 3;
+    z-index: 2;
   }
+  /* Owned castles: dot hidden, castle icon handles color */
+  .marker.owned .dot,
+  .marker.you-own .dot { display: none; }
   /* Selected: bigger ring with stronger glow */
   .marker.selected .ring {
-    width: 22px; height: 22px;
-    border-width: 2.5px;
+    width: 28px; height: 28px;
+    border-width: 2px;
     border-color: #fff;
-    box-shadow: 0 0 12px rgba(255,255,255,0.6), 0 0 4px rgba(0,0,0,0.8);
+    box-shadow: 0 0 6px rgba(255,255,255,0.35);
   }
   .marker.selected.owned .ring {
-    box-shadow: 0 0 12px var(--owner-color), 0 0 4px rgba(0,0,0,0.8), inset 0 0 0 2px var(--owner-color);
+    border-color: var(--owner-color);
+    box-shadow: 0 0 8px var(--owner-color)88;
   }
-  .marker:hover .ring {
-    width: 18px; height: 18px;
+  .marker.selected.you-own .ring {
+    width: 20px; height: 20px;
+    border-color: #fff;
+    box-shadow: 0 0 0 1px var(--owner-color)66, 0 0 10px var(--owner-color)66;
   }
+  .marker:hover:not(.selected) .ring { width: 22px; height: 22px; }
   /* Troop count below the dot */
   /* Scoped to .marker so it does NOT collide with .stat-cell.troops in the info panel,
      which would otherwise inherit position:absolute; top:50%; left:50% and float to the
      center of the viewport. (That was the long-running "garrison popup" bug.) */
   .marker .troops {
     position: absolute;
-    top: calc(50% + 10px);  /* 10px below center */
+    top: calc(50% + 12px);
     left: 50%;
     transform: translateX(-50%);
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 800;
     color: #fff;
-    text-shadow: 0 0 3px #000, 1px 1px 2px rgba(0,0,0,0.95), -1px -1px 2px rgba(0,0,0,0.95);
+    background: rgba(0,0,0,0.72);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 4px;
+    padding: 0 4px;
+    line-height: 15px;
     white-space: nowrap;
     pointer-events: none;
     z-index: 4;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
+    min-width: 18px;
+    text-align: center;
   }
+  .marker.you-own .troops {
+    color: var(--owner-color, #c9a84c);
+    border-color: var(--owner-color2, var(--owner-color, #c9a84c))55;
+  }
+  .marker.owned .troops {
+    color: var(--owner-color, #aaa);
+    border-color: var(--owner-color2, var(--owner-color, #aaa))44;
+  }
+
+  /* ── Castle icon system ──────────────────────────────────────────── */
+  .castle-icon {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -58%);
+    pointer-events: none;
+    z-index: 3;
+    color: rgba(220,212,190,0.88);
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.8));
+    transition: filter .15s;
+  }
+  .castle-icon.t1 { width: 18px; height: 20px; }
+  .castle-icon.t2 { width: 26px; height: 22px; }
+  .castle-icon.t3 { width: 44px; height: 22px; }
+  .marker.owned .castle-icon {
+    color: var(--owner-color, #c9a84c);
+    filter:
+      drop-shadow(0 0 2px var(--owner-color2, var(--owner-color, #c9a84c))88)
+      drop-shadow(0 1px 3px rgba(0,0,0,0.85));
+  }
+  .marker.you-own .castle-icon {
+    color: var(--owner-color, #c9a84c);
+    filter:
+      drop-shadow(0 0 3px var(--owner-color, #c9a84c)aa)
+      drop-shadow(0 0 7px var(--owner-color2, var(--owner-color, #c9a84c))55)
+      drop-shadow(0 1px 3px rgba(0,0,0,0.9));
+  }
+  .marker.selected .castle-icon {
+    filter:
+      drop-shadow(0 0 4px #ffffffcc)
+      drop-shadow(0 0 8px var(--owner-color, #c9a84c)88);
+  }
+  .marker:hover .castle-icon { filter: drop-shadow(0 0 6px rgba(255,255,255,0.6)) drop-shadow(0 1px 3px rgba(0,0,0,0.9)); }
+  /* Troop count: positioned below the castle icon */
+  .marker .troops {
+    top: calc(50% + 7px);
+  }
+  /* Shield fan — stacked card cluster right of castle icon */
+  .shield-fan {
+    position: absolute;
+    left: calc(50% + 24px);
+    top: calc(50% - 15px);
+    width: 44px; height: 28px;
+    pointer-events: auto;
+    z-index: 6;
+    cursor: pointer;
+  }
+  .shield-fan-item {
+    position: absolute;
+    width: 20px; height: 24px;
+    border-radius: 3px 3px 42% 42%;
+    border: 1.5px solid rgba(255,255,255,0.22);
+    overflow: hidden;
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.95));
+    transition: transform .18s ease;
+  }
+  .shield-fan-item:nth-child(1) { left: 0px;  top: 0px; z-index: 1; }
+  .shield-fan-item:nth-child(2) { left: 10px; top: 3px; z-index: 2; }
+  .shield-fan-item:nth-child(3) { left: 20px; top: 6px; z-index: 3; }
+  .shield-fan:hover .shield-fan-item:nth-child(1) { transform: translate(-6px, -3px) rotate(-12deg); }
+  .shield-fan:hover .shield-fan-item:nth-child(2) { transform: translate(0px,  -5px) rotate(0deg);  }
+  .shield-fan:hover .shield-fan-item:nth-child(3) { transform: translate(6px,  -3px) rotate(12deg); }
+  .shield-fan-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.35);
+    display: block;
+  }
+  .shield-fan-overflow {
+    position: absolute;
+    bottom: -5px; right: -10px;
+    background: #C9A84C;
+    color: #06070e;
+    font-size: 9px; font-weight: 900;
+    font-family: 'Cinzel', Georgia, serif;
+    border-radius: 9px;
+    padding: 1px 5px; line-height: 14px;
+    min-width: 16px; text-align: center;
+    z-index: 8;
+    pointer-events: none;
+    border: 1px solid rgba(0,0,0,0.4);
+  }
+
   /* When a castle is selected, hide the on-map troop number so the right info panel
      is the single source of truth. */
   .marker.selected .troops { display: none; }
-  /* Castle name label - appears well above the marker on hover/select */
+  /* Castle name label — no box, just shadowed text */
   .marker-label {
     position: absolute;
-    bottom: calc(50% + 18px);  /* 18px above center - safely above dot, ring, and commander flag */
+    bottom: calc(50% + 18px);
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(10,10,24,0.96);
-    border: 1px solid var(--border-strong);
-    color: var(--text);
-    padding: 3px 9px;
-    border-radius: 3px;
-    font-size: 12px;
-    font-weight: 500;
+    background: none;
+    border: none;
+    color: #fff;
+    padding: 2px 0;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'Cinzel', Georgia, serif;
+    letter-spacing: .02em;
     white-space: nowrap;
+    text-shadow:
+      0 0 3px rgba(0,0,0,0.95),
+      1px 1px 3px rgba(0,0,0,0.95),
+      -1px 1px 3px rgba(0,0,0,0.95),
+      1px -1px 3px rgba(0,0,0,0.95),
+      -1px -1px 3px rgba(0,0,0,0.95),
+      0 0 8px rgba(0,0,0,0.8);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.15s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.7);
-    z-index: 5;
+    transition: opacity 0.2s;
+    z-index: 6;
   }
-  /* If the marker is near the top of the viewport, flip the label to appear below */
-  .marker.label-below .marker-label {
-    bottom: auto;
-    top: calc(50% + 18px);
-  }
-  .marker:hover .marker-label, .marker.selected .marker-label { opacity: 1; }
+  .marker.label-below .marker-label { bottom: auto; top: calc(50% + 20px); }
+  .marker:hover .marker-label,
+  .marker.selected .marker-label,
+  .marker.show-label .marker-label { opacity: 1; }
+  /* Owned castle labels get house color tint */
+  .marker.owned .marker-label { color: var(--owner-color, #fff); }
 
   .map-controls {
     position: absolute;
@@ -902,6 +1223,7 @@
     background: var(--bg-deep);
   }
   .sidebar-tool-btn {
+    font-size: 16px;
     flex: 1;
     background: var(--bg-elevated);
     border: 1px solid var(--border);
@@ -917,6 +1239,8 @@
   }
   .sidebar-tool-btn:hover  { background: var(--border); }
   .sidebar-tool-btn.active { background: rgba(201,168,76,0.2); border-color: var(--accent); }
+  .sidebar.panel-open .sidebar-toolbar { display: none; }
+  .sidebar.panel-menu .sidebar-toolbar  { display: flex; }
   .sidebar-nav-list { display: flex; flex-direction: column; }
   .sidebar-nav-item {
     display: flex;
@@ -944,7 +1268,7 @@
     background: var(--bg-deep);
   }
   .section-back:hover { color: var(--text); }
-  .section-content { padding: 12px; overflow-y: auto; }
+  .section-content { padding: 16px; overflow-y: auto; }
 
   .section-back { 
     display: flex; align-items: center; justify-content: space-between;
@@ -958,7 +1282,7 @@
   }
   .section-help-trigger:hover { color: var(--accent); border-color: var(--accent); }
   .settings-section { border:1px solid var(--border); border-radius:6px; padding:12px; margin-bottom:12px; }
-  .settings-section-title { font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--accent); text-transform:uppercase; margin-bottom:10px; }
+  .settings-section-title { font-size:13px; font-weight:700; letter-spacing:.08em; color:var(--accent); text-transform:uppercase; margin-bottom:12px; }
   .form-row { display:flex; gap:10px; }
   .form-row .form-group { margin-bottom:8px; }
   .range-ring {
@@ -1102,9 +1426,9 @@
   .houses-sub-tabs { display: flex; border-bottom: 1px solid var(--border); overflow-x: auto; }
   .houses-sub-tab {
     flex-shrink: 0;
-    padding: 8px 12px;
+    padding: 12px 16px;
     border: none; background: transparent; color: var(--text-muted);
-    font-family: inherit; font-size: 11px; cursor: pointer;
+    font-family: 'Cinzel',Georgia,serif; font-size: 13px; font-weight: 600; cursor: pointer;
     border-bottom: 2px solid transparent; transition: all 0.1s;
     white-space: nowrap;
   }
@@ -1117,8 +1441,8 @@
     margin-bottom: 8px;
   }
   .house-card.is-me { border-left: 3px solid var(--accent); }
-  .house-card .hc-name { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
-  .house-card .hc-stats { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px; color: var(--text-muted); }
+  .house-card .hc-name { font-weight: 700; font-size: 17px; margin-bottom: 6px; font-family: 'Cinzel',Georgia,serif; }
+  .house-card .hc-stats { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 
   /* War calc result */
   .wc-win  { color: var(--success); font-weight: 700; }
@@ -1183,33 +1507,18 @@
     border-right: 1px solid var(--border);
   }
 
-  /* Commander presence indicator: small triangular flag in gold above the castle */
-  .marker.has-commander::after {
-    content: '';
-    position: absolute;
-    bottom: calc(50% + 8px);  /* 8px above center, between dot and label */
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-bottom: 7px solid var(--accent);
-    transform: translateX(-50%);
-    filter: drop-shadow(0 0 1px #000) drop-shadow(0 1px 2px rgba(0,0,0,0.85));
-    pointer-events: none;
-    z-index: 6;
-  }
+  /* Commander flag removed — shield fan serves as the army indicator */
 
   /* Scoreboard */
   .scoreboard-row {
     background: var(--bg-elevated);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 8px 10px;
-    margin-bottom: 5px;
+    border-radius: 8px;
+    padding: 14px 14px;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: 12px;
   }
   .scoreboard-row.is-you {
     background: #25253f;
@@ -1223,11 +1532,11 @@
     font-weight: 400;
     font-size: 10px;
   }
-  .scoreboard-row .name { font-size: 12px; font-weight: 600; }
-  .scoreboard-row .meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .scoreboard-row .name { font-size: 16px; font-weight: 700; font-family:'Cinzel',Georgia,serif; }
+  .scoreboard-row .meta { font-size: 13px; color: var(--text-muted); margin-top: 4px; font-family:'EB Garamond',Georgia,serif; }
   .scoreboard-row .stat-cluster { margin-left: auto; text-align: right; }
-  .scoreboard-row .castle-count { font-size: 14px; font-weight: 600; color: var(--text); }
-  .scoreboard-row .castle-count-label { font-size: 9px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; }
+  .scoreboard-row .castle-count { font-size: 26px; font-weight: 700; font-family:'Cinzel',Georgia,serif; color: var(--text); }
+  .scoreboard-row .castle-count-label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; }
 
   /* Castle info in game mode */
   .castle-owner-bar {
@@ -1240,8 +1549,8 @@
     margin-bottom: 12px;
     border-left: 4px solid var(--owner-color, var(--border));
   }
-  .castle-owner-bar .owner-name { font-size: 13px; font-weight: 600; }
-  .castle-owner-bar .owner-meta { font-size: 10px; color: var(--text-muted); }
+  .castle-owner-bar .owner-name { font-size: 17px; font-weight: 700; letter-spacing: .04em; }
+  .castle-owner-bar .owner-meta { font-size: 13px; color: var(--text-muted); }
   .castle-owner-bar.unowned { border-left-color: var(--border); }
   .castle-owner-bar.unowned .owner-name { color: var(--text-muted); font-style: italic; }
 
@@ -1288,7 +1597,7 @@
   }
   .upgrade-row .info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
   .upgrade-row .icon {
-    width: 26px; height: 26px;
+    width: 20px; height: 20px;
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -1377,7 +1686,7 @@
   .movement-icon {
     position: absolute;
     transform: translate(-50%, -50%);
-    width: 18px; height: 18px;
+    width: 20px; height: 20px;
     background: var(--accent);
     border: 2px solid #fff;
     border-radius: 3px;
@@ -1659,19 +1968,19 @@
     background:linear-gradient(180deg, #0a0c16 0%, #080a12 100%) !important;
     border-right:1px solid var(--border-gold) !important;
   }
-  .sidebar-nav-list { padding:4px 0; }
+  .sidebar-nav-list { padding:6px 0; }
   .sidebar-nav-item {
     display:flex;
     align-items:center;
-    gap:10px;
-    padding:9px 14px;
+    gap:14px;
+    padding:14px 18px;
     cursor:pointer;
     font-family:'Cinzel',Georgia,serif;
-    font-size:10.5px;
+    font-size:15px;
     font-weight:600;
-    letter-spacing:.06em;
+    letter-spacing:.05em;
     color:var(--text-muted);
-    border-left:2px solid transparent;
+    border-left:3px solid transparent;
     transition:all .18s ease;
     position:relative;
   }
@@ -1685,9 +1994,9 @@
     border-left-color:var(--accent) !important;
     background:rgba(201,168,76,.06) !important;
   }
-  .snav-icon { width:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .snav-icon svg { width:16px; height:16px; }
-  .sidebar-nav-divider { height:1px; background:linear-gradient(90deg,transparent,var(--border-gold),transparent); margin:6px 12px; }
+  .snav-icon { width:26px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .snav-icon svg { width:22px; height:22px; }
+  .sidebar-nav-divider { height:1px; background:linear-gradient(90deg,transparent,var(--border-gold),transparent); margin:10px 16px; }
 
   /* Section back button */
   .section-back {
@@ -1739,7 +2048,7 @@
   /* ── CASTLE INFO PANEL ───────────────────────────── */
   .castle-name {
     font-family:'Cinzel',Georgia,serif !important;
-    font-size:16px !important;
+    font-size:26px !important;
     font-weight:700 !important;
     letter-spacing:.04em !important;
     color:var(--text) !important;
@@ -1747,11 +2056,11 @@
   }
   .castle-region {
     font-family:'Cinzel',Georgia,serif !important;
-    font-size:9px !important;
+    font-size:12px !important;
     letter-spacing:.12em !important;
     text-transform:uppercase !important;
     color:var(--text-muted) !important;
-    margin-top:2px !important;
+    margin-top:4px !important;
   }
   .castle-owner-bar {
     border-left:3px solid var(--owner-color, var(--border)) !important;
@@ -1762,28 +2071,28 @@
   }
   .owner-name {
     font-family:'Cinzel',Georgia,serif !important;
-    font-size:12px !important;
+    font-size:16px !important;
     font-weight:700 !important;
     letter-spacing:.04em !important;
   }
-  .owner-meta { font-size:10px !important; color:var(--text-muted) !important; font-family:'EB Garamond',Georgia,serif !important; }
+  .owner-meta { font-size:13px !important; color:var(--text-muted) !important; font-family:'EB Garamond',Georgia,serif !important; }
 
   /* Stat grid */
   .stat-cell {
     background:var(--bg-elevated) !important;
     border:1px solid var(--border) !important;
     border-radius:4px !important;
-    padding:8px 6px !important;
+    padding:12px 8px !important;
   }
   .stat-label {
     font-family:'Cinzel',Georgia,serif !important;
-    font-size:8px !important;
-    letter-spacing:.12em !important;
+    font-size:11px !important;
+    letter-spacing:.10em !important;
     text-transform:uppercase !important;
     color:var(--text-muted) !important;
-    margin-bottom:4px !important;
+    margin-bottom:6px !important;
   }
-  .stat-value { font-family:'Cinzel',Georgia,serif !important; font-size:18px !important; font-weight:700 !important; color:var(--text) !important; }
+  .stat-value { font-family:'Cinzel',Georgia,serif !important; font-size:38px !important; font-weight:700 !important; color:var(--text) !important; }
   .stat-cell.troops .stat-value { color:var(--accent) !important; }
 
   /* Infrastructure rows */
@@ -1791,35 +2100,35 @@
     background:var(--bg-elevated) !important;
     border:1px solid var(--border) !important;
     border-radius:4px !important;
-    padding:8px 10px !important;
-    margin-bottom:5px !important;
+    padding:14px 14px !important;
+    margin-bottom:8px !important;
     display:flex;
     align-items:center;
-    gap:10px;
+    gap:14px;
   }
   .upgrade-row .icon {
-    width:26px; height:26px;
+    width:36px; height:36px;
     border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     font-family:'Cinzel',Georgia,serif;
-    font-size:11px; font-weight:700;
+    font-size:15px; font-weight:700;
     flex-shrink:0;
   }
   .upgrade-row.treasury .icon  { background:rgba(201,168,76,.2); color:var(--accent); border:1px solid var(--border-gold); }
   .upgrade-row.recruitment .icon { background:rgba(180,60,60,.2); color:#e07070; border:1px solid rgba(180,60,60,.3); }
   .upgrade-row.prestige .icon  { background:rgba(100,80,180,.2); color:#a090e0; border:1px solid rgba(100,80,180,.3); }
-  .upgrade-row .label { font-family:'Cinzel',Georgia,serif !important; font-size:10px !important; font-weight:700 !important; letter-spacing:.04em !important; color:var(--text) !important; }
-  .upgrade-row .level { font-size:11px !important; color:var(--text-muted) !important; margin-top:2px; }
+  .upgrade-row .label { font-family:'Cinzel',Georgia,serif !important; font-size:18px !important; font-weight:700 !important; letter-spacing:.04em !important; color:var(--text) !important; }
+  .upgrade-row .level { font-size:13px !important; color:var(--text-muted) !important; margin-top:2px; }
   .upgrade-row .info { display:flex; align-items:center; gap:8px; flex:1; }
 
   /* Upgrade buttons */
   .upgrade-btn {
     font-family:'Cinzel',Georgia,serif !important;
-    font-size:9px !important;
+    font-size:11px !important;
     font-weight:700 !important;
     letter-spacing:.06em !important;
     text-transform:uppercase !important;
-    padding:6px 10px !important;
+    padding:9px 14px !important;
     border-radius:3px !important;
     background:linear-gradient(180deg,#1a2030,#101520) !important;
     border:1px solid var(--border-gold) !important;
@@ -1832,18 +2141,246 @@
   }
   .upgrade-btn:hover:not(:disabled) { background:linear-gradient(180deg,#2a3040,#181d28) !important; color:var(--accent-bright) !important; }
   .upgrade-btn:disabled { opacity:.35 !important; cursor:not-allowed !important; }
-  .upgrade-btn .cost { font-family:'EB Garamond',Georgia,serif !important; font-size:9px !important; color:var(--text-muted); font-weight:400 !important; letter-spacing:0 !important; text-transform:none !important; }
+  .upgrade-btn .cost { font-family:'EB Garamond',Georgia,serif !important; font-size:11px !important; color:var(--text-muted); font-weight:400 !important; letter-spacing:0 !important; text-transform:none !important; }
+
+
+  /* ── Commander detail + transfer panel ────────────────────── */
+  .cmd-detail-panel {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .cmd-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cmd-detail-portrait {
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    overflow: hidden;
+    position: relative;
+    border: 2px solid var(--portrait-color, var(--accent));
+    box-shadow: 0 0 14px var(--portrait-color, var(--accent))55;
+    background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--portrait-color,#c9a84c) 30%, #0a0c18), #0a0c18);
+    font-size: 22px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--portrait-color, var(--accent));
+    font-family: 'Cinzel', Georgia, serif;
+  }
+  .cmd-detail-portrait img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center top;
+    border-radius: 50%;
+    z-index: 2;
+    opacity: 0; transition: opacity .25s;
+  }
+  .cmd-detail-portrait img.loaded { opacity: 1; }
+  .cmd-detail-info { flex: 1; min-width: 0; }
+  .cmd-detail-name {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--text);
+    letter-spacing: .03em;
+    margin-bottom: 4px;
+  }
+  .cmd-detail-sub {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 14px; color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .cmd-detail-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(201,168,76,.12);
+    border: 1px solid var(--border-gold);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  /* Transfer panel */
+  .cmd-transfer-panel {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cmd-transfer-label {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .cmd-transfer-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .cmd-transfer-side {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 10px;
+    text-align: center;
+  }
+  .cmd-transfer-side.you-own {
+    border-color: var(--accent)55;
+  }
+  .cmd-transfer-side-label {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .cmd-transfer-count {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 30px; font-weight: 700;
+    color: var(--text); line-height: 1;
+  }
+  .cmd-transfer-count.cmd-side { color: var(--accent); }
+  .cmd-transfer-arrows {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+  }
+  .cmd-arrow-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-elevated);
+    color: var(--text); font-size: 14px;
+    cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .cmd-arrow-btn:hover:not(:disabled) {
+    background: var(--accent); color: #06070e;
+    border-color: var(--accent);
+  }
+  .cmd-arrow-btn:disabled { opacity: .3; cursor: not-allowed; }
+  .cmd-transfer-controls {
+    display: flex; gap: 6px; align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .cmd-transfer-preset {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 10px; font-weight: 700;
+    padding: 5px 12px; border-radius: 20px;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-elevated); color: var(--text-muted);
+    cursor: pointer; transition: all .15s;
+  }
+  .cmd-transfer-preset:hover { color: var(--accent); border-color: var(--accent); }
+  .cmd-transfer-amt {
+    width: 64px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    color: var(--text); text-align: center;
+    padding: 5px 6px; border-radius: 6px;
+    font-size: 15px; font-weight: 700;
+    font-family: 'Cinzel', Georgia, serif;
+  }
+
+  /* Action buttons row */
+  .cmd-action-row {
+    display: flex; gap: 8px;
+    padding: 14px 16px;
+  }
+  .cmd-march-btn {
+    flex: 1;
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 13px; font-weight: 700; letter-spacing: .05em;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(180deg, #c9a84c, #8a6020);
+    color: #06070e;
+    cursor: pointer;
+    transition: filter .15s;
+  }
+  .cmd-march-btn:hover:not(:disabled) { filter: brightness(1.15); }
+  .cmd-march-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .cmd-route-btn {
+    flex: 1;
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 13px; font-weight: 700; letter-spacing: .05em;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(100,160,240,.4);
+    background: rgba(30,60,120,.3);
+    color: #90b8e8;
+    cursor: pointer;
+    transition: filter .15s;
+  }
+  .cmd-route-btn:hover { filter: brightness(1.15); }
+  /* ── Diplomacy panel ─────────────────────────────────────────── */
+  .dip-player-row { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  .dip-btn {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 9px; font-weight: 700; letter-spacing: .06em;
+    padding: 5px 10px; border-radius: 5px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg-elevated);
+    color: var(--text-muted); transition: all .15s;
+  }
+  .dip-btn:hover { color: var(--text); border-color: var(--border-strong); }
+  .dip-btn.ally      { border-color: #3a5a2a; background: #1a2a12; color: #7aaa50; }
+  .dip-btn.enemy     { border-color: #5a2020; background: #2a1010; color: #e07070; }
+  .dip-btn.send-gold { border-color: var(--accent)55; color: var(--accent); }
+  .dip-btn.send-know { border-color: #4a3a6a; color: #9080d0; }
+
+  /* ── Infrastructure 4-column grid ───────────────────────────── */
+  .infra-grid { display:flex; flex-direction:column; gap:6px; margin:8px 0; }
+  .ig-row {
+    display:grid;
+    grid-template-columns: 44px 1fr auto auto;
+    align-items:center;
+    gap:10px;
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:14px 12px;
+  }
+  .ig-row.treasury  { border-left:3px solid var(--accent); }
+  .ig-row.recruitment { border-left:3px solid #e07070; }
+  .ig-row.prestige  { border-left:3px solid #a090e0; }
+  .ig-icon {
+    width:40px; height:40px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+  }
+  .ig-row.treasury  .ig-icon { background:rgba(201,168,76,.18); color:var(--accent); }
+  .ig-row.recruitment .ig-icon { background:rgba(200,60,60,.18); color:#e07070; }
+  .ig-row.prestige  .ig-icon { background:rgba(120,90,200,.18); color:#a090e0; }
+  .ig-name {
+    font-family:'Cinzel',Georgia,serif;
+    font-size:17px; font-weight:700;
+    color:var(--text);
+    letter-spacing:.03em;
+  }
+  .ig-stat { display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
+  .ig-level { font-family:'Cinzel',Georgia,serif; font-size:16px; font-weight:700; color:var(--text); }
+  .ig-rate  { font-size:12px; color:var(--text-muted); font-family:'EB Garamond',Georgia,serif; white-space:nowrap; }
 
   /* ── COMMANDER PORTRAITS ─────────────────────────── */
   .commander-portrait-card {
     display:flex;
     align-items:center;
-    gap:12px;
+    gap:16px;
     background:var(--bg-elevated);
     border:1px solid var(--border);
-    border-radius:5px;
-    padding:10px 12px;
-    margin-bottom:6px;
+    border-radius:8px;
+    padding:16px 16px;
+    margin-bottom:10px;
     position:relative;
     overflow:hidden;
   }
@@ -1855,12 +2392,12 @@
   }
   .commander-portrait-card.dead { opacity:.5; }
   .portrait-medallion {
-    width:44px; height:44px;
+    width:80px; height:80px;
     border-radius:50%;
     flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
     font-family:'Cinzel',Georgia,serif;
-    font-size:16px; font-weight:900;
+    font-size:20px; font-weight:900;
     position:relative;
     overflow:hidden;
     background:radial-gradient(circle at 35% 35%, color-mix(in srgb,var(--portrait-color,#c9a84c) 30%,#0a0c18), #0a0c18);
@@ -1874,13 +2411,13 @@
     width:100%; height:100%;
     object-fit:cover; object-position:center top;
     border-radius:50%;
-    z-index:2;
+    z-index:4;
     opacity:0; /* hidden until confirmed loaded */
     transition:opacity .25s;
   }
-  .portrait-photo.portrait-loaded { opacity:1; }
+  .portrait-photo.portrait-loaded { opacity:1 !important; z-index:4; }
   /* When photo fails, keep hidden */
-  .portrait-photo.portrait-missing { display:none; }
+  .portrait-photo.portrait-missing { display:none !important; }
   /* Fallback: always rendered, hidden only when photo loaded */
   .portrait-fallback {
     display:flex;
@@ -1889,7 +2426,7 @@
     z-index:1;
     transition:opacity .25s;
   }
-  .portrait-photo.portrait-loaded ~ .portrait-fallback { opacity:0; pointer-events:none; }
+  .portrait-photo.portrait-loaded ~ .portrait-fallback { opacity:0 !important; pointer-events:none; }
   /* Level badge sits on top of everything */
   .portrait-level-badge { z-index:3; }
   .portrait-level-badge {
@@ -1903,8 +2440,8 @@
     padding:1px 4px;
     line-height:1.4;
   }
-  .portrait-name { font-family:'Cinzel',Georgia,serif; font-size:12px; font-weight:700; letter-spacing:.03em; color:var(--text); }
-  .portrait-sub  { font-size:10px; color:var(--text-muted); margin-top:2px; font-family:'EB Garamond',Georgia,serif; }
+  .portrait-name { font-family:'Cinzel',Georgia,serif; font-size:18px; font-weight:700; letter-spacing:.03em; color:var(--text); }
+  .portrait-sub  { font-size:14px; color:var(--text-muted); margin-top:4px; font-family:'EB Garamond',Georgia,serif; }
   .portrait-actions { display:flex; flex-direction:column; gap:5px; margin-left:auto; flex-shrink:0; }
 
   /* ── ACTION BUTTONS (send forces, recruit, etc.) ─── */
@@ -2064,40 +2601,60 @@
 <!-- =================== MAIN SCREEN =================== -->
 <div class="main-screen hidden" id="mainScreen">
   <div class="header">
-    <!-- Left: brand -->
-    <div class="header-brand">
+    <!-- Hamburger — game mode only -->
+    <button class="tb-menu-btn hidden" id="menuBtn" aria-label="Open menu">&#9776;</button>
+
+    <!-- Brand -->
+    <div class="tb-brand-wrap header-brand">
+      <div class="tb-house-dot hidden" id="tbHouseDot"></div>
       <div class="title">Westeros</div>
       <div class="stage" id="stageLabel">Lobby</div>
     </div>
 
-    <!-- Center: game context (hidden in lobby) -->
-    <div class="game-resources hidden" id="gameResources">
-      <div class="game-context">
-        <span class="game-name" id="gameName"></span>
-        <span class="context-sep">·</span>
-        <span id="gameYearLabel" style="color:var(--text-muted);font-size:12px;"></span>
+    <!-- Game stats — readable blocks in game mode -->
+    <div class="game-resources hidden" id="gameResources" style="display:flex;align-items:center;padding:0 16px;">
+      <div class="tb-game-info">
+        <div class="tb-game-name" id="gameName"></div>
+        <div class="tb-year-tick" id="gameYearLabel"></div>
       </div>
-      <div class="resource-strip">
-        <div class="resource-pill gold-pill">
-          <span class="rp-icon">💰</span>
+
+      <div class="tb-vsep"></div>
+
+      <div class="tb-stat-block">
+        <i class="ti ti-coin" aria-hidden="true"></i>
+        <div class="tb-stat-vals">
           <strong id="resourceGold">0</strong>
-          <span class="rp-rate" id="rateGold"></span>
+          <span id="rateGold"></span>
         </div>
-        <div class="resource-pill">
-          <span class="rp-icon">★</span>
+      </div>
+
+      <div class="tb-vsep"></div>
+
+      <div class="tb-stat-block">
+        <i class="ti ti-star" aria-hidden="true"></i>
+        <div class="tb-stat-vals">
           <strong id="resourcePrestige">0</strong>
-          <span class="rp-rate" id="ratePrestige"></span>
+          <span id="ratePrestige"></span>
         </div>
-        <div class="resource-pill cycle-pill" id="cyclePill" title="Ticks until next production cycle">
-          <span class="rp-icon">⏳</span>
-          <span id="cycleCountdown"></span>
+      </div>
+
+      <div class="tb-vsep"></div>
+
+      <div class="tb-cycle-block" id="cyclePill">
+        <svg class="tb-moon-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <path class="tb-moon-face" d="M12 4 a8 8 0 0 1 0 16 a6 6 0 0 0 0-16z" fill="currentColor"/>
+        </svg>
+        <div class="tb-stack">
+          <span class="tb-cycle-label">Next cycle</span>
+          <span id="cycleCountdown">--h --m</span>
         </div>
       </div>
     </div>
 
     <div class="spacer"></div>
 
-    <!-- Right: Rookery + exit (shown in game), auth (lobby) -->
+    <!-- Right side -->
     <div class="header-right">
       <!-- Lobby only -->
       <div class="lobby-right" id="lobbyRight">
@@ -2106,18 +2663,23 @@
         <button class="btn-secondary" id="signOutBtn">Sign Out</button>
       </div>
       <!-- Game only -->
-      <div class="game-right hidden" id="gameRight">
-        <button class="rookery-btn" id="inboxBtn" title="The Rookery — open ravens">
-          <span class="rookery-icon">🪶</span>
-          <span class="rookery-text">Rookery</span>
+      <div class="game-right hidden" id="gameRight" style="padding-right:12px;gap:8px;">
+        <button class="rookery-btn compact" id="inboxBtn" title="The Rookery — open ravens" style="padding:7px 12px;">
+          <i class="ti ti-feather" style="font-size:17px;" aria-hidden="true"></i>
           <span class="inbox-badge" id="inboxBadge" style="display:none;">0</span>
         </button>
-        <button class="btn-secondary" id="exitGameBtn">Exit Game</button>
+        <button class="btn-secondary compact" id="exitGameBtn" style="padding:7px 16px;font-size:12px;letter-spacing:.06em;">Exit</button>
       </div>
     </div>
   </div>
 
   <div class="sidebar">
+    <!-- NP-style panel header (game mode only) -->
+    <div class="np-panel-header hidden" id="npPanelHeader">
+      <button class="np-panel-back" id="npPanelBack" style="display:none" aria-label="Back">&#8592;</button>
+      <span class="np-panel-title" id="npPanelTitle">Menu</span>
+      <button class="np-panel-close" id="npPanelClose" aria-label="Close">&#10005;</button>
+    </div>
     <!-- Lobby mode content -->
     <div id="lobbyContent">
       <div class="section-title">
@@ -2139,10 +2701,10 @@
     <!-- Game mode content - NP-style sidebar navigation -->
     <div id="gameContent" class="hidden">
       <div class="sidebar-toolbar">
-        <button class="sidebar-tool-btn" id="toolRuler" title="Distance Ruler — measure travel time between castles">📏</button>
-        <button class="sidebar-tool-btn" id="toolBulkUpgrade" title="Bulk Upgrade — spend gold on cheapest available upgrades">💰</button>
-        <button class="sidebar-tool-btn" id="toolWarCalc" title="War Calculator — predict battle outcomes">⚔</button>
-        <button class="sidebar-tool-btn" id="toolRefresh" title="Refresh — process pending ticks">⟳</button>
+        <button class="sidebar-tool-btn" id="toolRuler" title="Distance Ruler — measure travel time between castles"><i class="ti ti-ruler-2" aria-hidden="true"></i></button>
+        <button class="sidebar-tool-btn" id="toolBulkUpgrade" title="Bulk Upgrade — spend gold on cheapest available upgrades"><i class="ti ti-coins" aria-hidden="true"></i></button>
+        <button class="sidebar-tool-btn" id="toolWarCalc" title="War Calculator — predict battle outcomes"><i class="ti ti-sword" aria-hidden="true"></i></button>
+        <button class="sidebar-tool-btn" id="toolRefresh" title="Refresh — process pending ticks"><i class="ti ti-refresh" aria-hidden="true"></i></button>
       </div>
       <div id="sidebarContent">
         <!-- Rendered by JS: nav list or section content -->
@@ -2151,6 +2713,7 @@
   </div>
 
   <div class="map-area">
+    <div class="panel-overlay" id="panelOverlay"></div>
     <div class="map-container" id="mapContainer">
       <div class="map-inner" id="mapInner">
         <img id="mapImage" alt="Westeros">
@@ -2185,7 +2748,7 @@
 
 <div class="modal-overlay" id="bulkUpgradeModal">
   <div class="modal">
-    <h2>💰 Bulk Upgrade</h2>
+    <h2>Bulk Upgrade</h2>
     <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
       Automatically upgrades the cheapest available castles until your budget is exhausted. Uses Master of Laws bonus.
     </div>
@@ -2211,10 +2774,10 @@
 
 <div class="modal-overlay" id="warCalcModal">
   <div class="modal">
-    <h2>⚔ War Calculator</h2>
+    <h2>War Calculator</h2>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
       <div>
-        <div style="font-weight:600;color:var(--accent);margin-bottom:8px;">⚔ Attacker</div>
+        <div style="font-weight:600;color:var(--accent);margin-bottom:8px;"><i class="ti ti-sword" style="font-size:14px;" aria-hidden="true"></i> Attacker</div>
         <div class="form-group"><label>Troops</label><input type="number" id="wc-atk-troops" value="20" min="0"></div>
         <div class="form-group"><label>Commander Level</label><input type="number" id="wc-atk-lvl" value="5" min="0" max="10"></div>
         <div class="form-group"><label>Hand Council Level</label><input type="number" id="wc-atk-hand" value="0" min="0" max="5"></div>
@@ -2256,7 +2819,7 @@
 <!-- =================== ROOKERY PANEL =================== -->
 <div class="inbox-panel" id="inboxPanel">
   <div class="inbox-header">
-    <div class="inbox-title">🪶 The Rookery</div>
+    <div class="inbox-title">The Rookery</div>
     <div style="display:flex;gap:6px;align-items:center;">
       <button class="inbox-mark-all" id="inboxMarkAll">Dismiss all</button>
       <button class="inbox-close" id="inboxClose">✕</button>
@@ -2288,7 +2851,7 @@
         </div>
         <div class="form-row">
           <div class="form-group" style="flex:1;">
-            <label>Tick Speed</label>
+            <label>Moon Speed</label>
             <select id="newGameTickSpeed">
               <option value="normal">Normal (1 hr/tick)</option>
               <option value="slow">Slow (2 hr/tick)</option>
@@ -2300,10 +2863,10 @@
           <div class="form-group" style="flex:1;">
             <label>Production Cycle</label>
             <select id="newGameCycleTicks">
-              <option value="8">Every 8 ticks (fast)</option>
-              <option value="12" selected>Every 12 ticks (standard)</option>
-              <option value="16">Every 16 ticks (slow)</option>
-              <option value="24">Every 24 ticks (epic)</option>
+              <option value="8">Every 8 moons (fast)</option>
+              <option value="12" selected>Every 12 moons (standard)</option>
+              <option value="16">Every 16 moons (slow)</option>
+              <option value="24">Every 24 moons (epic)</option>
             </select>
           </div>
         </div>
@@ -2619,6 +3182,14 @@ const el = {
   mapLoading: document.getElementById('mapLoading'),
   zoomReadout: document.getElementById('zoomReadout'),
   infoPanel: document.getElementById('infoPanel'),
+  // NP-style panel system
+  menuBtn:      document.getElementById('menuBtn'),
+  npPanelHeader:document.getElementById('npPanelHeader'),
+  npPanelTitle: document.getElementById('npPanelTitle'),
+  npPanelBack:  document.getElementById('npPanelBack'),
+  npPanelClose: document.getElementById('npPanelClose'),
+  panelOverlay: document.getElementById('panelOverlay'),
+  tbHouseDot:   document.getElementById('tbHouseDot'),
   toast: document.getElementById('toast'),
   createGameModal: document.getElementById('createGameModal'),
   createGameForm: document.getElementById('createGameForm'),
@@ -2700,7 +3271,7 @@ const el = {
   cancelSendForces: document.getElementById('cancelSendForces'),
   confirmSendForces: document.getElementById('confirmSendForces'),
   stackPicker: document.getElementById('stackPicker'),
-  infoPanelBody: document.getElementById('infoPanelBody'),
+  infoPanelBody: document.getElementById('sidebarContent'), // redirected: castle details render in left panel
   recruitCommanderModal: document.getElementById('recruitCommanderModal'),
   recruitInfo: document.getElementById('recruitInfo'),
   recruitPoolWrap: document.getElementById('recruitPoolWrap'),
@@ -2835,6 +3406,28 @@ async function loadReferenceData() {
     if (housesResult.error) throw housesResult.error;
     state.castles = castlesResult.data;
     state.houses = housesResult.data;
+
+    // ── House color system: primary + secondary ─────────────────────────────────
+    // Primary  = castle icon fill + inner glow
+    // Secondary = outer aura glow — makes each house visually unique even when
+    //             two primaries are similar (e.g. Lannister gold vs Baratheon gold)
+    const HOUSE_COLOR_MAP = {
+      //             primary        secondary
+      stark:      { c1:'#C4D8EC', c2:'#4A8AAC' }, // ice blue    + deep steel (cold North)
+      lannister:  { c1:'#D4AF37', c2:'#CC2828' }, // Lannister gold + crimson (lion on red)
+      baratheon:  { c1:'#F5C518', c2:'#1A1A30' }, // bright gold + black (stag on gold)
+      targaryen:  { c1:'#E82040', c2:'#8A0C18' }, // dragon red  + deep blood red
+      greyjoy:    { c1:'#C8A030', c2:'#2A4A5A' }, // kraken gold + iron sea (breaks blue cluster)
+      tully:      { c1:'#4A90E0', c2:'#CC2828' }, // river blue  + Tully red (striped banner)
+      arryn:      { c1:'#68C8F0', c2:'#CCEEFF' }, // sky blue    + white (falcon + moon)
+      tyrell:     { c1:'#58BC2A', c2:'#C8A010' }, // leaf green  + rose gold
+      martell:    { c1:'#F08020', c2:'#C03020' }, // sun orange  + spear red
+    };
+    state.houses = state.houses.map(h => ({
+      ...h,
+      color:  HOUSE_COLOR_MAP[h.slug]?.c1 || h.color,
+      color2: HOUSE_COLOR_MAP[h.slug]?.c2 || h.color,
+    }));
     el.castleCount.textContent = state.castles.length;
     el.houseCount.textContent = state.houses.length;
     el.mapLoading.classList.add('hidden');
@@ -2871,11 +3464,15 @@ function positionMarkers() {
     const y = my * ih * state.zoom + state.panY;
     marker.style.left = x + 'px';
     marker.style.top = y + 'px';
+    // Scale marker with zoom so castles grow as you zoom in
+    const mScale = Math.max(0.45, Math.min(2.6, Math.pow(state.zoom, 0.68)));
+    marker.style.transform = `translate(-50%, -50%) scale(${mScale})`;
     if (y < 60) {
       marker.classList.add('label-below');
     } else {
       marker.classList.remove('label-below');
     }
+    // Labels show on hover/select only (no auto-show)
   });
 
   // Position the range ring (if visible) — uses native map px radius → screen px
@@ -2970,12 +3567,15 @@ function renderMarkers() {
     const isSelected = state.selectedCastle === castle.slug;
 
     let cls = 'marker';
-    let ownerColor = null;
+    let ownerColor  = null;
+    let ownerColor2 = null;
+    let ownerHouse  = null;
     let troops = null;
     let effectiveInfluence = castle.base_influence;
+    let gc = null;  // hoisted — accessible throughout marker loop
 
     if (state.mode === 'game' && castleStateMap) {
-      const gc = castleStateMap.get(castle.slug);
+      gc = castleStateMap.get(castle.slug);
       if (gc) {
         effectiveInfluence = gc.effective_influence;
         if (gc.owner_player_id) {
@@ -2984,7 +3584,9 @@ function renderMarkers() {
             const house = houseMap.get(player.house_slug);
             if (house) {
               cls += ' owned';
-              ownerColor = house.color;
+              ownerColor  = house.color;
+              ownerColor2 = house.color2 || house.color;
+              ownerHouse  = house;
               if (player.user_id === state.user.id) cls += ' you-own';
             }
             // In fog-of-war games, hide enemy troop counts outside scan range
@@ -3007,29 +3609,34 @@ function renderMarkers() {
     marker.dataset.mapx = castle.map_x;
     marker.dataset.mapy = castle.map_y;
     marker.style.setProperty('--halo-size', haloSize(effectiveInfluence) + 'px');
-    if (ownerColor) marker.style.setProperty('--owner-color', ownerColor);
+    if (ownerColor)  marker.style.setProperty('--owner-color',  ownerColor);
+    if (ownerColor2) marker.style.setProperty('--owner-color2', ownerColor2);
 
-    // Commander chip: show first stationed commander's portrait
+    // Commander chip: stacked shield fan for all stationed commanders
     let cmdChipHtml = '';
     if (commanderCastles && commanderCastles.has(castle.slug)) {
       const cmdsHere = state.commanders.filter(c => c.current_castle_slug === castle.slug && c.status !== 'dead' && c.status !== 'moving');
       if (cmdsHere.length > 0) {
-        const lc = cmdsHere[0];
-        const lcHouse = houseMap ? houseMap.get(playerMap.get(lc.owner_player_id)?.house_slug) : null;
-        const lcColor = lcHouse ? lcHouse.color : '#c9a84c';
-        const lcSrc = nameToPortrait(lc.name);
-        const lcInit = (lc.name||'?')[0];
-        cmdChipHtml = `<div class="cmd-chip" style="--cmd-color:${lcColor}">
-          <img src="${lcSrc}" class="cmd-chip-img" alt="" onload="this.style.opacity=1" onerror="this.style.display='none'">
-          <span class="cmd-chip-init">${lcInit}</span>
-          ${cmdsHere.length > 1 ? `<div class="cmd-chip-count">+${cmdsHere.length-1}</div>` : ''}
-        </div>`;
+        const MAX_SHOWN = 3;
+        const visible = cmdsHere.slice(0, MAX_SHOWN);
+        const overflow = cmdsHere.length > MAX_SHOWN ? cmdsHere.length - MAX_SHOWN : 0;
+        const fanItems = visible.map(cmd => {
+          const house = houseMap ? houseMap.get(playerMap.get(cmd.owner_player_id)?.house_slug) : null;
+          const sp   = house ? shieldSrc(house.slug) : '';
+          const slug  = house?.slug || '';
+          const color = house?.color || '#C9A84C';
+          return `<div class="shield-fan-item" style="color:${color};">${sp ? `<img src="${sp}" alt="" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="shieldFallback(this,'${slug}',0)">` : ''}</div>`;
+        }).join('');
+        cmdChipHtml = `<div class="shield-fan">${fanItems}${overflow > 0 ? `<div class="shield-fan-overflow">+${overflow}</div>` : ''}</div>`;
       }
     }
+    const castleInfluence = (state.mode === 'game')
+      ? (state.gameCastles.find(g => g.castle_slug === castle.slug)?.effective_influence ?? castle.influence ?? 10)
+      : (castle.influence ?? 10);
+    const castleIconTier = castleInfluence >= 41 ? 3 : castleInfluence >= 21 ? 2 : 1;
+    const tierClass = castleIconTier === 3 ? 't3' : castleIconTier === 2 ? 't2' : 't1';
     marker.innerHTML = `
-      <div class="halo"></div>
-      <div class="ring"></div>
-      <div class="dot"></div>
+      <div class="castle-icon ${tierClass}">${CASTLE_ICONS[castleIconTier]}</div>
       ${troops !== null && troops > 0 ? `<div class="troops">${troops}</div>` : ''}
       ${cmdChipHtml}
       <div class="marker-label">${escapeHtml(castle.name)}</div>
@@ -3054,6 +3661,89 @@ function renderMarkers() {
   }
 }
 
+// ── NP-style left panel system ───────────────────────────────────────────────
+const _panel = { open: false, history: [] };
+
+function openPanel(title, showBack = false) {
+  _panel.open = true;
+  el.npPanelTitle.textContent = title;
+  el.npPanelBack.style.display = showBack ? 'flex' : 'none';
+  const sidebar = document.querySelector('.sidebar');
+  sidebar.classList.add('panel-open');
+  sidebar.classList.toggle('panel-menu', title === 'Menu' && !showBack);
+  el.panelOverlay.classList.add('visible');
+}
+
+function closePanel() {
+  _panel.open = false;
+  _panel.history = [];
+  const sidebar = document.querySelector('.sidebar');
+  sidebar.classList.remove('panel-open');
+  sidebar.classList.remove('panel-menu');
+  el.panelOverlay.classList.remove('visible');
+  // Clear selection
+  state.selectedCastle = null;
+  state.selectedMovementId = null;
+  renderMarkers();
+  renderMovements();
+}
+
+function panelNav(title) {
+  openPanel(title, true);
+}
+
+// Wire panel controls
+el.npPanelClose?.addEventListener('click', () => {
+  if (state.mode === 'game') closePanel();
+});
+
+el.npPanelBack?.addEventListener('click', () => {
+  openPanel('Menu', false);
+  renderSidebarNav();
+});
+
+el.panelOverlay?.addEventListener('click', () => {
+  if (state.mode === 'game') closePanel();
+});
+
+el.menuBtn?.addEventListener('click', () => {
+  if (_panel.open && el.npPanelTitle.textContent === 'Menu') {
+    closePanel();
+  } else {
+    openPanel('Menu', false);
+    renderSidebarNav();
+  }
+});
+
+el.inboxBtn?.addEventListener('click', () => {
+  openPanel('Rookery', false);
+  // Render inbox content into sidebarContent
+  el.sidebarContent.innerHTML = `<div class="section-content">${buildInboxHtml()}</div>`;
+  attachInboxListeners();
+});
+
+function enterGamePanelMode() {
+  // Switch main-screen to game-mode CSS class
+  document.getElementById('mainScreen').classList.add('game-mode');
+  el.menuBtn?.classList.remove('hidden');
+  el.npPanelHeader?.classList.remove('hidden');
+  // Show player house dot in topbar
+  const myHouse = state.currentPlayer ? state.houses.find(h => h.slug === state.currentPlayer.house_slug) : null;
+  if (myHouse && el.tbHouseDot) {
+    el.tbHouseDot.textContent = myHouse.name[0].toUpperCase();
+    el.tbHouseDot.style.color = myHouse.color;
+    el.tbHouseDot.classList.remove('hidden');
+  }
+}
+
+function exitGamePanelMode() {
+  document.getElementById('mainScreen').classList.remove('game-mode');
+  el.menuBtn?.classList.add('hidden');
+  el.npPanelHeader?.classList.add('hidden');
+  el.tbHouseDot?.classList.add('hidden');
+  closePanel();
+}
+
 function renderCastleInfo() {
   // If an in-flight movement is selected, show that instead of castle info.
   if (state.selectedMovementId && state.mode === 'game') {
@@ -3063,12 +3753,17 @@ function renderCastleInfo() {
   const castle = state.castles.find(c => c.slug === state.selectedCastle);
   if (!castle) {
     if (state.mode === 'game') {
-      el.infoPanelBody.innerHTML = '<div class="info-empty">Click a castle or a moving force to view details.</div>';
+      // No castle selected — don't change panel content if panel is showing nav
+      if (!_panel.open) return;
+      // If panel was showing castle info, close it
+      if (el.npPanelTitle.textContent !== 'Menu') closePanel();
     } else {
       el.infoPanelBody.innerHTML = '<div class="info-empty">Welcome to Westeros.<br><br>Select a castle on the map to view its details, or create a game to begin.</div>';
     }
     return;
   }
+  // Open the left panel with the castle name as title
+  if (state.mode === 'game') openPanel(castle.name, false);
   const tierClass = `tier-${castle.tier}`;
 
   // In game mode, show game-state info; in lobby mode, show reference info
@@ -3091,15 +3786,14 @@ function renderCastleInfo() {
     const myGold = state.currentPlayer ? state.currentPlayer.gold : 0;
 
     el.infoPanelBody.innerHTML = `
-      <div class="castle-header">
-        <div class="castle-name">${escapeHtml(castle.name)}</div>
-        <div class="castle-region">${escapeHtml(castle.region)}</div>
+      <div class="castle-header" style="display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:12px;">
+        <div class="castle-region" style="margin-top:0;flex:1;">${escapeHtml(castle.region)}</div>
         <span class="tier-badge ${tierClass}">Tier ${castle.tier}</span>
       </div>
 
       <div class="castle-owner-bar ${owner ? '' : 'unowned'}" style="--owner-color: ${ownerHouse ? ownerHouse.color : 'var(--border)'}">
         <div style="display:flex;align-items:center;gap:10px;">
-          ${ownerHouse ? `<div class="house-sigil-sm" style="color:${ownerHouse.color}">${HOUSE_SIGILS[ownerHouse.slug] || ''}</div>` : ''}
+          ${ownerHouse ? shieldBadgeHtml(ownerHouse.slug, ownerHouse.color, 44) : ''}
           <div>
             <div class="owner-name">${owner ? escapeHtml(ownerHouse ? ownerHouse.name : 'Unknown') : 'Unowned'}</div>
             <div class="owner-meta">${owner ? escapeHtml(owner.display_name || (owner.is_ai ? 'AI Lord' : 'Player')) : 'No house claims this castle'}</div>
@@ -3107,7 +3801,7 @@ function renderCastleInfo() {
         </div>
       </div>
 
-      <div class="stat-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+      <div class="stat-grid" style="grid-template-columns: 1fr 1fr;">
         <div class="stat-cell troops">
           <div class="stat-label">Garrison</div>
           <div class="stat-value">${gc ? gc.troops : 0}</div>
@@ -3116,52 +3810,47 @@ function renderCastleInfo() {
           <div class="stat-label">Influence</div>
           <div class="stat-value">${gc ? gc.effective_influence : castle.base_influence}</div>
         </div>
-        <div class="stat-cell">
-          <div class="stat-label">Tier</div>
-          <div class="stat-value">${castle.tier}</div>
-        </div>
       </div>
 
       ${youOwnThis ? `
-        <div class="section-title" style="margin-top: 6px;">Infrastructure</div>
-        <div class="upgrade-row treasury">
-          <div class="info">
-            <div class="icon">T</div>
-            <div>
-              <div class="label">Treasury</div>
-              <div class="level">Level ${gc.gold_level} <span style="font-size: 10px; color: var(--text-muted); font-weight: 400;">(+${gc.gold_level * 12}/yr)</span></div>
+        <div class="section-title" style="margin-top:12px;font-size:14px;letter-spacing:.1em;">Infrastructure</div>
+        <div class="infra-grid">
+          <div class="ig-row treasury">
+            <div class="ig-icon"><i class="ti ti-coin"></i></div>
+            <div class="ig-name">Treasury</div>
+            <div class="ig-stat">
+              <span class="ig-level">Level ${gc.gold_level}</span>
+              <span class="ig-rate">+${gc.gold_level * 12} gold/yr</span>
             </div>
+            <button class="upgrade-btn" data-action="upgrade" data-type="gold" data-castle="${castle.slug}" ${myGold < goldCost ? 'disabled' : ''}>
+              Upgrade<span class="cost">${goldCost}g</span>
+            </button>
           </div>
-          <button class="upgrade-btn" data-action="upgrade" data-type="gold" data-castle="${castle.slug}" ${myGold < goldCost ? 'disabled' : ''}>
-            Upgrade<span class="cost">${goldCost} gold</span>
-          </button>
-        </div>
-        <div class="upgrade-row recruitment">
-          <div class="info">
-            <div class="icon">R</div>
-            <div>
-              <div class="label">Recruitment</div>
-              <div class="level">Level ${gc.industry_level} <span style="font-size: 10px; color: var(--text-muted); font-weight: 400;">(+${(gc.industry_level / 10).toFixed(1)} troops/tick)</span></div>
+          <div class="ig-row recruitment">
+            <div class="ig-icon"><i class="ti ti-sword"></i></div>
+            <div class="ig-name">Recruitment</div>
+            <div class="ig-stat">
+              <span class="ig-level">Level ${gc.industry_level}</span>
+              <span class="ig-rate">+${(gc.industry_level * 0.1).toFixed(1)} troops/tick</span>
             </div>
+            <button class="upgrade-btn" data-action="upgrade" data-type="industry" data-castle="${castle.slug}" ${myGold < industryCost ? 'disabled' : ''}>
+              Upgrade<span class="cost">${industryCost}g</span>
+            </button>
           </div>
-          <button class="upgrade-btn" data-action="upgrade" data-type="industry" data-castle="${castle.slug}" ${myGold < industryCost ? 'disabled' : ''}>
-            Upgrade<span class="cost">${industryCost} gold</span>
-          </button>
-        </div>
-        <div class="upgrade-row prestige">
-          <div class="info">
-            <div class="icon">P</div>
-            <div>
-              <div class="label">Prestige</div>
-              <div class="level">Level ${gc.prestige_level} <span style="font-size: 10px; color: var(--text-muted); font-weight: 400;">(+${gc.prestige_level * 12}/yr)</span></div>
+          <div class="ig-row prestige">
+            <div class="ig-icon"><i class="ti ti-crown"></i></div>
+            <div class="ig-name">Prestige</div>
+            <div class="ig-stat">
+              <span class="ig-level">Level ${gc.prestige_level}</span>
+              <span class="ig-rate">+${gc.prestige_level * 12} prestige/yr</span>
             </div>
+            <button class="upgrade-btn" data-action="upgrade" data-type="prestige" data-castle="${castle.slug}" ${myGold < prestigeCost ? 'disabled' : ''}>
+              Upgrade<span class="cost">${prestigeCost}g</span>
+            </button>
           </div>
-          <button class="upgrade-btn" data-action="upgrade" data-type="prestige" data-castle="${castle.slug}" ${myGold < prestigeCost ? 'disabled' : ''}>
-            Upgrade<span class="cost">${prestigeCost} gold</span>
-          </button>
         </div>
       ` : gc ? `
-        <div class="section-title" style="margin-top: 6px;">Infrastructure</div>
+        <div class="section-title" style="margin-top:12px;font-size:14px;letter-spacing:.1em;">Infrastructure</div>
         <div class="stat-grid">
           <div class="stat-cell gold">
             <div class="stat-label">Treasury</div>
@@ -3179,44 +3868,80 @@ function renderCastleInfo() {
       ` : ''}
 
       ${commandersHere.length > 0 ? `
-        <div class="section-title" style="margin-top:10px;">Commanders Here</div>
+        <div class="section-title" style="margin-top:14px;font-size:14px;letter-spacing:.1em;">Commanders Here</div>
         ${commandersHere.map(cmd => {
-          const isDead   = cmd.status === 'dead';
-          const isYours  = youOwnThis && !isDead;
-          const cmdOwner = state.gamePlayers.find(p => p.id === cmd.owner_player_id);
-          const cmdHouse = cmdOwner ? state.houses.find(h => h.slug === cmdOwner.house_slug) : null;
-          const portraitColor = cmdHouse ? cmdHouse.color : (ownerHouse ? ownerHouse.color : 'var(--accent)');
-          const initial  = (cmd.name || '?')[0].toUpperCase();
+          const isDead    = cmd.status === 'dead';
+          const isYours   = youOwnThis && !isDead;
+          const cmdOwner  = state.gamePlayers.find(p => p.id === cmd.owner_player_id);
+          const cmdHouse  = cmdOwner ? state.houses.find(h => h.slug === cmdOwner.house_slug) : null;
+          const pColor    = cmdHouse ? cmdHouse.color : (ownerHouse ? ownerHouse.color : 'var(--accent)');
+          const initial   = (cmd.name || '?')[0].toUpperCase();
           const sigilSlug = cmdHouse ? cmdHouse.slug : (ownerHouse ? ownerHouse.slug : '');
-          const portraitSrc = nameToPortrait(cmd.name);
+          const pSrc      = nameToPortrait(cmd.name);
+          // Troop counts — commander may have pre-loaded troops (idle)
+          const cmdTroops = cmd.troops || 0;
+          const garr      = gc ? gc.troops : 0;
+          const marchable = cmdTroops > 0 ? cmdTroops : garr;  // pre-loaded or garrison
+
           return `
-            <div class="commander-portrait-card${isDead ? ' dead' : ''}" style="--portrait-color:${portraitColor}">
-              <div class="portrait-medallion" style="--portrait-color:${portraitColor}">
-                <img src="${portraitSrc}" class="portrait-photo" alt="${escapeHtml(cmd.name)}"
-                  onload="this.classList.add('portrait-loaded')"
-                  onerror="this.classList.add('portrait-missing')">
-                <div class="portrait-fallback">
-                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.18;color:${portraitColor}">${HOUSE_SIGILS[sigilSlug] || ''}</div>
-                  <div style="position:relative;z-index:1;font-size:18px;font-weight:900;">${initial}</div>
+            <div class="cmd-detail-panel" data-commander-id="${cmd.id}">
+              <div class="cmd-detail-header">
+                <div class="cmd-detail-portrait" style="--portrait-color:${pColor}">
+                  <div style="position:relative;z-index:1;">${initial}</div>
+                  <img src="${pSrc}" alt="${escapeHtml(cmd.name)}"
+                    onload="this.classList.add('loaded')"
+                    onerror="this.style.display='none'">
+                  <div style="position:absolute;bottom:-2px;right:-2px;z-index:3;background:var(--bg-deep);border:2px solid ${pColor};border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:10px;font-weight:700;color:${pColor};">L${cmd.level}</div>
                 </div>
-                <div class="portrait-level-badge">L${cmd.level}</div>
+                <div class="cmd-detail-info">
+                  <div class="cmd-detail-name">${escapeHtml(cmd.name)}${isDead ? ' <span style="color:var(--error);font-size:11px;">✝ Fallen</span>' : ''}</div>
+                  <div class="cmd-detail-sub">${cmdHouse ? cmdHouse.name : 'Unknown House'}</div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <span class="cmd-detail-badge">⚔ Level ${cmd.level}</span>
+                    ${cmdTroops > 0 ? `<span class="cmd-detail-badge" style="border-color:rgba(100,200,80,.4);color:#80d060;">🛡 ${cmdTroops} ready</span>` : ''}
+                  </div>
+                </div>
               </div>
-              <div style="flex:1;min-width:0;">
-                <div class="portrait-name">${escapeHtml(cmd.name)}${isDead ? ' <span style="color:var(--error);font-size:9px;letter-spacing:.08em;"> FALLEN</span>' : ''}</div>
-                <div class="portrait-sub">${cmdHouse ? cmdHouse.name : 'Unknown House'} · ${isDead ? 'Slain in battle' : 'Level ' + cmd.level + ' Commander'}</div>
-                ${isYours ? `
-                <div class="portrait-actions" style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;">
-                  <button class="send-forces-btn" data-action="send" data-commander-id="${cmd.id}"
-                    style="background:linear-gradient(180deg,#c9a84c,#8a6020);color:#06070e;font-size:9px;padding:5px 10px;"
-                    ${(!gc || gc.troops <= 0) ? 'disabled' : ''}>
-                    ${gc && gc.troops > 0 ? `⚔ March (${gc.troops})` : 'No troops'}
-                  </button>
-                  <button class="send-forces-btn" data-action="route" data-commander-id="${cmd.id}"
-                    style="background:linear-gradient(180deg,#2a4a7a,#1a3060);color:#90b8e8;font-size:9px;padding:5px 10px;">
-                    🗺 Route
-                  </button>
-                </div>` : ''}
+              ${isYours ? `
+              <div class="cmd-transfer-panel">
+                <div class="cmd-transfer-label">⇄ Troop Transfer — Garrison to Commander</div>
+                <div class="cmd-transfer-row">
+                  <div class="cmd-transfer-side you-own">
+                    <div class="cmd-transfer-side-label">Garrison</div>
+                    <div class="cmd-transfer-count garrison-display">${garr}</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">${escapeHtml(castle.name)}</div>
+                  </div>
+                  <div class="cmd-transfer-arrows">
+                    <button class="cmd-arrow-btn transfer-to-cmd" data-cmd="${cmd.id}" title="Move to commander" ${garr <= 0 ? 'disabled' : ''}>→</button>
+                    <button class="cmd-arrow-btn transfer-to-garr" data-cmd="${cmd.id}" title="Return to garrison" ${cmdTroops <= 0 ? 'disabled' : ''}>←</button>
+                  </div>
+                  <div class="cmd-transfer-side">
+                    <div class="cmd-transfer-side-label">${escapeHtml(cmd.name)}</div>
+                    <div class="cmd-transfer-count cmd-side cmd-troops-display">${cmdTroops}</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Commander</div>
+                  </div>
+                </div>
+                <div class="cmd-transfer-controls">
+                  <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="min">Min</button>
+                  <input class="cmd-transfer-amt" type="number" min="0" max="${garr + cmdTroops}" value="${cmdTroops}" data-cmd="${cmd.id}">
+                  <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="half">Half</button>
+                  <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="max">Max</button>
+                  <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="apply" style="background:var(--accent);color:#06070e;border-color:var(--accent);">Set</button>
+                </div>
               </div>
+              <div class="cmd-action-row">
+                <button class="cmd-march-btn" data-action="send" data-commander-id="${cmd.id}"
+                  ${marchable <= 0 ? 'disabled' : ''}>
+                  <i class="ti ti-sword"></i>
+                  ${marchable > 0 ? `March with ${marchable} troops` : 'No troops available'}
+                </button>
+                <button class="cmd-route-btn" data-action="route" data-commander-id="${cmd.id}">
+                  <i class="ti ti-route"></i> Route
+                </button>
+              </div>` : `
+              <div style="padding:12px 16px;font-size:13px;color:var(--text-muted);font-family:'EB Garamond',Georgia,serif;font-style:italic;">
+                ${isDead ? 'Fallen in battle.' : 'Enemy commander — stationed here.'}
+              </div>`}
             </div>
           `;
         }).join('')}
@@ -3250,6 +3975,56 @@ function renderCastleInfo() {
     // Wire up recruit buttons
     el.infoPanelBody.querySelectorAll('[data-action="recruit"]').forEach(btn => {
       btn.addEventListener('click', () => openRecruitModal(btn.dataset.castle));
+    });
+    // Wire troop transfer controls
+    el.infoPanelBody.querySelectorAll('.cmd-transfer-amt').forEach(input => {
+      const cmdId = parseInt(input.dataset.cmd);
+      const gc = state.gameCastles.find(g => g.castle_slug === state.selectedCastle);
+      const cmd = state.commanders.find(c => c.id === cmdId);
+      const total = (gc?.troops || 0) + (cmd?.troops || 0);
+      input.max = total;
+      input.addEventListener('input', () => {
+        const v = Math.max(0, Math.min(total, parseInt(input.value) || 0));
+        updateTransferDisplay(input.closest('.cmd-detail-panel'), v, total - v);
+      });
+    });
+    el.infoPanelBody.querySelectorAll('.cmd-transfer-preset').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const cmdId = parseInt(btn.dataset.cmd);
+        const gc = state.gameCastles.find(g => g.castle_slug === state.selectedCastle);
+        const cmd = state.commanders.find(c => c.id === cmdId);
+        const total = (gc?.troops || 0) + (cmd?.troops || 0);
+        const panel = btn.closest('.cmd-detail-panel');
+        const amtInput = panel.querySelector('.cmd-transfer-amt');
+        let newCmdTroops = parseInt(amtInput.value) || 0;
+        const preset = btn.dataset.preset;
+        if (preset === 'min') newCmdTroops = 0;
+        else if (preset === 'max') newCmdTroops = total;
+        else if (preset === 'half') newCmdTroops = Math.floor(total / 2);
+        else if (preset === 'apply') {
+          newCmdTroops = Math.max(0, Math.min(total, parseInt(amtInput.value) || 0));
+          await applyTroopTransfer(cmdId, newCmdTroops, total);
+          return;
+        }
+        amtInput.value = newCmdTroops;
+        updateTransferDisplay(panel, newCmdTroops, total - newCmdTroops);
+      });
+    });
+    el.infoPanelBody.querySelectorAll('.transfer-to-cmd, .transfer-to-garr').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const cmdId = parseInt(btn.dataset.cmd);
+        const gc = state.gameCastles.find(g => g.castle_slug === state.selectedCastle);
+        const cmd = state.commanders.find(c => c.id === cmdId);
+        const total = (gc?.troops || 0) + (cmd?.troops || 0);
+        const isToCmD = btn.classList.contains('transfer-to-cmd');
+        const step = Math.max(1, Math.floor(total * 0.1));
+        const panel = btn.closest('.cmd-detail-panel');
+        const amtInput = panel.querySelector('.cmd-transfer-amt');
+        let cur = parseInt(amtInput.value) || 0;
+        cur = isToCmD ? Math.min(total, cur + step) : Math.max(0, cur - step);
+        amtInput.value = cur;
+        updateTransferDisplay(panel, cur, total - cur);
+      });
     });
   } else {
     // Lobby mode (reference info)
@@ -3561,8 +4336,8 @@ function openJoinGameModal(gameId) {
     return `
       <div class="house-option${taken ? ' taken' : ''}${isYours ? ' selected' : ''}" data-house="${house.slug}"
            style="--hb-color:${house.color};--hb-glow:${house.color}44;border-left:3px solid ${house.color}88;">
-        <div class="house-sigil-badge" style="color:${house.color};--hb-color:${house.color};--hb-glow:${house.color}44;">
-          ${HOUSE_SIGILS[house.slug] || ''}
+        <div class="house-sigil-badge" style="color:${house.color};--hb-color:${house.color};--hb-glow:${house.color}44;padding:6px;">
+          <img src="${shieldSrc(house.slug)}" style="width:100%;height:100%;object-fit:contain;" onerror="shieldFallback(this,'${house.slug}',0)">
         </div>
         <div style="flex:1;min-width:0;">
           <div class="house-name" style="color:${house.color};font-size:15px;">${escapeHtml(house.name)}</div>
@@ -3706,7 +4481,8 @@ async function enterGameMode(gameId) {
     // Subscribe to live updates for this game
     subscribeRealtime(state.activeGame.id);
     document.querySelector('.map-area').classList.add('game-mode');
-    el.stageLabel.textContent = `v0.4 · Playing`;
+    enterGamePanelMode();
+    el.stageLabel.textContent = `v2.0 · Playing`;
     el.gameName.textContent = game.name;
 
     // Process any pending ticks before loading state, so the player sees the latest
@@ -3770,9 +4546,10 @@ async function refreshGameState(gameId) {
       .order('created_at', { ascending: false });
     state.ledger = ledgerRows || [];
 
-    // Fetch diplomacy for allied filter in Realms section
-    const { data: dip } = await supabase.from('diplomacy').select('*')
-      .eq('game_id', gameId).eq('player_id', state.currentPlayer.id);
+    // Fetch diplomacy rows for this player (player_a or player_b)
+    const { data: dip } = await supabase.from('diplomacy')
+      .select('*').eq('game_id', gameId)
+      .or(`player_a_id.eq.${state.currentPlayer.id},player_b_id.eq.${state.currentPlayer.id}`);
     state.diplomacy = dip || [];
   }
 
@@ -4244,28 +5021,77 @@ function renderGameResources() {
   el.resourceGold.textContent = state.currentPlayer.gold;
   el.resourcePrestige.textContent = state.currentPlayer.prestige || 0;
 
-  // Year/tick context
+  // Moon / year label
   const tick = state.activeGame.current_tick;
-  const year = Math.floor(tick / 12);
-  const cycleLen    = state.activeGame?.production_cycle_ticks ?? 12;
-  const nextCycleTick = Math.ceil((tick + 1) / cycleLen) * cycleLen;
-  const ticksToNext = nextCycleTick - tick;
-  if (el.gameYearLabel) el.gameYearLabel.textContent = `Year ${year} · Tick ${tick}`;
-  if (el.cycleCountdown) el.cycleCountdown.textContent = `Cycle in ${ticksToNext}t`;
+  const cycleLen = state.activeGame?.production_cycle_ticks ?? 20;
+  const year = Math.floor(tick / cycleLen) + 1;
+  if (el.gameYearLabel) el.gameYearLabel.textContent = `Year ${year} · Moon ${tick}`;
 
-  // Production rates: sum of levels across owned castles
+  // Production rates
   const myCastles = state.gameCastles.filter(gc => gc.owner_player_id === state.currentPlayer.id);
   const goldRate = myCastles.reduce((s, c) => s + c.gold_level, 0);
   const prestigeRate = myCastles.reduce((s, c) => s + c.prestige_level, 0);
-  if (el.rateGold) {
-    el.rateGold.textContent = goldRate > 0 ? `+${goldRate * 12}/yr` : '';
+  if (el.rateGold) el.rateGold.textContent = goldRate > 0 ? `+${goldRate * cycleLen}/cycle` : '';
+  if (el.ratePrestige) el.ratePrestige.textContent = prestigeRate > 0 ? `+${prestigeRate * cycleLen}/cycle` : '';
+
+  // Start the live production countdown (drift-free via absolute timestamp)
+  startProductionCountdown();
+}
+
+function startProductionCountdown() {
+  if (window._productionTimer) clearInterval(window._productionTimer);
+
+  const game = state.activeGame;
+  if (!game) return;
+
+  const cycleLen    = game.production_cycle_ticks ?? 20;
+  const hoursPerTick = tickIntervalHours(game.tick_speed);
+  const cycleSecs   = cycleLen * hoursPerTick * 3600;
+
+  // Sync moon rotation speed to cycle duration: one full rotation per cycle
+  const moonEl = document.querySelector('.tb-moon-svg');
+  if (moonEl) moonEl.style.animationDuration = `${cycleSecs}s`;
+
+  // Fallback: estimate from tick count — capture wall time now so the countdown actually ticks
+  const ticksLeft = cycleLen - (game.current_tick % cycleLen) || cycleLen;
+  const initialSecs = ticksLeft * hoursPerTick * 3600;
+  const startedAt = Date.now();
+
+  function tick() {
+    const countdown = el.cycleCountdown;
+    if (!countdown) return;
+
+    let secsRemaining;
+
+    if (game.next_production_at) {
+      // Drift-free: server owns the schedule
+      secsRemaining = Math.max(0, Math.round((new Date(game.next_production_at) - Date.now()) / 1000));
+    } else {
+      // Estimated: count down from snapshot, using elapsed wall time
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      secsRemaining = Math.max(0, initialSecs - elapsed);
+    }
+
+    const h = Math.floor(secsRemaining / 3600);
+    const m = Math.floor((secsRemaining % 3600) / 60);
+    const s = secsRemaining % 60;
+
+    countdown.textContent = h > 0
+      ? `${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`
+      : `${m}m ${String(s).padStart(2, '0')}s`;
+
+    // When the cycle fires, refresh game state to get the new next_production_at
+    if (secsRemaining === 0 && game.next_production_at) {
+      refreshGameState(game.id);
+    }
   }
-  if (el.ratePrestige) {
-    el.ratePrestige.textContent = prestigeRate > 0 ? `+${prestigeRate * 12}/yr` : '';
-  }
+
+  tick(); // Run immediately so there's no blank flash
+  window._productionTimer = setInterval(tick, 1000);
 }
 
 function exitGameMode() {
+  if (window._productionTimer) { clearInterval(window._productionTimer); window._productionTimer = null; }
   state.mode = 'lobby';
   state.activeGame = null;
   state.currentPlayer = null;
@@ -4284,7 +5110,8 @@ function exitGameMode() {
   el.gameOverOverlay?.classList.add('hidden');
   unsubscribeRealtime();
   document.querySelector('.map-area').classList.remove('game-mode');
-  el.stageLabel.textContent = 'v0.3 · Lobby';
+  exitGamePanelMode();
+  el.stageLabel.textContent = 'v2.0 · Lobby';
 
   renderMarkers();
   renderCastleInfo();
@@ -4622,6 +5449,50 @@ function formatDuration(ticks, tickSpeed) {
   return `${(hours / 24).toFixed(1)} days`;
 }
 
+// ── Troop transfer helpers ────────────────────────────────────────────────────
+function updateTransferDisplay(panel, cmdTroops, garrTroops) {
+  const garrEl = panel.querySelector('.garrison-display');
+  const cmdEl  = panel.querySelector('.cmd-troops-display');
+  const amtInput = panel.querySelector('.cmd-transfer-amt');
+  if (garrEl)  garrEl.textContent  = Math.max(0, garrTroops);
+  if (cmdEl)   cmdEl.textContent   = Math.max(0, cmdTroops);
+  if (amtInput) amtInput.value     = Math.max(0, cmdTroops);
+  // Update arrow button states
+  const toCmd  = panel.querySelector('.transfer-to-cmd');
+  const toGarr = panel.querySelector('.transfer-to-garr');
+  if (toCmd)  toCmd.disabled  = garrTroops <= 0;
+  if (toGarr) toGarr.disabled = cmdTroops  <= 0;
+  // Update march button
+  const marchBtn = panel.querySelector('.cmd-march-btn');
+  if (marchBtn) {
+    const marchable = cmdTroops > 0 ? cmdTroops : garrTroops;
+    marchBtn.disabled = marchable <= 0;
+    marchBtn.innerHTML = `<i class="ti ti-sword"></i> ${marchable > 0 ? `March with ${marchable} troops` : 'No troops available'}`;
+    marchBtn.dataset.preloadedTroops = cmdTroops;
+  }
+}
+
+async function applyTroopTransfer(commanderId, newCmdCount, totalTroops) {
+  const cmd = state.commanders.find(c => c.id === commanderId);
+  if (!cmd) return;
+  const delta = newCmdCount - (cmd.troops || 0);
+  if (delta === 0) { toast('No change'); return; }
+  try {
+    const { data, error } = await supabase.rpc('transfer_troops', {
+      p_game_id: state.activeGame.id,
+      p_commander_id: commanderId,
+      p_amount: delta,
+    });
+    if (error) throw error;
+    toast(`${Math.abs(delta)} troops ${delta > 0 ? 'loaded onto commander' : 'returned to garrison'}`);
+    await refreshGameState(state.activeGame.id);
+    // Ensure castle panel re-renders with new garrison + commander counts
+    renderCastleInfo();
+  } catch (err) {
+    toast('Transfer failed: ' + err.message, true);
+  }
+}
+
 function startPickingDestination(commanderId) {
   const commander = state.commanders.find(c => c.id === commanderId);
   if (!commander) return;
@@ -4719,7 +5590,10 @@ function openSendForcesModal(commander, destCastle) {
   const destGc = state.gameCastles.find(g => g.castle_slug === destCastle.slug);
   const ticks = estimateTravelTicks(fromCastle, destCastle);
   const duration = formatDuration(ticks, state.activeGame.tick_speed);
-  const maxTroops = fromGc ? fromGc.troops : 0;
+  // If commander has pre-loaded troops, use those. Otherwise pull from garrison.
+  const preloaded = commander.troops || 0;
+  const maxTroops = preloaded > 0 ? preloaded : (fromGc ? fromGc.troops : 0);
+  const troopSource = preloaded > 0 ? `${preloaded} pre-loaded on commander` : `${maxTroops} in garrison`;
 
   // Determine mission type
   const isAssault = destGc && destGc.owner_player_id && destGc.owner_player_id !== state.currentPlayer.id;
@@ -4740,7 +5614,7 @@ function openSendForcesModal(commander, destCastle) {
   el.sendForcesInfo.innerHTML = `
     ${missionContext}
     <strong>${escapeHtml(commander.name)}</strong> (Lvl ${commander.level})<br>
-    From: <span style="color:var(--accent)">${escapeHtml(fromCastle.name)}</span> (${maxTroops} troops available)<br>
+    From: <span style="color:var(--accent)">${escapeHtml(fromCastle.name)}</span> — <em style="font-size:12px;color:var(--text-muted)">${troopSource}</em><br>
     To: <span style="color:${isAssault ? 'var(--error)' : 'var(--accent)'}">${escapeHtml(destCastle.name)}</span>
   `;
   el.sendForcesSlider.min = 1;
@@ -4785,13 +5659,13 @@ el.confirmSendForces.addEventListener('click', async () => {
       const loopLabel = _routeIsLoop ? ' (looping)' : '';
       toast(`Route dispatched: ${data.waypoints} stops${loopLabel}, ETA first stop ${data.travel_ticks}t`);
     } else {
-      // Single destination (existing)
+      // Single destination
       const destSlug = el.sendForcesModal.dataset.destCastle;
       const { data, error } = await supabase.rpc('send_commander', {
-        p_game_id:        state.activeGame.id,
-        p_commander_id:   commanderId,
-        p_to_castle_slug: destSlug,
-        p_troops:         troops,
+        p_game_id:      state.activeGame.id,
+        p_commander_id: commanderId,
+        p_to_castle:    destSlug,
+        p_troops:       troops,
       });
       if (error) throw error;
       const duration = formatDuration(data.travel_ticks, state.activeGame.tick_speed);
@@ -5095,6 +5969,145 @@ function hideStackPicker() {
 // =====================================================
 const _svg = (path, vb='0 0 24 24') => `<svg viewBox="${vb}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
 
+
+// ── Castle icons: 3 SVG designs for tier 1 / 2 / 3 ─────────────────────────
+const CASTLE_ICONS = {
+  1: `<svg viewBox="0 0 20 22" xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="100%" height="100%">
+    <!-- Battlements: secondary color -->
+    <rect x="2" y="0" width="3.5" height="5" rx="0.4" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="8" y="0" width="3.5" height="5" rx="0.4" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="14" y="0" width="3.5" height="5" rx="0.4" style="fill:var(--owner-color2,currentColor)"/>
+    <!-- Tower body: primary color -->
+    <rect x="1" y="4" width="18" height="14" rx="0.5"/>
+    <!-- Window + door: dark overlay -->
+    <rect x="7.5" y="6" width="5" height="5" rx="2.5" fill="rgba(0,0,0,0.35)"/>
+    <rect x="7" y="16" width="6" height="6" rx="3" fill="rgba(0,0,0,0.35)"/>
+  </svg>`,
+  2: `<svg viewBox="0 0 28 22" xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="100%" height="100%">
+    <!-- Side turret bodies: primary -->
+    <rect x="0" y="7" width="6" height="11" rx="0.4"/>
+    <rect x="22" y="7" width="6" height="11" rx="0.4"/>
+    <!-- Connecting walls: primary -->
+    <rect x="6" y="13" width="2" height="5" rx="0"/>
+    <rect x="20" y="13" width="2" height="5" rx="0"/>
+    <!-- Central tower body: primary -->
+    <rect x="8" y="2" width="12" height="16" rx="0.5"/>
+    <!-- All battlements: secondary color -->
+    <rect x="0" y="4" width="2.5" height="4" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="3.5" y="4" width="2.5" height="4" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="22" y="4" width="2.5" height="4" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="25.5" y="4" width="2.5" height="4" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="8" y="0" width="3" height="4" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="12.5" y="0" width="3" height="4" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="17" y="0" width="3" height="4" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <!-- Windows + door: dark overlay -->
+    <rect x="11" y="5" width="6" height="5" rx="3" fill="rgba(0,0,0,0.32)"/>
+    <rect x="11" y="14" width="6" height="6" rx="3" fill="rgba(0,0,0,0.32)"/>
+    <rect x="1.5" y="10" width="3" height="3" rx="1.5" fill="rgba(0,0,0,0.25)"/>
+    <rect x="23.5" y="10" width="3" height="3" rx="1.5" fill="rgba(0,0,0,0.25)"/>
+  </svg>`,
+  3: `<svg viewBox="0 0 44 22" xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="100%" height="100%">
+    <!-- Wide outer wall: primary -->
+    <rect x="0" y="10" width="44" height="12" rx="0.5"/>
+    <!-- Outer battlements: secondary color -->
+    <rect x="0" y="6" width="3" height="5" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="5" y="6" width="3" height="5" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="10" y="6" width="3" height="5" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="31" y="6" width="3" height="5" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="36" y="6" width="3" height="5" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="41" y="6" width="3" height="5" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <!-- Corner towers: secondary color -->
+    <rect x="-1" y="2" width="8" height="10" rx="0.5" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="37" y="2" width="8" height="10" rx="0.5" style="fill:var(--owner-color2,currentColor)"/>
+    <!-- Central keep body: primary -->
+    <rect x="16" y="0" width="12" height="18" rx="0.5"/>
+    <!-- Central keep battlements: secondary -->
+    <rect x="15" y="0" width="3" height="4" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="20" y="0" width="3" height="4" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <rect x="26" y="0" width="3" height="4" rx="0.3" style="fill:var(--owner-color2,currentColor)"/>
+    <!-- Gate + window: dark overlay -->
+    <rect x="19" y="12" width="6" height="10" rx="3" fill="rgba(0,0,0,0.32)"/>
+    <rect x="20" y="3" width="4" height="4" rx="2" fill="rgba(0,0,0,0.28)"/>
+  </svg>`,
+};
+
+
+// ── House shields — marker for armies on the map ─────────────────────────────
+// Files should be in /Shields/{slug}.png on GitHub
+// Tries lowercase first, then Title case, as a fallback
+const SHIELD_FILENAME_MAP = {
+  stark:     ['stark', 'Stark', 'House Stark'],
+  lannister: ['Lannister', 'lannister', 'House Lannister'],
+  baratheon: ['baratheon', 'Baratheon'],
+  targaryen: ['targaryen', 'Targaryen'],
+  greyjoy:   ['greyjoy', 'Greyjoy'],
+  tully:     ['tully', 'Tully'],
+  arryn:     ['arryn', 'Arryn'],
+  tyrell:    ['tyrell', 'Tyrell'],
+  martell:   ['martell', 'Martell'],
+};
+function shieldSrc(slug) {
+  const name = (SHIELD_FILENAME_MAP[slug] || [slug])[0];
+  return `./Shields/${name}.png`;
+}
+function shieldFallback(img, slug, idx) {
+  const names = SHIELD_FILENAME_MAP[slug] || [slug];
+  const next = (idx || 0) + 1;
+  if (next < names.length) {
+    img.src = `./Shields/${names[next]}.png`;
+    img.onerror = () => shieldFallback(img, slug, next);
+  } else {
+    // Final fallback: use the inline house sigil SVG
+    const svgHtml = HOUSE_SIGIL_SVGS[slug];
+    if (svgHtml) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;';
+      wrap.innerHTML = svgHtml;
+      img.replaceWith(wrap);
+    } else {
+      img.outerHTML = `<div style="width:100%;height:100%;border-radius:3px;background:var(--cmd-color,#c9a84c);opacity:0.85;"></div>`;
+    }
+  }
+}
+
+// ── Shields replace sigils everywhere in the UI ───────────────────────────────
+// File path: ./Shields/{slug}.png  (adjust SHIELD_FILENAME_MAP if names differ)
+function shieldBadgeHtml(slug, color, size = 44) {
+  const src = shieldSrc(slug);
+  const pad = Math.round(size * 0.1);
+  return `<div style="width:${size}px;height:${size}px;flex-shrink:0;border-radius:50%;
+       border:2px solid ${color};
+       background:radial-gradient(circle at 38% 38%,color-mix(in srgb,${color} 18%,#06070e),#06070e);
+       position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:${pad}px;">
+    <img src="${src}" style="position:relative;z-index:1;width:100%;height:100%;object-fit:contain;"
+         onload="" onerror="shieldFallback(this,'${slug}',0)">
+  </div>`;
+}
+// ── Diplomacy helpers ────────────────────────────────────────────────────────
+function getDiplomacyStatus(targetPlayerId) {
+  if (!state.diplomacy || !state.currentPlayer) return 'neutral';
+  const row = state.diplomacy.find(d =>
+    (d.player_a_id === state.currentPlayer.id && d.player_b_id === targetPlayerId) ||
+    (d.player_b_id === state.currentPlayer.id && d.player_a_id === targetPlayerId)
+  );
+  return row?.status || 'neutral';
+}
+
+
+
+function getDiplomacyLabel(status, graceTick) {
+  if (status === 'ally')         return 'Allied';
+  if (status === 'enemy')        return 'Enemy';
+  if (status === 'proposed')     return 'Proposal Pending';
+  if (status === 'grace_period') {
+    const rem = graceTick - (state.activeGame?.current_tick || 0);
+    return `Grace Period (${Math.max(0,rem)}t remaining)`;
+  }
+  return 'Neutral';
+}
+function getDiplomacyColor(status) {
+  return { ally:'#62C030', enemy:'#E82040', proposed:'#F5C518', grace_period:'#F5A020', neutral:'#5a5040' }[status] || '#5a5040';
+}
 function nameToPortrait(name) {
   return './portraits/' + (name || '').toLowerCase()
     .replace(/\s+/g, '-')
@@ -5113,19 +6126,22 @@ const HOUSE_SIGIL_SVGS = {
   martell:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g stroke="currentColor" stroke-linecap="round"><line x1="50" y1="4"  x2="50" y2="22" stroke-width="6"/><line x1="50" y1="78" x2="50" y2="96" stroke-width="6"/><line x1="4"  y1="50" x2="22" y2="50" stroke-width="6"/><line x1="78" y1="50" x2="96" y2="50" stroke-width="6"/><line x1="14" y1="14" x2="28" y2="28" stroke-width="5"/><line x1="72" y1="72" x2="86" y2="86" stroke-width="5"/><line x1="86" y1="14" x2="72" y2="28" stroke-width="5"/><line x1="14" y1="86" x2="28" y2="72" stroke-width="5"/></g><circle cx="50" cy="50" r="26" fill="currentColor"/><circle cx="50" cy="50" r="18" fill="rgba(255,255,255,.16)"/><circle cx="50" cy="50" r="10" fill="rgba(0,0,0,.12)"/><line x1="10" y1="90" x2="90" y2="10" stroke="rgba(0,0,0,.62)" stroke-width="7" stroke-linecap="round"/><polygon points="86,8 96,4 92,14" fill="rgba(0,0,0,.62)"/><circle cx="12" cy="88" r="4" fill="rgba(0,0,0,.62)"/></svg>`,
 };
 
-// ── Sigil image helper — uses PNG files, SVG as fallback ───────────────────
-function sigilFallback(el, slug) {
-  const svg = HOUSE_SIGIL_SVGS[slug] || '';
-  el.outerHTML = svg;
+// ── Sigil helpers — always use built-in SVG (no PNG files needed) ────────────
+function sigilFallback(el, slug, nameIdx) {
+  // Skip all PNG fallbacks — go straight to SVG
+  el.outerHTML = HOUSE_SIGIL_SVGS[slug] || '';
 }
 const HOUSE_SIGILS = Object.fromEntries(
-  Object.keys(HOUSE_SIGIL_SVGS).map(slug => [slug,
-    `<img src="./sigils/${slug}.png"
-       style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .15s;"
-       onload="this.style.opacity=1"
-       onerror="sigilFallback(this,'${slug}')">`
-  ])
+  Object.keys(HOUSE_SIGIL_SVGS).map(slug => [slug, HOUSE_SIGIL_SVGS[slug]])
 );
+
+// ── Expose helper functions to global scope ───────────────────────────────────
+// <script type="module"> is block-scoped; inline onerror/onload handlers
+// need these on window to be callable.
+window.sigilFallback  = sigilFallback;
+window.shieldFallback = shieldFallback;
+window.shieldSrc      = shieldSrc;
+window.nameToPortrait = nameToPortrait;
 const NAV_ICONS = {
   leaderboard:  _svg('<path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>'),
   houses:       _svg('<path d="M3 22V10l9-8 9 8v12"/><path d="M9 22V16h6v6"/><rect x="9" y="10" width="6" height="4" rx="0.5"/>'),
@@ -5142,6 +6158,7 @@ const SIDEBAR_SECTIONS = [
   { id: 'leaderboard', icon: NAV_ICONS.leaderboard, label: 'Leaderboard',   help: null        },
   { id: 'houses',      icon: NAV_ICONS.houses,      label: 'Houses',        help: null        },
   { id: 'council',     icon: NAV_ICONS.council,     label: 'Small Council', help: 'council'   },
+  { id: 'diplomacy',   icon: NAV_ICONS.intel,       label: 'Diplomacy',     help: null        },
   { id: 'realms',      icon: NAV_ICONS.realms,      label: 'Realms',        help: 'castles'   },
   { id: 'ledger',      icon: NAV_ICONS.ledger,      label: 'Ledger',        help: 'trade'     },
   { id: 'intel',       icon: NAV_ICONS.intel,       label: 'Intel',         help: 'intel'     },
@@ -5165,24 +6182,23 @@ function renderSidebar() {
 }
 
 function renderSidebarNav() {
-  const myPlayer = state.currentPlayer;
-  const myHouse  = myPlayer ? state.houses.find(h => h.slug === myPlayer.house_slug) : null;
-  const houseHeaderHtml = myHouse ? `
-    <div style="display:flex;align-items:center;gap:12px;padding:14px 14px 10px;border-bottom:1px solid var(--border-gold);margin-bottom:4px;">
-      <div style="width:42px;height:42px;border-radius:50%;border:2px solid ${myHouse.color};
-           box-shadow:0 0 14px ${myHouse.color}44;
-           background:radial-gradient(circle at 38% 38%,color-mix(in srgb,${myHouse.color} 18%,#06070e),#06070e);
-           color:${myHouse.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:6px;">
-        ${HOUSE_SIGILS[myHouse.slug]||''}
-      </div>
+  // Update panel title
+  if (el.npPanelTitle) el.npPanelTitle.textContent = 'Menu';
+  if (el.npPanelBack) el.npPanelBack.style.display = 'none';
+
+  const myHouse = state.currentPlayer ? state.houses.find(h => h.slug === state.currentPlayer.house_slug) : null;
+  const houseTopHtml = myHouse ? `
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 16px 12px;border-bottom:1px solid var(--border-gold);">
+      ${shieldBadgeHtml(myHouse.slug, myHouse.color, 48)}
       <div style="min-width:0;">
-        <div style="font-family:'Cinzel',Georgia,serif;font-size:12px;font-weight:700;color:${myHouse.color};letter-spacing:.04em;">${escapeHtml(myHouse.name)}</div>
+        <div style="font-family:'Cinzel',Georgia,serif;font-size:13px;font-weight:700;color:${myHouse.color};">${escapeHtml(myHouse.name)}</div>
         <div style="font-family:'EB Garamond',Georgia,serif;font-style:italic;font-size:11px;color:var(--text-muted);margin-top:1px;">"${escapeHtml(myHouse.words)}"</div>
       </div>
     </div>` : '';
+
   el.sidebarContent.innerHTML = `
     <div class="sidebar-nav-list">
-      ${houseHeaderHtml}
+      ${houseTopHtml}
       ${SIDEBAR_SECTIONS.map(s => {
         if (s.id === 'divider') return '<div class="sidebar-nav-divider"></div>';
         return `<div class="sidebar-nav-item" data-section="${s.id}">
@@ -5196,6 +6212,10 @@ function renderSidebarNav() {
       const section = item.dataset.section;
       if (section === 'main_menu') { exitGameMode(); return; }
       _sidebarSection = section;
+      // Update panel title to section name
+      const sectionDef = SIDEBAR_SECTIONS.find(s => s.id === section);
+      if (el.npPanelTitle && sectionDef) el.npPanelTitle.textContent = sectionDef.label;
+      if (el.npPanelBack) el.npPanelBack.style.display = 'flex';
       renderSidebarSection(section);
     });
   });
@@ -5204,20 +6224,9 @@ function renderSidebarNav() {
 function renderSidebarSection(section) {
   // Help/Codex — manages its own back button (TOC vs article)
   if (section === 'help') {
-    const isArticle = _helpPage !== null && HELP_ARTICLES[_helpPage];
-    const backLabel  = isArticle ? `← ${HELP_ARTICLES[_helpPage].title.replace(/^[^\s]+\s/,'')}` : '← Help';
-    el.sidebarContent.innerHTML =
-      `<div class="section-back" id="sidebarBack">${backLabel}</div>` +
-      `<div class="section-content">${buildHelpHtml()}</div>`;
-    document.getElementById('sidebarBack')?.addEventListener('click', () => {
-      if (_helpPage !== null) {
-        _helpPage = null;
-        renderSidebarSection('help');
-      } else {
-        _sidebarSection = null;
-        renderSidebarNav();
-      }
-    });
+    if (el.npPanelTitle) el.npPanelTitle.textContent = 'Help';
+    if (el.npPanelBack) el.npPanelBack.style.display = 'flex';
+    el.sidebarContent.innerHTML = `<div class="section-content">${buildHelpHtml()}</div>`;
     wireHelpSection();
     return;
   }
@@ -5226,35 +6235,28 @@ function renderSidebarSection(section) {
 
   // player_detail is a sub-section with its own back behavior
   if (section === 'player_detail') {
-    const backTo = 'leaderboard';
     const target = state.gamePlayers.find(p => p.id === state.viewingPlayerId);
     const house  = target ? state.houses.find(h => h.slug === target.house_slug) : null;
-    const backHtml = `<div class="section-back" id="sidebarBack">← ${house ? house.name : 'Player'}</div>`;
-    el.sidebarContent.innerHTML = backHtml +
-      `<div class="section-content" id="playerDetailContent"><div style="padding:20px;color:var(--text-muted);font-size:13px;">Loading…</div></div>`;
-    document.getElementById('sidebarBack').addEventListener('click', () => {
-      _sidebarSection = backTo;
-      renderSidebarSection(backTo);
-    });
+    if (el.npPanelTitle) el.npPanelTitle.textContent = house ? house.name : 'Player';
+    if (el.npPanelBack) el.npPanelBack.style.display = 'flex';
+    el.sidebarContent.innerHTML = `<div class="section-content" id="playerDetailContent"><div style="padding:20px;color:var(--text-muted);font-size:13px;">Loading…</div></div>`;
     renderPlayerDetailAsync(state.viewingPlayerId);
     return;
   }
 
   // Reset sub-section state when entering a section fresh
   if (section === 'help') _helpPage = null;
-  const backLabel = section === 'help' && _helpPage
-    ? '← Help' : `← ${meta ? meta.label : section}`;
-  // Contextual "?" link for sections that have a help article
-  const helpBtn = (meta?.help && section !== 'help')
-    ? `<button class="section-help-trigger" data-helparticle="${meta.help}" title="Open help article">?</button>`
-    : '';
-  const backHtml = `<div class="section-back" id="sidebarBack">${backLabel}${helpBtn}</div>`;
+
+  // Update panel header: show back arrow, set title
+  if (el.npPanelBack) el.npPanelBack.style.display = 'flex';
+  if (el.npPanelTitle && meta) el.npPanelTitle.textContent = meta.label;
 
   let content = '';
   switch (section) {
     case 'leaderboard': content = buildLeaderboardHtml(); break;
     case 'houses':      content = buildHousesHtml(); break;
     case 'council':     content = buildCouncilSidebarHtml(); break;
+    case 'diplomacy':   content = buildDiplomacyHtml(); break;
     case 'analysis':    content = buildAnalysisHtml(); break;
     case 'help':        content = buildHelpHtml(); break;
     case 'options':     content = buildOptionsHtml(); break;
@@ -5264,25 +6266,12 @@ function renderSidebarSection(section) {
     default:            content = `<div style="padding:20px;color:var(--text-muted);font-size:13px;">Coming soon.</div>`;
   }
 
-  el.sidebarContent.innerHTML = backHtml + `<div class="section-content">${content}</div>`;
+  el.sidebarContent.innerHTML = `<div class="section-content">${content}</div>`;
 
-  // Back button
-  document.getElementById('sidebarBack')?.addEventListener('click', () => {
-    if (section === 'help' && _helpPage) {
-      _helpPage = null;
-      const contentEl = el.sidebarContent.querySelector('.section-content');
-      if (contentEl) {
-        contentEl.innerHTML = buildHelpHtml();
-        document.getElementById('sidebarBack').textContent = '← Help';
-        wireHelpSection();
-      }
-    } else {
-      _sidebarSection = null;
-      renderSidebarNav();
-    }
-  });
+  // Wire section-specific listeners
+  if (section === 'diplomacy') wireDiplomacySection();
 
-  // Contextual help "?" button
+  // Help "?" contextual button (if present in content)
   el.sidebarContent.querySelector('.section-help-trigger')?.addEventListener('click', e => {
     _helpPage = e.currentTarget.dataset.helparticle;
     _sidebarSection = 'help';
@@ -5297,6 +6286,210 @@ function renderSidebarSection(section) {
   if (section === 'ledger')      wireLedgerButtons();
   if (section === 'intel')       loadIntelSection();
   if (section === 'analysis')    wireAnalysisSection();
+}
+
+// ── Diplomacy panel ───────────────────────────────────────────────────────────
+function buildDiplomacyHtml() {
+  const me = state.currentPlayer;
+  if (!me) return '<div style="padding:20px;color:var(--text-muted)">Not in a game.</div>';
+
+  const otherPlayers = state.gamePlayers.filter(p => p.id !== me.id && p.status !== 'eliminated');
+  if (otherPlayers.length === 0) return '<div style="padding:20px;color:var(--text-muted)">No other players yet.</div>';
+
+  const rows = otherPlayers.map(p => {
+    const house  = state.houses.find(h => h.slug === p.house_slug);
+    const color  = house?.color || '#888';
+    const dipRow = state.diplomacy?.find(d =>
+      (d.player_a_id === me.id && d.player_b_id === p.id) ||
+      (d.player_b_id === me.id && d.player_a_id === p.id)
+    );
+    const status = dipRow?.status || 'neutral';
+    const statusColor = getDiplomacyColor(status);
+    const statusLabel = getDiplomacyLabel(status, dipRow?.grace_ends_at_tick);
+    const isAlly     = status === 'ally';
+    const isGrace    = status === 'grace_period';
+    const isProposed = status === 'proposed';
+    // Did I propose, or did they propose to me?
+    const iProposed  = isProposed && dipRow?.proposed_by_player_id === me.id;
+    const theyProposed = isProposed && dipRow?.proposed_by_player_id !== me.id;
+
+    // Primary action — only one shown at a time
+    let primaryBtn = '';
+    if (isAlly) {
+      primaryBtn = `<button class="dip-btn break" data-target="${p.id}">⚔ Declare War</button>`;
+    } else if (iProposed) {
+      primaryBtn = `<button class="dip-btn" disabled style="opacity:.5;cursor:default;">📜 Proposal Sent</button>`;
+    } else if (theyProposed) {
+      primaryBtn = `
+        <button class="dip-btn accept" data-target="${p.id}" style="background:#1a2a12;border-color:#3a6a20;color:#7aaa50;">✓ Accept Alliance</button>
+        <button class="dip-btn decline" data-target="${p.id}" style="background:#2a1010;border-color:#6a2020;color:#e07070;">✗ Decline</button>`;
+    } else if (!isGrace) {
+      primaryBtn = `<button class="dip-btn ally" data-target="${p.id}">🤝 Propose Alliance</button>`;
+    }
+
+    // Enemy toggle (always available unless grace period)
+    const enemyBtn = !isGrace && !isAlly
+      ? (status === 'enemy'
+          ? `<button class="dip-btn neutral" data-target="${p.id}">↺ Clear Enemy</button>`
+          : `<button class="dip-btn enemy" data-target="${p.id}">☠ Mark Enemy</button>`)
+      : '';
+
+    return `
+    <div class="dip-player-row" data-player-id="${p.id}" style="--h-color:${color}">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        ${shieldBadgeHtml(house?.slug||'', color, 44)}
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:${color};">${escapeHtml(house?.name||p.display_name)}</div>
+          <div style="font-size:12px;color:${statusColor};margin-top:3px;">● ${statusLabel}</div>
+        </div>
+      </div>
+      <div class="dip-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        ${primaryBtn}
+        ${enemyBtn}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="dip-btn send-gold" data-target="${p.id}">⚜ Send Gold</button>
+        <button class="dip-btn send-know" data-target="${p.id}">📜 Send Knowledge</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div style="padding:0 2px;">
+    <div style="font-size:11px;color:var(--text-muted);letter-spacing:.08em;padding:14px 18px 8px;text-transform:uppercase;border-bottom:1px solid var(--border);">Houses</div>
+    ${rows}
+    <div id="dipModal" style="display:none;padding:16px;background:var(--bg-elevated);border-top:1px solid var(--border);margin-top:8px;"></div>
+  </div>`;
+}
+
+function wireDiplomacySection() {
+  const c = el.sidebarContent;
+  if (!c) return;
+
+  const COUNCIL_SEATS = [
+    { key:'hand', label:'Hand' }, { key:'coin', label:'Coin' },
+    { key:'war', label:'War' }, { key:'whisperers', label:'Whisperers' }, { key:'law', label:'Law' },
+  ];
+
+  const showModal = (html) => {
+    const m = document.getElementById('dipModal');
+    if (m) { m.style.display='block'; m.innerHTML=html; }
+  };
+  const hideModal = () => {
+    const m = document.getElementById('dipModal');
+    if (m) m.style.display='none';
+  };
+
+  c.querySelectorAll('.dip-btn.ally').forEach(btn => btn.addEventListener('click', async () => {
+    const tid = parseInt(btn.dataset.target);
+    const { error } = await supabase.rpc('propose_alliance', { p_game_id: state.activeGame.id, p_target_player_id: tid });
+    if (error) return toast('Failed: ' + error.message, true);
+    toast('Alliance proposed — raven sent to their Rookery');
+    await reloadDiplomacy();
+  }));
+
+  c.querySelectorAll('.dip-btn.accept').forEach(btn => btn.addEventListener('click', async () => {
+    const tid = parseInt(btn.dataset.target);
+    const { error } = await supabase.rpc('accept_alliance', { p_game_id: state.activeGame.id, p_target_player_id: tid });
+    if (error) return toast('Failed: ' + error.message, true);
+    toast('Alliance accepted — both houses are now allies');
+    await reloadDiplomacy();
+  }));
+
+  c.querySelectorAll('.dip-btn.decline').forEach(btn => btn.addEventListener('click', async () => {
+    const tid = parseInt(btn.dataset.target);
+    const { error } = await supabase.rpc('decline_alliance', { p_game_id: state.activeGame.id, p_target_player_id: tid });
+    if (error) return toast('Alliance proposal declined');
+    toast('Alliance proposal declined');
+    await reloadDiplomacy();
+  }));
+
+  c.querySelectorAll('.dip-btn.break').forEach(btn => btn.addEventListener('click', async () => {
+    const tid = parseInt(btn.dataset.target);
+    const { error } = await supabase.rpc('break_alliance', { p_game_id: state.activeGame.id, p_target_player_id: tid });
+    if (error) return toast('Failed: ' + error.message, true);
+    toast('War declared — announced to all, 24-tick grace period begins', true);
+    await reloadDiplomacy();
+  }));
+
+  c.querySelectorAll('.dip-btn.enemy').forEach(btn => btn.addEventListener('click', async () => {
+    const tid = parseInt(btn.dataset.target);
+    await supabase.rpc('set_enemy', { p_game_id: state.activeGame.id, p_target_player_id: tid });
+    await reloadDiplomacy();
+  }));
+
+  c.querySelectorAll('.dip-btn.neutral').forEach(btn => btn.addEventListener('click', async () => {
+    const tid = parseInt(btn.dataset.target);
+    await supabase.rpc('set_neutral', { p_game_id: state.activeGame.id, p_target_player_id: tid });
+    await reloadDiplomacy();
+  }));
+
+  c.querySelectorAll('.dip-btn.send-gold').forEach(btn => btn.addEventListener('click', () => {
+    const tid = parseInt(btn.dataset.target);
+    const house = state.houses.find(h => h.slug === state.gamePlayers.find(p=>p.id===tid)?.house_slug);
+    showModal(`
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">Send Gold to ${escapeHtml(house?.name||'?')}</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="dipGoldAmt" type="number" min="1" max="${state.currentPlayer?.gold||0}" value="50"
+          style="flex:1;background:var(--bg-deep);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:4px;font-size:13px;">
+        <button id="dipGoldSend" style="background:var(--accent);color:#06070e;border:none;border-radius:4px;padding:6px 12px;font-weight:700;cursor:pointer;font-size:12px;">Send</button>
+        <button id="dipGoldCancel" style="background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);border-radius:4px;padding:6px 10px;cursor:pointer;font-size:12px;">✕</button>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:6px;">You have ${state.currentPlayer?.gold||0} gold</div>
+    `);
+    document.getElementById('dipGoldCancel')?.addEventListener('click', hideModal);
+    document.getElementById('dipGoldSend')?.addEventListener('click', async () => {
+      const amt = parseInt(document.getElementById('dipGoldAmt')?.value || 0);
+      if (!amt || amt < 1) return toast('Enter a valid amount', true);
+      const { error } = await supabase.rpc('send_gold', { p_game_id: state.activeGame.id, p_target_player_id: tid, p_amount: amt });
+      if (error) return toast('Failed: ' + error.message, true);
+      toast(`${amt} gold sent`);
+      hideModal();
+      await reloadGameState();
+    });
+  }));
+
+  c.querySelectorAll('.dip-btn.send-know').forEach(btn => btn.addEventListener('click', () => {
+    const tid = parseInt(btn.dataset.target);
+    const house = state.houses.find(h => h.slug === state.gamePlayers.find(p=>p.id===tid)?.house_slug);
+    const seatOpts = COUNCIL_SEATS.map(s => {
+      const myLv = state.councilSeats?.find(cs=>cs.seat===s.key)?.level || 0;
+      return `<option value="${s.key}" ${myLv===0?'disabled':''}>
+        ${s.label} (your level: ${myLv})
+      </option>`;
+    }).join('');
+    showModal(`
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">Send Council Knowledge to ${escapeHtml(house?.name||'?')}</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">Cost: 25 gold per level sent</div>
+      <select id="dipKnowSeat" style="width:100%;background:var(--bg-deep);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:4px;font-size:12px;margin-bottom:8px;">${seatOpts}</select>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="dipKnowLvl" type="number" min="1" max="5" value="1"
+          style="flex:1;background:var(--bg-deep);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:4px;font-size:13px;">
+        <span style="font-size:11px;color:var(--text-muted);">levels</span>
+        <button id="dipKnowSend" style="background:var(--accent);color:#06070e;border:none;border-radius:4px;padding:6px 12px;font-weight:700;cursor:pointer;font-size:12px;">Send (25g/lv)</button>
+        <button id="dipKnowCancel" style="background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);border-radius:4px;padding:6px 10px;cursor:pointer;font-size:12px;">✕</button>
+      </div>
+    `);
+    document.getElementById('dipKnowCancel')?.addEventListener('click', hideModal);
+    document.getElementById('dipKnowSend')?.addEventListener('click', async () => {
+      const seat = document.getElementById('dipKnowSeat')?.value;
+      const lvls = parseInt(document.getElementById('dipKnowLvl')?.value || 1);
+      const { data, error } = await supabase.rpc('send_council_knowledge',
+        { p_game_id: state.activeGame.id, p_target_player_id: tid, p_seat: seat, p_levels: lvls });
+      if (error) return toast('Failed: ' + error.message, true);
+      toast(`${data.levels_sent} level(s) of ${seat} knowledge sent for ${data.cost} gold`);
+      hideModal();
+      await reloadGameState();
+    });
+  }));
+}
+
+async function reloadDiplomacy() {
+  if (!state.currentPlayer || !state.activeGame) return;
+  const { data } = await supabase.from('diplomacy')
+    .select('*').eq('game_id', state.activeGame.id)
+    .or(`player_a_id.eq.${state.currentPlayer.id},player_b_id.eq.${state.currentPlayer.id}`);
+  state.diplomacy = data || [];
+  renderSidebarSection('diplomacy');
 }
 
 function buildLeaderboardHtml() {
@@ -5318,7 +6511,7 @@ function buildLeaderboardHtml() {
   const winAt = Math.ceil(totalCastles / 2);
 
   return `
-    <div style="font-size:11px;color:var(--text-muted);text-align:center;padding:8px 0 4px;">
+    <div style="font-size:14px;color:var(--text-muted);text-align:center;padding:14px 0 10px;">
       First to <strong style="color:var(--accent)">${winAt}</strong> of ${totalCastles} castles wins
     </div>
     ${rows.map(({ player, house, castleCount }) => {
@@ -5326,7 +6519,7 @@ function buildLeaderboardHtml() {
       const elim = player.eliminated_at_tick != null;
       return `
         <div class="scoreboard-row${isYou ? ' is-you' : ''}${player.is_ai ? ' is-ai' : ''}${elim ? ' eliminated' : ''}">
-          <div class="house-sigil-sm" style="color:${house ? house.color : '#888'};width:30px;height:30px;flex-shrink:0;">${house ? (HOUSE_SIGILS[house.slug]||'') : ''}</div>
+          <div class="house-sigil-sm" style="color:${house ? house.color : '#888'};width:44px;height:44px;flex-shrink:0;">${house ? `<img src="${shieldSrc(house.slug)}" style="width:100%;height:100%;object-fit:contain;" onerror="shieldFallback(this,'${house.slug}',0)">` : ''}</div>
           <div style="flex:1;min-width:0;">
             <div class="name" style="color:${house ? house.color : 'var(--text)'};">${escapeHtml(house ? house.name : player.house_slug)}${isYou ? ' (you)' : ''}</div>
             <div class="meta">${escapeHtml(player.display_name || (player.is_ai ? 'AI' : 'Player'))}${elim ? ' ☠ Eliminated' : ''}</div>
@@ -5590,7 +6783,7 @@ function housesPlayerRows(colsFn) {
       `<button class="ht-eye view-player-btn" data-player-id="${p.id}" title="View profile">👁</button>`;
     const nameCell = `<td>
       <div class="ht-name">
-        <div class="house-sigil-sm" style="color:${house?.color||'#888'};width:22px;height:22px;">${house ? (HOUSE_SIGILS[house.slug]||'') : ''}</div>
+        <div class="house-sigil-sm" style="color:${house?.color||'#888'};width:22px;height:22px;">${house ? `<img src="${shieldSrc(house.slug)}" style="width:100%;height:100%;object-fit:contain;" onerror="shieldFallback(this,'${house.slug}',0)">` : ''}</div>
         <span style="color:${house?.color||'var(--text)'};">${escapeHtml(house?.name || p.house_slug)}${isMe ? ' ★' : ''}</span>
         ${eyeBtn}
       </div>
@@ -5903,7 +7096,7 @@ function buildRealmsHtml() {
   ).join('');
 
   const filterHtml = `
-    <div style="display:flex;gap:4px;padding:8px 0 4px;border-bottom:1px solid var(--border);margin-bottom:4px;">
+    <div style="display:flex;gap:6px;padding:12px 0 8px;border-bottom:1px solid var(--border);margin-bottom:6px;">
       ${['mine','all','allied'].map(f => {
         const labels = { mine: 'Mine', all: 'All', allied: 'Allied' };
         return `<button class="realms-filter-btn ${_realmsFilter===f?'active':''}" data-rfilter="${f}">${labels[f]}</button>`;
@@ -6628,7 +7821,7 @@ function buildOptionsHtml() {
         <div><strong style="color:var(--text);">Players:</strong> ${state.gamePlayers.length}</div>
         <div><strong style="color:var(--text);">AI Difficulty:</strong> ${state.activeGame.ai_difficulty || 3} — ${diffLabels[state.activeGame.ai_difficulty || 3] || 'Lord'}</div>
         <div><strong style="color:var(--text);">Win Condition:</strong> ${Math.round((state.activeGame.victory_pct || 0.5) * 100)}% of castles (~${Math.round((state.activeGame.victory_pct || 0.5) * 188)})</div>
-        <div><strong style="color:var(--text);">Production Cycle:</strong> Every ${state.activeGame.production_cycle_ticks || 12} ticks</div>
+        <div><strong style="color:var(--text);">Production Cycle:</strong> Every ${state.activeGame.production_cycle_ticks || 20} moons</div>
         <div><strong style="color:var(--text);">Commander Speed:</strong> ${state.activeGame.commander_speed_mult || 1}× (${(17.5 * (state.activeGame.commander_speed_mult || 1)).toFixed(1)} px/tick)</div>
         <div><strong style="color:var(--text);">Infrastructure Costs:</strong> ${state.activeGame.infra_cost_mult === 0.5 ? 'Cheap ½×' : state.activeGame.infra_cost_mult === 2.0 ? 'Expensive 2×' : 'Standard 1×'}</div>
         <div><strong style="color:var(--text);">Council Costs:</strong> ${state.activeGame.council_cost_mult === 0.5 ? 'Cheap ½×' : state.activeGame.council_cost_mult === 2.0 ? 'Expensive 2×' : 'Standard 1×'}</div>
@@ -6869,7 +8062,7 @@ const HELP_ARTICLES = {
   },
 
   rookery: {
-    title: '🪶 The Rookery',
+    title: 'The Rookery',
     html: `
       <p>The Rookery is your message center. Open it with the 🪶 Rookery button in the header. The button glows gold when you have unread ravens.</p>
       <div class="help-hdr">Tabs</div>
@@ -6977,7 +8170,7 @@ const HELP_TOC = [
   { id: 'infrastructure', label: '💰 Infrastructure'  },
   { id: 'commanders',     label: '⚔ Commanders'       },
   { id: 'combat',         label: '⚔ Combat'           },
-  { id: 'rookery',        label: '🪶 The Rookery'     },
+  { id: 'rookery',        label: 'The Rookery'     },
   { id: 'council',        label: '⚜ Small Council'    },
   { id: 'diplomacy',      label: '🤝 Diplomacy'       },
   { id: 'trade',          label: '💰 Trade'           },

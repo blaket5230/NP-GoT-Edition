@@ -3622,8 +3622,10 @@ function renderMarkers() {
         const overflow = cmdsHere.length > MAX_SHOWN ? cmdsHere.length - MAX_SHOWN : 0;
         const fanItems = visible.map(cmd => {
           const house = houseMap ? houseMap.get(playerMap.get(cmd.owner_player_id)?.house_slug) : null;
-          const sp = house ? shieldSrc(house.slug) : '';
-          return `<div class="shield-fan-item">${sp ? `<img src="${sp}" alt="" onerror="this.style.display='none'">` : ''}</div>`;
+          const sp   = house ? shieldSrc(house.slug) : '';
+          const slug  = house?.slug || '';
+          const color = house?.color || '#C9A84C';
+          return `<div class="shield-fan-item" style="color:${color};">${sp ? `<img src="${sp}" alt="" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="shieldFallback(this,'${slug}',0)">` : ''}</div>`;
         }).join('');
         cmdChipHtml = `<div class="shield-fan">${fanItems}${overflow > 0 ? `<div class="shield-fan-overflow">+${overflow}</div>` : ''}</div>`;
       }
@@ -5660,10 +5662,10 @@ el.confirmSendForces.addEventListener('click', async () => {
       // Single destination
       const destSlug = el.sendForcesModal.dataset.destCastle;
       const { data, error } = await supabase.rpc('send_commander', {
-        p_game_id:        state.activeGame.id,
-        p_commander_id:   commanderId,
-        p_to_castle_slug: destSlug,
-        p_troops:         troops,
+        p_game_id:      state.activeGame.id,
+        p_commander_id: commanderId,
+        p_to_castle:    destSlug,
+        p_troops:       troops,
       });
       if (error) throw error;
       const duration = formatDuration(data.travel_ticks, state.activeGame.tick_speed);
