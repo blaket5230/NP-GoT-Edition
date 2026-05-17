@@ -181,6 +181,7 @@ All of these are explicitly out of scope for V1 but logged for future developmen
 | Random events | Regional event deck firing periodically with flavor and mechanical impact |
 | Castle experience | Veteran garrison units, named garrison commanders |
 | Head of house death consequences | Power transition events when named heads die |
+| Sub-tick army animation | Army markers currently jump position each game tick. Use requestAnimationFrame + wall-clock interpolation so markers move smoothly every second between ticks. Pair with live progress % update in the movement info panel. |
 | Shadow Paths | Retired entirely. Not planned for any version. |
 
 ---

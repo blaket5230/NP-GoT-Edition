@@ -1662,7 +1662,7 @@
     stroke: var(--error);
   }
   .movement-icon.hostile {
-    background: var(--error);
+    background: transparent;
     box-shadow: 0 0 8px var(--error), 0 1px 3px rgba(0,0,0,0.9);
   }
   .movement-icon.hostile:hover { box-shadow: 0 0 0 3px rgba(180,50,50,0.4), 0 0 12px var(--error); }
@@ -1686,14 +1686,10 @@
   .movement-icon {
     position: absolute;
     transform: translate(-50%, -50%);
-    width: 20px; height: 20px;
-    background: var(--accent);
-    border: 2px solid #fff;
+    background: transparent;
+    border: 2px solid rgba(255,255,255,0.6);
     border-radius: 3px;
-    box-shadow: 0 0 8px var(--accent), 0 1px 3px rgba(0,0,0,0.9);
-    color: var(--bg-deep);
-    font-size: 11px;
-    font-weight: 700;
+    box-shadow: 0 0 8px rgba(201,168,76,0.5), 0 1px 3px rgba(0,0,0,0.9);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1711,20 +1707,6 @@
     stroke-width: 3;
     opacity: 1;
     stroke-dasharray: 8 3;
-  }
-  .movement-eta {
-    position: absolute;
-    transform: translateX(-50%);
-    margin-top: 12px;
-    background: rgba(10,10,24,0.95);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-size: 10px;
-    font-weight: 600;
-    white-space: nowrap;
-    z-index: 7;
   }
 
   /* "Send Forces" action button in castle info */
@@ -5657,7 +5639,8 @@ el.confirmSendForces.addEventListener('click', async () => {
       });
       if (error) throw error;
       const loopLabel = _routeIsLoop ? ' (looping)' : '';
-      toast(`Route dispatched: ${data.waypoints} stops${loopLabel}, ETA first stop ${data.travel_ticks}t`);
+      const routeEtaDuration = formatDuration(data.travel_ticks, state.activeGame.tick_speed);
+      toast(`Route dispatched: ${data.waypoints} stops${loopLabel}, ETA first stop ${routeEtaDuration}`);
     } else {
       // Single destination
       const destSlug = el.sendForcesModal.dataset.destCastle;
@@ -5698,7 +5681,7 @@ function renderMovements() {
 
   // Clear previous content (lines AND icon divs)
   el.movementsOverlay.innerHTML = '';
-  el.markerLayer.querySelectorAll('.movement-icon, .movement-eta').forEach(n => n.remove());
+  el.markerLayer.querySelectorAll('.movement-icon').forEach(n => n.remove());
 
   if (!state.movements || state.movements.length === 0) return;
 
@@ -5738,24 +5721,25 @@ function renderMovements() {
     icon.className = ['movement-icon', isSelected ? 'selected' : '', isHostile ? 'hostile' : ''].join(' ').trim();
     icon.style.left = ix + 'px';
     icon.style.top = iy + 'px';
-    icon.textContent = mov.troops;
+    const movPlayer = state.gamePlayers?.find(p => p.id === movCommander?.owner_player_id);
+    const movHouse = movPlayer ? state.houses?.find(h => h.slug === movPlayer.house_slug) : null;
+    const shieldSlug = movHouse?.slug || '';
+    const shieldImgSrc = shieldSlug ? shieldSrc(shieldSlug) : '';
+    icon.innerHTML = shieldImgSrc
+      ? `<div style="position:relative;width:100%;height:100%;">
+           <img src="${shieldImgSrc}" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="shieldFallback(this,'${shieldSlug}',0)">
+           <div style="position:absolute;bottom:-3px;right:-5px;background:var(--bg-deep);color:var(--accent);font-size:9px;font-weight:700;padding:0 2px;border-radius:2px;border:1px solid var(--accent);line-height:1.4;">${mov.troops}</div>
+         </div>`
+      : String(mov.troops);
+    const mScale = Math.max(0.45, Math.min(2.0, Math.pow(state.zoom, 0.68)));
+    const iconSize = Math.round(26 * mScale);
+    icon.style.width = icon.style.height = iconSize + 'px';
     icon.title = isHostile ? '⚔ Assault in progress' : 'Reinforcements en route';
     icon.addEventListener('click', (e) => {
       e.stopPropagation();
       selectAtClick(e.clientX, e.clientY, { preferMovement: mov.id });
     });
     el.markerLayer.appendChild(icon);
-
-    // ETA below icon
-    const remainingTicks = mov.arrives_at_tick - state.activeGame.current_tick;
-    if (remainingTicks > 0) {
-      const eta = document.createElement('div');
-      eta.className = 'movement-eta';
-      eta.style.left = ix + 'px';
-      eta.style.top = iy + 'px';
-      eta.textContent = `ETA ${remainingTicks}t`;
-      el.markerLayer.appendChild(eta);
-    }
   });
 }
 
@@ -5775,10 +5759,28 @@ function renderMovementInfo() {
   const totalTicks = mov.arrives_at_tick - mov.departed_at_tick;
   const elapsed = Math.max(0, totalTicks - remainingTicks);
   const pct = totalTicks > 0 ? Math.round((elapsed / totalTicks) * 100) : 0;
+  const secsPerTick = tickIntervalHours(state.activeGame.tick_speed) * 3600;
+  const cycleLen = state.activeGame.production_cycle_ticks ?? 20;
+  const ticksUntilProduction = cycleLen - (state.activeGame.current_tick % cycleLen) || cycleLen;
+  const nextProductionMs = state.activeGame.next_production_at
+    ? new Date(state.activeGame.next_production_at).getTime()
+    : null;
+  let arrivalTimeStr = null;
+  if (nextProductionMs && remainingTicks > 0) {
+    const arrivalMs = nextProductionMs + (remainingTicks - ticksUntilProduction) * secsPerTick * 1000;
+    arrivalTimeStr = new Date(arrivalMs).toLocaleString(undefined, {
+      month: 'short', day: 'numeric',
+      hour: 'numeric', minute: '2-digit', second: '2-digit'
+    });
+  }
   const remainingDuration = remainingTicks > 0
     ? formatDuration(remainingTicks, state.activeGame.tick_speed)
-    : 'arriving now';
+    : null;
   const isYours = player && player.user_id === state.user.id;
+
+  const pColor    = house ? house.color : 'var(--accent)';
+  const initial   = commander ? (commander.name || '?')[0].toUpperCase() : '?';
+  const atkBonus  = commander ? commander.level * 10 : 0;
 
   el.infoPanelBody.innerHTML = `
     <div class="castle-header">
@@ -5787,21 +5789,23 @@ function renderMovementInfo() {
       <span class="tier-badge tier-1" style="background: var(--accent); color: var(--bg-deep);">Marching</span>
     </div>
 
-    <div class="castle-owner-bar" style="--owner-color: ${house ? house.color : 'var(--border)'}">
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg-elevated);border-radius:6px;margin-bottom:10px;">
+      <div class="cmd-detail-portrait" style="--portrait-color:${pColor};width:70px;height:70px;font-size:18px;flex-shrink:0;">
+        <div style="position:relative;z-index:1;">${initial}</div>
+        ${commander ? `<img src="${nameToPortrait(commander.name)}" alt="${escapeHtml(commander.name)}" onload="this.classList.add('loaded')" onerror="this.style.display='none'">` : ''}
+        <div style="position:absolute;bottom:-2px;right:-2px;z-index:3;background:var(--bg-deep);border:2px solid ${pColor};border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:9px;font-weight:700;color:${pColor};">L${commander ? commander.level : '?'}</div>
+      </div>
       <div>
-        <div class="owner-name">${house ? escapeHtml(house.name) : (player ? 'Unknown' : 'Unowned')}</div>
-        <div class="owner-meta">${player ? escapeHtml(player.display_name || (player.is_ai ? 'AI' : 'Player')) : ''}</div>
+        <div style="font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--text);">${escapeHtml(commander ? commander.name : 'Unknown')}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${house ? escapeHtml(house.name) : (player ? 'Unknown House' : '')}</div>
+        <div style="font-size:11px;color:${pColor};margin-top:5px;">Level ${commander ? commander.level : '—'} · +${atkBonus}% attack strength</div>
       </div>
     </div>
 
-    <div class="stat-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+    <div class="stat-grid" style="grid-template-columns: 1fr 1fr;">
       <div class="stat-cell">
         <div class="stat-label">Troops</div>
         <div class="stat-value" style="color: var(--success);">${mov.troops}</div>
-      </div>
-      <div class="stat-cell">
-        <div class="stat-label">Level</div>
-        <div class="stat-value">${commander ? commander.level : '—'}</div>
       </div>
       <div class="stat-cell">
         <div class="stat-label">Progress</div>
@@ -5809,16 +5813,17 @@ function renderMovementInfo() {
       </div>
     </div>
 
-    <div class="section-title" style="margin-top: 6px;">Current Leg</div>
-    <div class="info-row"><span class="label">From</span><span class="value">${escapeHtml(fromCastle ? fromCastle.name : mov.from_castle_slug)}</span></div>
-    <div class="info-row"><span class="label">To</span><span class="value" style="color: var(--accent);">${escapeHtml(toCastle ? toCastle.name : mov.to_castle_slug)}</span></div>
-    <div class="info-row"><span class="label">Arrives in</span><span class="value">${remainingTicks > 0 ? `${remainingTicks} tick${remainingTicks > 1 ? 's' : ''} (${remainingDuration})` : 'now'}</span></div>
-    <div class="info-row"><span class="label">Departed tick</span><span class="value">${mov.departed_at_tick}</span></div>
-    <div class="info-row"><span class="label">Arrives tick</span><span class="value">${mov.arrives_at_tick}</span></div>
+    <div class="section-title" style="margin-top: 8px;">Current Leg</div>
+    <div style="padding: 0 10px;">
+      <div class="info-row" style="font-size:13px;padding:5px 0;"><span class="label">From</span><span class="value">${escapeHtml(fromCastle ? fromCastle.name : mov.from_castle_slug)}</span></div>
+      <div class="info-row" style="font-size:13px;padding:5px 0;"><span class="label">To</span><span class="value" style="color:var(--accent);">${escapeHtml(toCastle ? toCastle.name : mov.to_castle_slug)}</span></div>
+      <div class="info-row" style="font-size:13px;padding:5px 0;"><span class="label">Arrives</span><span class="value">${arrivalTimeStr || remainingDuration || 'Now'}</span></div>
+      ${remainingDuration ? `<div class="info-row" style="font-size:13px;padding:5px 0;"><span class="label">In about</span><span class="value">${remainingDuration}</span></div>` : ''}
+    </div>
 
     ${isYours ? `
-      <div style="margin-top: 14px; padding: 10px; background: var(--bg-elevated); border-radius: 4px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
-        <strong style="color: var(--text);">Route editing coming in v0.7.</strong> The current leg is locked once a commander is on the march, but you'll be able to add, remove, or change waypoints that come after this destination.
+      <div style="margin-top:14px;padding:10px 14px;background:var(--bg-elevated);border-radius:4px;font-size:12px;color:var(--text-muted);line-height:1.5;">
+        Route editing is not yet available. The current leg is locked once a commander is on the march.
       </div>
     ` : ''}
   `;
