@@ -3495,9 +3495,8 @@ function showAuthScreen() {
 function showMainScreen() {
   el.authScreen.classList.add('hidden');
   el.mainScreen.classList.remove('hidden');
-  requestAnimationFrame(() => {
-    if (el.mapImage.naturalWidth > 0) startHomePanAnimation();
-  });
+  void el.mainScreen.getBoundingClientRect(); // force layout before reading container dims
+  if (el.mapImage.naturalWidth > 0) startHomePanAnimation();
 }
 
 // =====================================================
