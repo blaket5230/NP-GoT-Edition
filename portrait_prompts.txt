@@ -1,0 +1,426 @@
+WESTEROS GAME — MISSING PORTRAIT PROMPTS
+========================================
+84 characters. Save each file to: /portraits/[filename].jpg
+Base style: Photorealistic, cinematic HBO Game of Thrones, tight bust shot from
+chest up, 1:1 square format, sharp focus, no other people in background, no text, 8k.
+
+
+════════════════════════════════════════════════════════
+HOUSE STARK
+Cold, grey stone, dark furs and chainmail, dim torchlight or pale northern daylight.
+Functional. Austere. No ornament.
+════════════════════════════════════════════════════════
+
+FILE: maege-mormont.jpg
+CHARACTER: Maege Mormont — Lady of Bear Island, fights with a mace
+PROMPT: Photorealistic portrait of a stout fierce middle-aged woman with grey-streaked brown hair worn loose, weathered face, determined iron expression, wearing dark bear fur cloak over chainmail with a bear emblem, Bear Island great hall with animal pelts on stone walls behind her, cold northern firelight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: rickard-karstark.jpg
+CHARACTER: Rickard Karstark — Lord of Karhold, proud and vengeful
+PROMPT: Photorealistic portrait of a tall broad older man with a long dark beard going grey, deep-set proud eyes, stern unforgiving expression, wearing dark grey northern plate armor with a sunburst of spears sigil, cold stone castle interior lit by a single guttering torch, frost visible on the stone, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: galbart-glover.jpg
+CHARACTER: Galbart Glover — Master of Deepwood Motte, steady bannerman
+PROMPT: Photorealistic portrait of a dependable middle-aged man with dark hair and a short beard, calm reliable eyes, wearing dark leather and chainmail with a mailed fist emblem, dim northern hall with rough-hewn timber and stone, grey daylight from a narrow window, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: helman-tallhart.jpg
+CHARACTER: Helman Tallhart — Co-castellan of Torrhen's Square
+PROMPT: Photorealistic portrait of an experienced northern soldier in his late forties, weathered face, brown hair greying at temples, short beard, steady serious expression, wearing dark quilted brigandine over chainmail, cold stone hall lit by torchlight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: jonos-bracken.jpg
+CHARACTER: Jonos Bracken — Lord of Stone Hedge, ancient feud with the Blackwoods
+PROMPT: Photorealistic portrait of a hardened middle-aged lord with dark reddish-brown hair and a trimmed beard, stubborn proud expression, wearing dark northern armor with a red horse sigil, stone hall interior, warm torchlight against cold grey walls, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: howland-reed.jpg
+CHARACTER: Howland Reed — Lord of Greywater Watch, crannogman, saved Ned Stark's life
+PROMPT: Photorealistic portrait of a small wiry mysterious man in his forties with shaggy dark hair and sharp watchful eyes, secretive calm expression, wearing muted green-grey leather and woven reeds, swamp mist and dark water visible behind him, dim greenish diffuse light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: halys-hornwood.jpg
+CHARACTER: Halys Hornwood — Lord of Hornwood, quiet steadfast vassal
+PROMPT: Photorealistic portrait of a quiet dignified northern lord in his fifties, weathered face with a neatly trimmed grey beard, subdued loyal expression, wearing dark northern wool and chainmail with a moose-horn emblem, cold stone hall, pale grey daylight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+
+════════════════════════════════════════════════════════
+HOUSE LANNISTER
+Crimson and gold. Polished armor, rich candlelight, the wealth of the Westerlands
+on display. Casterly Rock or King's Landing — grand, formal, powerful.
+════════════════════════════════════════════════════════
+
+FILE: addam-marbrand.jpg
+CHARACTER: Addam Marbrand — Commander of Lannister outriders, aggressive cavalry leader
+PROMPT: Photorealistic portrait of a dashing young knight in his late twenties with auburn hair and an easy confident smile, sharp alert eyes, wearing polished crimson-trimmed plate armor, Casterly Rock's golden-lit great hall behind him, warm candlelight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: daven-lannister.jpg
+CHARACTER: Daven Lannister — Tywin's nephew, strong loyal fighter
+PROMPT: Photorealistic portrait of a big broad-shouldered young man in his early thirties with golden Lannister hair and a square jaw, direct fierce expression, wearing heavy crimson and gold plate armor with a lion emblem, warm torch-lit stone hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: forley-prester.jpg
+CHARACTER: Forley Prester — Veteran Lannister officer, dependable field commander
+PROMPT: Photorealistic portrait of a dependable veteran soldier in his late forties with grey-brown hair and a short beard, calm professional expression, wearing serviceable crimson and dark steel armor, warm candlelit Westerlands hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: andros-brax.jpg
+CHARACTER: Andros Brax — Lord of Hornvale, solid Lannister bannerman
+PROMPT: Photorealistic portrait of a solid middle-aged lord with dark hair and a trimmed beard, steady loyal expression, wearing crimson and silver plate armor with an ox-head sigil, warm torch-lit stone hall of the Westerlands, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: lyle-crakehall.jpg
+CHARACTER: Lyle Crakehall — Known as Strongboar, devastatingly effective in melee
+PROMPT: Photorealistic portrait of a massively built loud man in his forties with a thick brown beard, boisterous dangerous energy, wide neck, wearing heavy battered crimson armor with a boar sigil, warm torch-lit Westerlands feast hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: damon-marbrand.jpg
+CHARACTER: Damon Marbrand — Lord of Ashemark, experienced Lannister commander
+PROMPT: Photorealistic portrait of an experienced lord in his fifties with auburn-grey hair and a short beard, calm commanding expression, wearing rich crimson wool over dark chainmail with a burning tree sigil, warm golden candlelit hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: leo-lefford.jpg
+CHARACTER: Leo Lefford — Lord of the Golden Tooth, controls key western passage
+PROMPT: Photorealistic portrait of an older lord in his sixties with white hair and a neat white beard, proud shrewd expression, wearing rich golden and crimson robes over plate, a mountain pass barely visible through a narrow window behind him, warm candlelight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: stafford-lannister.jpg
+CHARACTER: Stafford Lannister — Tywin's cousin, tasked with raising a new host
+PROMPT: Photorealistic portrait of a portly older Lannister lord in his late fifties with thinning golden-grey hair and a round face, soft but proud expression, wearing rich crimson and gold robes, the opulent interior of a Westerlands manor behind him, warm candlelight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: lyman-darry.jpg
+CHARACTER: Lyman Darry — Young lord of Darry, sworn to the Lannisters
+PROMPT: Photorealistic portrait of a young man in his early twenties with dark hair and a boyish face, earnest slightly nervous expression, wearing crimson and dark steel armor with a plowman sigil, candlelit stone hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: harys-swyft.jpg
+CHARACTER: Harys Swyft — Father-in-law to Kevan Lannister, minor but connected lord
+PROMPT: Photorealistic portrait of a fussy older man in his sixties with white hair and pink cheeks, self-important expression, wearing rich crimson velvet over light armor with a rooster sigil, warm candlelit hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+
+════════════════════════════════════════════════════════
+HOUSE TYRELL
+Highgarden. Warm southern sunlight, flowering gardens, green and gold, rose motifs.
+Ornate and beautiful. The richest table in Westeros.
+════════════════════════════════════════════════════════
+
+FILE: mathis-rowan.jpg
+CHARACTER: Mathis Rowan — Lord of Goldengrove, experienced Reach strategist
+PROMPT: Photorealistic portrait of a dignified middle-aged lord with brown hair and a neatly trimmed beard, thoughtful intelligent expression, wearing green and gold plate armor with a golden tree sigil, Highgarden's warm sun-lit stone hall with flowering vines visible, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: paxter-redwyne.jpg
+CHARACTER: Paxter Redwyne — Lord of the Arbor, commands the largest fleet in Westeros
+PROMPT: Photorealistic portrait of a florid-faced middle-aged lord with reddish complexion, short auburn hair going grey, wide nose, wearing green and gold naval lord's attire with a grape cluster sigil, a glimpse of the Arbor sea visible through a window behind him, warm afternoon light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: tanton-fossoway.jpg
+CHARACTER: Tanton Fossoway — Knight of the green apple branch of House Fossoway
+PROMPT: Photorealistic portrait of a young knight in his mid-twenties with sandy brown hair and a friendly open face, eager expression, wearing green and silver armor with a green apple sigil, bright Highgarden courtyard light behind him, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: bryan-fossoway.jpg
+CHARACTER: Bryan Fossoway — Knight of the red apple branch, rival to his cousin Tanton
+PROMPT: Photorealistic portrait of a young knight in his late twenties with auburn hair and a more guarded expression than his cousin, competitive edge in his eyes, wearing green and copper armor with a red apple sigil, warm Reach sunlight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: hosteen-frey.jpg
+CHARACTER: Hosteen Frey — One of Walder Frey's most capable fighting sons
+PROMPT: Photorealistic portrait of a gruff aggressive man in his fifties with a Frey's long face and close-set eyes, iron grey hair, thick arms visible in his armor, scowling combative expression, wearing serviceable dark armor with twin towers sigil, dim torchlit hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: leyton-hightower.jpg
+CHARACTER: Leyton Hightower — Lord of Oldtown, elder lord who rarely leaves his tower
+PROMPT: Photorealistic portrait of a very old distinguished lord with long white hair and a long white beard, ancient piercing eyes, an air of mysterious reclusiveness, wearing deep blue and grey scholar's robes over fine mail, the Hightower's lantern room glowing behind him in the darkness, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: baelor-hightower.jpg
+CHARACTER: Baelor Hightower — Ser Baelor Brightsmile, popular and skilled knight
+PROMPT: Photorealistic portrait of a handsome charming knight in his thirties with dark hair and a warm genuine smile, open likeable face, wearing ornate blue and white plate armor with a tower sigil, warm Oldtown torchlight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: humfrey-hewett.jpg
+CHARACTER: Humfrey Hewett — Lord of Oakenshield, island lord loyal to the Reach
+PROMPT: Photorealistic portrait of a weathered middle-aged lord with brown hair and a salt-and-pepper beard, practical no-nonsense expression, wearing green wool and salt-worn plate armor, island castle with a grey sea barely visible through a window, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: tommard-heddle.jpg
+CHARACTER: Tommard Heddle — Knight of the Reach, solid garrison commander
+PROMPT: Photorealistic portrait of a solid reliable knight in his forties with brown hair and a plain face, steady dutiful expression, wearing standard green Reach plate armor, warm southern stone hall behind him, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: arwyn-oakheart.jpg
+CHARACTER: Arwyn Oakheart — Lady of Old Oak, fierce and proud noblewoman warrior
+PROMPT: Photorealistic portrait of a proud fierce noblewoman in her forties with dark auburn hair pinned back severely, sharp intelligent eyes, elegant but hard expression, wearing green and gold plate over a silk surcoat with a flying leaves sigil, warm Reach afternoon light through tall stone windows, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: alesander-florent.jpg
+CHARACTER: Alesander Florent — Of House Florent, sworn to Highgarden despite Stannis connections
+PROMPT: Photorealistic portrait of a middle-aged lord with large prominent ears, close-cropped dark hair, and a slightly foxlike sharp face, calculating careful expression, wearing green and gold armor with a fox-head sigil, Highgarden hall behind him, warm torchlight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+
+════════════════════════════════════════════════════════
+HOUSE BARATHEON
+Divided house — split between Storm's End, Dragonstone and the Reach.
+Black and gold. Stormy dramatic light. Dark stone. Brotherhood scenes use campfire.
+════════════════════════════════════════════════════════
+
+FILE: beric-dondarrion.jpg
+CHARACTER: Beric Dondarrion — Lightning Lord, resurrected multiple times, leads the Brotherhood Without Banners
+PROMPT: Photorealistic portrait of a gaunt haunted man in his thirties with hollow cheeks and one milky dead eye beneath a scarred brow, multiple old facial scars, lank dark hair, wearing worn battered plate with a lightning bolt sigil, outdoors in the Riverlands at dusk with firelight casting warm shadows on him, otherworldly quality, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: cortnay-penrose.jpg
+CHARACTER: Cortnay Penrose — Castellan of Storm's End, loyal to the last
+PROMPT: Photorealistic portrait of an unbending middle-aged man with dark hair and a strong jaw, absolute rigid loyalty in his expression, wearing dark grey Stormlands plate with a rampant horse sigil, Storm's End's storm-battered stone walls behind him, cold grey sea light through a narrow slit, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: gilbert-farring.jpg
+CHARACTER: Gilbert Farring — Castellan under Stannis, steady garrison commander
+PROMPT: Photorealistic portrait of a steady capable soldier in his forties with grey-brown hair and a short beard, professional composed expression, wearing dark Dragonstone plate armor, Dragonstone's volcanic dark stone walls behind him, cold grey light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: bryen-caron.jpg
+CHARACTER: Bryen Caron — Lord of Nightsong, Stormlands lord
+PROMPT: Photorealistic portrait of a young Stormlands lord in his late twenties with dark hair and a proud bearing, wearing black and dark gold armor with a black songbird sigil, Storm's End interior, dramatic stormy light through a window, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: robar-royce.jpg
+CHARACTER: Robar Royce — Served in Renly's Rainbow Guard, skilled knight
+PROMPT: Photorealistic portrait of a handsome young knight in his mid-twenties with dark hair and a noble bearing, wearing polished black and bronze plate with runes etched into the armor, a warm candlelit Reach hall setting appropriate to Renly's court, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: guyard-morrigen.jpg
+CHARACTER: Guyard Morrigen — Ser Guyard the Green, fought for Renly
+PROMPT: Photorealistic portrait of a knight in his mid-thirties with brown hair and a serious proud face, wearing green-tinted Stormlands plate with a crow sigil, warm torchlit setting of Renly's camp, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: parmen-crane.jpg
+CHARACTER: Parmen Crane — Ser Parmen the Purple, one of Renly's finest knights
+PROMPT: Photorealistic portrait of a distinguished knight in his late thirties with light brown hair and a polished manner, wearing purple-trimmed black plate armor with a crane sigil, warm candlelit hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: lomas-estermont.jpg
+CHARACTER: Lomas Estermont — Lord of Greenstone, Stannis's loyal uncle
+PROMPT: Photorealistic portrait of a loyal older lord in his sixties with white hair and a grey beard, steadfast expression, wearing dark Stormlands wool and plate with a turtle sigil, Dragonstone's cold grey stone hall, dim firelight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: eldon-estermont.jpg
+CHARACTER: Eldon Estermont — Stannis bannerman, elderly lord of Estermont island
+PROMPT: Photorealistic portrait of a very old Stormlands lord in his seventies with a deeply lined face and sparse white hair, still proud despite his age, wearing a dark wool cloak over old plate armor with a turtle sigil, cold island stone hall, grey sea light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: ardrian-celtigar.jpg
+CHARACTER: Ardrian Celtigar — Lord of Claw Isle, fiercely loyal Stannis supporter
+PROMPT: Photorealistic portrait of a proud imperious older lord in his sixties with silver hair and a pointed silver beard, haughty expression, wearing rich dark blue and silver robes with a red crab sigil, Dragonstone's cold stone hall with a glimpse of grey sea, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+
+════════════════════════════════════════════════════════
+HOUSE ARRYN
+The Vale of Arryn. High cold mountains, pale blue-white mountain light, ancient stone.
+Blue and white. Falcon sigil. Proud, ancient nobility.
+════════════════════════════════════════════════════════
+
+FILE: nestor-royce.jpg
+CHARACTER: Nestor Royce — High Steward of the Vale, keeps the Gates of the Moon
+PROMPT: Photorealistic portrait of a capable older lord in his late fifties with grey hair and a short grey beard, dependable trustworthy expression, wearing blue and dark grey plate armor with a runic bronze sigil, the Gates of the Moon stone hall behind him, cold mountain light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: lyn-corbray.jpg
+CHARACTER: Lyn Corbray — Dangerous unpredictable knight who carries Valyrian steel Lady Forlorn
+PROMPT: Photorealistic portrait of a lean pale dangerous man in his thirties with dark hair swept back and cold predatory eyes, a faint cruel smile, wearing elegant blue and silver plate, the hilt of a Valyrian steel sword visible at his shoulder, Eyrie stone hall with cold mountain light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: lyonel-corbray.jpg
+CHARACTER: Lyonel Corbray — More cautious brother to Lyn Corbray
+PROMPT: Photorealistic portrait of a measured middle-aged man with dark hair and a careful guarded expression, a quieter version of his brother's lean features, wearing blue and silver Vale plate, cold stone hall with pale mountain light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: anya-waynwood.jpg
+CHARACTER: Anya Waynwood — Lady of Ironoaks, shrewd influential Vale noblewoman
+PROMPT: Photorealistic portrait of a shrewd composed noblewoman in her fifties with silver-streaked dark hair worn up in a practical style, intelligent calculating eyes, wearing blue and silver noble attire with a wheel sigil brooch, Vale great hall with cold grey mountain light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: morton-waynwood.jpg
+CHARACTER: Morton Waynwood — Loyal Waynwood knight of the Vale
+PROMPT: Photorealistic portrait of a loyal Vale knight in his forties with brown hair and a plain dependable face, steady expression, wearing blue and white plate with a wheel sigil, cold stone Vale hall, mountain light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: donnel-waynwood.jpg
+CHARACTER: Donnel Waynwood — Young knight eager to prove himself
+PROMPT: Photorealistic portrait of a young eager knight in his early twenties with brown hair and bright determined eyes, earnest expression, wearing polished blue Vale plate with a wheel sigil, pale cold mountain light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: symond-templeton.jpg
+CHARACTER: Symond Templeton — Knight of Ninestars, experienced Vale commander
+PROMPT: Photorealistic portrait of a seasoned Vale knight in his forties with dark hair and a confident capable expression, battle-tested bearing, wearing blue and silver tournament plate with a nine-pointed star sigil, cold Vale hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: eon-hunter.jpg
+CHARACTER: Eon Hunter — Lord Hunter, very old lord of Longbow Hall
+PROMPT: Photorealistic portrait of a very old Vale lord in his seventies with sparse white hair, rheumy but still proud eyes, a craggy weathered face, wearing a blue wool cloak over old plate with a longbow sigil, the Eyrie's cold pale light behind him, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: gilwood-hunter.jpg
+CHARACTER: Gilwood Hunter — Eldest son of Lord Hunter, heir to Longbow Hall
+PROMPT: Photorealistic portrait of a dependable middle-aged man in his late forties with greying brown hair and a patient expression, wearing blue and grey Vale wool and plate with a longbow sigil, cold stone Vale hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: horton-redfort.jpg
+CHARACTER: Horton Redfort — Lord of Redfort, experienced Vale lord
+PROMPT: Photorealistic portrait of an experienced older lord in his sixties with a red-grey beard and stern eyes, wearing blue and red plate with a red fortress sigil, cold Vale mountain stone hall, pale light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: mychel-redfort.jpg
+CHARACTER: Mychel Redfort — Young Redfort knight, formidable with a sword
+PROMPT: Photorealistic portrait of a young formidable knight in his early twenties with red-brown hair and a focused intense expression, wearing polished blue and red Vale plate, cold mountain stone hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: marwyn-belmore.jpg
+CHARACTER: Marwyn Belmore — Lord of Strongsong, loyal Vale bannerman
+PROMPT: Photorealistic portrait of a solid middle-aged Vale lord with brown hair and a broad face, loyal straightforward expression, wearing blue and grey Strongsong plate with a bell sigil, cold Vale stone hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: andar-royce.jpg
+CHARACTER: Andar Royce — Son of Bronze Yohn, strong Royce heir
+PROMPT: Photorealistic portrait of a strong young man in his mid-twenties with dark hair and the proud bearing of his father Yohn Royce, wearing blue and dark bronze rune-etched plate armor, cold Vale mountain hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+
+════════════════════════════════════════════════════════
+HOUSE TULLY
+The Riverlands. Riverrun — where rivers meet. Blue and red, fish sigil.
+Mist on the water, grey-blue light, practical lords of an often-contested land.
+════════════════════════════════════════════════════════
+
+FILE: jason-mallister.jpg
+CHARACTER: Jason Mallister — Lord of Seagard, legendary for defeating Ironborn at sea
+PROMPT: Photorealistic portrait of a respected older lord in his fifties with dark grey-streaked hair and a proud scarred face, fierce dignified expression, wearing blue and silver plate with an eagle sigil, Seagard's coastal hall with dim grey sea light through a window, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: patrek-mallister.jpg
+CHARACTER: Patrek Mallister — Son of Jason, continues the Mallister fighting tradition
+PROMPT: Photorealistic portrait of a young man in his mid-twenties with dark hair and his father's fierce bearing, wearing blue and silver Mallister plate with an eagle sigil, coastal stone hall, grey sea light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: tytos-blackwood.jpg
+CHARACTER: Tytos Blackwood — Lord of Raventree Hall, ancient house, bitter Bracken rivals
+PROMPT: Photorealistic portrait of a young dark-haired lord in his late twenties with intense proud eyes, wearing black and dark red armor with a black crow on dead red leaves sigil, Raventree Hall's dark stone hall hung with old tapestries, dim firelight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: brynden-blackwood.jpg
+CHARACTER: Brynden Blackwood — Young Blackwood, carries on the ancient feud
+PROMPT: Photorealistic portrait of a young man in his early twenties with black hair and sharp defiant eyes, wearing black Blackwood plate with a raven sigil, dark stone Riverlands hall, moody torchlight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: hendry-bracken.jpg
+CHARACTER: Hendry Bracken — Young Bracken knight, sworn enemy of the Blackwoods
+PROMPT: Photorealistic portrait of a hot-headed young man in his mid-twenties with reddish-brown hair and a combative expression, wearing red and brown Bracken plate with a red horse sigil, Riverlands stone hall, warm firelight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: karyl-vance.jpg
+CHARACTER: Karyl Vance — Lord of Wayfarer's Rest, veteran Riverlands commander
+PROMPT: Photorealistic portrait of a veteran middle-aged lord with brown hair going grey and a weathered practical face, steady experienced expression, wearing blue and grey Vance plate with a double-headed serpent sigil, Riverlands inn or hall setting, blue-grey river light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: marq-piper.jpg
+CHARACTER: Marq Piper — Young hot-headed lord, loyal Tully bannerman
+PROMPT: Photorealistic portrait of a young impetuous lord in his early twenties with auburn hair and flashing eyes, hot-blooded eager expression, wearing blue and red Piper plate with a dancing maiden sigil, bright warm Riverlands hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: clement-piper.jpg
+CHARACTER: Clement Piper — Lord of Pinkmaiden, father to the fiery Marq
+PROMPT: Photorealistic portrait of a measured middle-aged lord in his late forties with auburn-brown hair and a patient expression, wearing blue and red wool and plate with a dancing maiden sigil, Pinkmaiden Castle hall, blue-grey Riverlands light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: norbert-vance.jpg
+CHARACTER: Norbert Vance — Blind lord of Atranta, experienced strategist despite his blindness
+PROMPT: Photorealistic portrait of a dignified middle-aged man with clouded sightless eyes, long grey-brown hair, serene yet formidable expression, wearing blue and grey Vance robes over plate, Riverlands hall, soft grey light, his blindness visible but not pitied, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: robin-ryger.jpg
+CHARACTER: Robin Ryger — Captain of the Riverrun guard, reliable castle defender
+PROMPT: Photorealistic portrait of a reliable soldier in his forties with dark hair and a short beard, professional loyal expression, wearing blue and red Tully guard plate with a trout sigil, Riverrun's stone gatehouse hall, blue-grey river light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: halmon-paege.jpg
+CHARACTER: Halmon Paege — Lord of House Paege, minor Riverlands lord
+PROMPT: Photorealistic portrait of a minor Riverlands lord in his forties with brown hair and a plain honest face, modest dependable expression, wearing blue and grey practical armor with a simple sigil, Riverlands stone hall, dim torchlight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+
+════════════════════════════════════════════════════════
+HOUSE GREYJOY
+The Iron Islands. Salt, rust and sea spray. Dark oiled leather, kraken sigil.
+Ironborn are reavers — weathered, grim, scarred. Longships and grey crashing waves.
+════════════════════════════════════════════════════════
+
+FILE: asha-greyjoy.jpg
+CHARACTER: Asha Greyjoy — Fierce Ironborn commander, holds Deepwood Motte
+PROMPT: Photorealistic portrait of a fierce confident woman in her late twenties with short dark hair, sharp dark eyes, strong jaw, bold defiant expression, wearing dark oiled ironborn leather and light chainmail with a kraken emblem, an ironborn great hall of dark salt-sprayed stone behind her, grey sea light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: rodrik-harlaw.jpg
+CHARACTER: Rodrik Harlaw — The Reader, most learned of the Ironborn
+PROMPT: Photorealistic portrait of an older Ironborn lord in his sixties who looks unlike other Ironborn — thinner, more cerebral, with silver hair and thoughtful intelligent eyes, wearing dark ironborn leather but with an air of scholarly distance, the Ten Towers' library hall behind him with glimpses of dusty books on stone shelves, grey sea light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: gorold-goodbrother.jpg
+CHARACTER: Gorold Goodbrother — Lord of Hammerhorn, powerful Ironborn lord of Great Wyk
+PROMPT: Photorealistic portrait of a powerful broad Ironborn lord in his forties with a thick dark beard, hard eyes, wearing dark plate and oiled leather with a hammerhead sigil, Iron Islands great hall of dark salt-stained stone, grey crashing sea audible in the background, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: andrik-the-unsmiling.jpg
+CHARACTER: Andrik the Unsmiling — Huge Ironborn warrior who never smiles, terrifying in combat
+PROMPT: Photorealistic portrait of a massive hulking Ironborn warrior in his forties with enormous shoulders, scarred face, long dark unwashed hair, absolutely no hint of a smile — just cold dead menacing eyes, wearing heavy dark Ironborn plate, Iron Islands torchlit hall, grey sea light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: stonehand-drumm.jpg
+CHARACTER: Stonehand Drumm — Of ancient House Drumm, bearers of Nightfall Valyrian steel
+PROMPT: Photorealistic portrait of a fierce Ironborn warrior in his late thirties with dark hair and a scarred tattooed face, proud ancient lineage evident in his bearing, wearing dark ironborn plate with a crossed bones sigil, the hint of a Valyrian steel hilt at his shoulder, grey Island hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: maron-volmark.jpg
+CHARACTER: Maron Volmark — Ironborn lord from Harlaw island
+PROMPT: Photorealistic portrait of a young Ironborn lord in his mid-twenties with dark hair and salt-spray roughened features, proud defiant expression, wearing dark grey ironborn leather and mail, Harlaw island stone hall, cold grey sea light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: sawane-botley.jpg
+CHARACTER: Sawane Botley — Lord of Lordsport, Ironborn port lord, reaved many shores
+PROMPT: Photorealistic portrait of a weathered Ironborn lord in his fifties with a grey beard and sea-worn face, experienced reaver's expression, wearing salt-stained dark ironborn leather and plate, Lordsport harbor hall with sea light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: lucas-codd.jpg
+CHARACTER: Lucas Codd — Of the lowly Codds, known for cruelty at sea
+PROMPT: Photorealistic portrait of a cruel-looking Ironborn man in his thirties with an unpleasant face, mean close-set eyes, dark stubble, wearing rough dark Ironborn leather, dim torchlit Iron Islands hall, grey light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: erik-ironmaker.jpg
+CHARACTER: Erik Ironmaker — Legendary reaver, now ancient and fierce as iron
+PROMPT: Photorealistic portrait of an extremely old Ironborn warrior in his eighties with a deeply wrinkled iron-hard face and white hair, still fierce burning eyes that show the legend he once was, wearing old dark ironborn plate that has seen decades of war, Iron Islands torch-lit hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+
+════════════════════════════════════════════════════════
+HOUSE MARTELL
+Dorne. Warm southern sun, tiled stone, the Water Gardens and Sunspear.
+Orange, red and yellow. Sun and spear. Mediterranean and Moorish aesthetic.
+Dornish people are darker-featured, more exotic than the northern houses.
+════════════════════════════════════════════════════════
+
+FILE: areo-hotah.jpg
+CHARACTER: Areo Hotah — Captain of the Sunspear Guard, massive Norvoshi warrior with a longaxe
+PROMPT: Photorealistic portrait of a huge bald dark-skinned man from Norvos in his forties with a shaved head and a full grey beard, massive neck and shoulders, calm professional guardian expression, wearing Sunspear guard plate with a spear motif, the warm tiled stone of Sunspear behind him, southern lantern light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: anders-yronwood.jpg
+CHARACTER: Anders Yronwood — Lord of Yronwood, head of Dorne's most powerful vassal house
+PROMPT: Photorealistic portrait of a proud powerful Dornish lord in his fifties with olive skin, dark hair going silver at the temples, and the bearing of Dorne's most ancient noble family, wearing orange and dark plate with a scorpion sigil, Yronwood's warm stone hall, southern afternoon light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: harmen-uller.jpg
+CHARACTER: Harmen Uller — Lord of Hellholt, famous for cruelty and cunning
+PROMPT: Photorealistic portrait of a cunning-looking Dornish lord in his forties with dark olive skin, slicked dark hair, and a thin calculating smile that doesn't reach his eyes, wearing dark red and black armor with a sun and flame sigil, Hellholt's warm torch-lit hall, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: ulwyck-uller.jpg
+CHARACTER: Ulwyck Uller — Fierce and dangerous Dornishman of House Uller
+PROMPT: Photorealistic portrait of a fierce young Dornish warrior in his late twenties with dark skin, black hair, and wild dangerous eyes, wearing dark red Dornish leather and light plate, Sunspear warm stone courtyard light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: daemon-sand.jpg
+CHARACTER: Daemon Sand — The Sand Dog, bastard knight, loyal companion to Oberyn Martell
+PROMPT: Photorealistic portrait of a young Dornish bastard knight in his late twenties with olive-brown skin, curly dark hair, and a loyal fierce expression, wearing orange and dark Dornish plate, Sunspear's warm stone hall behind him with desert light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: manfrey-martell.jpg
+CHARACTER: Manfrey Martell — Castellan of Sunspear, keeps the seat of Dornish power
+PROMPT: Photorealistic portrait of a composed middle-aged Dornish lord with olive skin and dark hair greying at the temples, calm administrative expression, wearing orange and gold Martell robes with a sun and spear sigil, Sunspear's warm tiled great hall, lantern light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: gerold-dayne.jpg
+CHARACTER: Gerold Dayne — The Darkstar, vain and dangerous knight of House Dayne
+PROMPT: Photorealistic portrait of an unnervingly handsome Dornish knight in his thirties with distinctive pale silver-white hair despite his youth, dark intense eyes, a vain yet dangerous expression, wearing dark Dornish plate with a falling star sigil, dramatic shadow and torchlight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: cletus-yronwood.jpg
+CHARACTER: Cletus Yronwood — Young Yronwood, accompanied Quentyn on his quest to Essos
+PROMPT: Photorealistic portrait of a young Dornish noble in his early twenties with olive skin, dark hair, and an adventurous eager expression, wearing orange and dark plate with a scorpion sigil, Essos harbor background with warm exotic light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: franklyn-fowler.jpg
+CHARACTER: Franklyn Fowler — The Old Hawk, Lord of Skyreach, Marshal of the Boneway
+PROMPT: Photorealistic portrait of a weathered old Dornish lord in his late sixties known as the Old Hawk, with sharp hawk-like eyes, leathery tanned skin, white hair, wearing dark mountain Dornish plate with a hawk sigil, the rocky Dornish mountains visible behind him, harsh sun, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: symon-santagar.jpg
+CHARACTER: Symon Santagar — Knight of Spottswood, skilled Dornish knight
+PROMPT: Photorealistic portrait of a skilled Dornish knight in his forties with olive skin, dark beard, and a seasoned fighter's face, wearing orange and dark Dornish plate with a spotted leopard sigil, warm Sunspear stone hall, southern lantern light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+
+════════════════════════════════════════════════════════
+HOUSE TARGARYEN
+The commander pool spans Essos — Dothraki, Ghiscari, mercenaries, freedmen.
+Diverse ethnicities, varied settings. Black and red for core Targaryens,
+but the free company and Essos characters have their own distinct worlds.
+════════════════════════════════════════════════════════
+
+FILE: strong-belwas.jpg
+CHARACTER: Strong Belwas — Former pit fighter of Meereen, massive and gleefully violent
+PROMPT: Photorealistic portrait of a huge bald dark-skinned man in his thirties with an enormous belly covered in dozens of thin parallel scars from past fights, gleefully violent expression, wearing a simple linen vest or no top armor, pit fighter aesthetic, Meereen's warm stone pyramid interior behind him, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: ben-plumm.jpg
+CHARACTER: Ben Plumm — Brown Ben Plumm, sellsword captain with a famous lucky streak
+PROMPT: Photorealistic portrait of a charming weathered mercenary captain in his forties with mixed-heritage brown skin, short greying dark hair, a knowing lucky smile, wearing practical sellsword armor in muted colors, Essos mercenary camp backdrop with torchlight, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: mero-of-braavos.jpg
+CHARACTER: Mero of Braavos — The Titan's Bastard, crude brutal sellsword captain
+PROMPT: Photorealistic portrait of a crude brutal mercenary captain in his late forties with a scarred ugly face, big nose, rough dark stubble, contemptuous sneering expression, wearing battered mismatched sellsword armor, Essos city backdrop with lantern light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: prendahl-na-ghezn.jpg
+CHARACTER: Prendahl na Ghezn — Ghiscari mercenary captain of the Stormcrows
+PROMPT: Photorealistic portrait of a Ghiscari man in his forties with bronze-toned skin, straight black hair, and the rigid disciplined face of a career soldier, wearing ornate Ghiscari officer's armor with harpy motifs, Meereen stone hall background, warm Essos lantern light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: sallor-the-bald.jpg
+CHARACTER: Sallor the Bald — Bald mercenary captain, shared command of the Stormcrows
+PROMPT: Photorealistic portrait of a bald mercenary captain in his forties with a shaved head and a thick dark beard, hard experienced eyes, wearing practical sellsword plate in dark colors, Essos city exterior at dusk, warm lantern light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+FILE: aggo.jpg
+CHARACTER: Aggo — Dothraki bloodrider, sworn to Daenerys after Drogo's death
+PROMPT: Photorealistic portrait of a fierce Dothraki warrior in his thirties with copper-brown skin, long black hair worn in a braid with small bells, dark almond eyes, proud bloodrider's expression, wearing a Dothraki leather vest and arm guards, open Dothraki grassland at golden hour or campfire light, no other people, 1:1 square format, tight bust shot, sharp focus, cinematic HBO Game of Thrones style, 8k, no text
+
+
+════════════════════════════════════════════════════════
+NOTE: Asha Greyjoy file is listed above as asha-greyjoy.jpg
+You currently have yara-greyjoy.jpg in the portraits folder.
+Either rename that file to asha-greyjoy.jpg OR generate a new one
+using the prompt above. The game code uses asha-greyjoy.jpg.
+════════════════════════════════════════════════════════

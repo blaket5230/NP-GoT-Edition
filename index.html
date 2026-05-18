@@ -1302,6 +1302,8 @@
   .marker.out-of-range { opacity: 0.32; }
   .marker.out-of-range .dot  { background: #555 !important; }
   .marker.out-of-range .ring { border-color: #444 !important; }
+  .marker.fogged { opacity: 0.38; pointer-events: none; filter: saturate(0.45) brightness(0.8); }
+  .marker.fogged .marker-label { opacity: 0.85 !important; }
   /* Commander portrait chip on map markers */
   .cmd-chip {
     position:absolute; top:-22px; left:50%; transform:translateX(-50%);
@@ -1648,6 +1650,20 @@
     animation: pulse-hostile 1.2s ease-in-out infinite;
   }
   .marker.invalid-target { opacity: 0.35; }
+  .map-area.editing-route .map-container { cursor: crosshair; }
+  .marker.queued-waypoint .ring {
+    border-color: #7cbfff !important;
+    border-style: dashed;
+    animation: pulse-queued 1.2s ease-in-out infinite;
+  }
+  .marker.current-dest .ring {
+    border-color: var(--accent) !important;
+    border-width: 3px !important;
+  }
+  @keyframes pulse-queued {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(124,191,255,0.55); }
+    50%      { box-shadow: 0 0 12px 2px rgba(124,191,255,0.55); }
+  }
   @keyframes pulse-target {
     0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.6); }
     50%      { box-shadow: 0 0 12px 2px rgba(201,168,76,0.6); }
@@ -1699,11 +1715,40 @@
     transition: box-shadow 0.15s;
   }
   .movement-icon:hover { box-shadow: 0 0 0 3px rgba(201,168,76,0.4), 0 0 12px var(--accent); }
+  .movement-label {
+    position: absolute;
+    bottom: calc(100% + 5px);
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    background: rgba(0,0,0,0.78);
+    color: #fff;
+    font-size: 10px;
+    font-family: 'Cinzel', Georgia, serif;
+    letter-spacing: 0.04em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .movement-icon:hover .movement-label { opacity: 1; }
   .movement-icon.selected {
     box-shadow: 0 0 0 3px var(--accent), 0 0 14px var(--accent), 0 1px 3px rgba(0,0,0,0.9);
     z-index: 8;
   }
   .movement-path.selected {
+    stroke-width: 3;
+    opacity: 1;
+    stroke-dasharray: 8 3;
+  }
+  .movement-path.future-leg {
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-dasharray: 6 5;
+    opacity: 0.7;
+  }
+  .movement-path.future-leg.selected {
     stroke-width: 3;
     opacity: 1;
     stroke-dasharray: 8 3;
@@ -1910,6 +1955,39 @@
     font-size: 10px;
     color: var(--text-muted);
   }
+
+  .entity-picker-list { display: flex; flex-direction: column; }
+  .entity-pick-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px; cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .entity-pick-row:hover { background: var(--bg-elevated); }
+  .entity-pick-row:last-child { border-bottom: none; }
+  .ep-icon {
+    width: 32px; height: 32px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; flex-shrink: 0;
+  }
+  .ep-portrait {
+    width: 32px; height: 32px; border-radius: 4px;
+    background: var(--portrait-color, var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden; flex-shrink: 0;
+  }
+  .ep-initial {
+    position: relative; z-index: 1; font-size: 13px; font-weight: 700; color: #fff;
+  }
+  .ep-shield {
+    width: 32px; height: 32px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 2px;
+  }
+  .ep-info { flex: 1; min-width: 0; }
+  .ep-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ep-meta { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .ep-arrow { font-size: 18px; color: var(--text-faint); }
 
   .start-game-btn {
     width: 100%;
@@ -2164,6 +2242,7 @@
     opacity: 0; transition: opacity .25s;
   }
   .cmd-detail-portrait img.loaded { opacity: 1; }
+  .cmd-detail-initial { position: relative; z-index: 1; }
   .cmd-detail-info { flex: 1; min-width: 0; }
   .cmd-detail-name {
     font-family: 'Cinzel', Georgia, serif;
@@ -3117,8 +3196,16 @@ const state = {
 
   // Movement UI
   isPickingDestination: false,
+  isBuildingNewRoute: false,
   pickingForCommanderId: null,
   selectedMovementId: null,
+  selectedCommanderId: null,
+  entityPicker: null,         // { entities: [...] } when picker is active
+  isEditingRoute: false,
+  editingRouteCommanderId: null,
+  pendingRouteEdits: [],
+  movementPanel: 'mini',      // 'mini' | 'detail' | 'route'
+  pendingRouteIsLoop: undefined,
 
   // User preferences (persisted in localStorage)
   prefs: {
@@ -3501,7 +3588,11 @@ function renderMarkers() {
   // ── Range ring (injected first so it renders behind all castle markers) ──
   if (state.isPickingDestination && state.pickingForCommanderId) {
     const cmd = state.commanders.find(c => c.id === state.pickingForCommanderId);
-    const src = cmd && state.castles.find(c => c.slug === cmd.current_castle_slug);
+    // Ring follows the last queued waypoint, not the commander's origin
+    const srcSlug = _routeWaypoints.length > 0
+      ? _routeWaypoints[_routeWaypoints.length - 1].slug
+      : cmd?.current_castle_slug;
+    const src = srcSlug && state.castles.find(c => c.slug === srcSlug);
     if (src && src.map_x != null) {
       const whispLv  = state.councilSeats.find(s => s.seat === 'whisperers')?.level || 0;
       const radiusPx = FOG_SCAN_BASE + whispLv * FOG_SCAN_PER_LV;
@@ -3536,14 +3627,59 @@ function renderMarkers() {
   // Fog of war: compute visible set (null = no fog, show all)
   const visibleSlugs = computeVisibleSlugs();
 
+  // Update fog memory for every castle currently in vision (own + visible)
+  if (visibleSlugs && state.mode === 'game' && castleStateMap) {
+    state.castles.forEach(c => {
+      const gc2 = castleStateMap.get(c.slug);
+      if (!gc2) return;
+      const isMine2 = gc2.owner_player_id === state.currentPlayer?.id;
+      if (isMine2 || visibleSlugs.has(c.slug)) {
+        const p2 = playerMap.get(gc2.owner_player_id);
+        const h2 = p2 ? houseMap.get(p2.house_slug) : null;
+        fogLastKnown[c.slug] = {
+          owner_player_id: gc2.owner_player_id,
+          effective_influence: gc2.effective_influence,
+          color: h2?.color || null,
+          color2: h2?.color2 || h2?.color || null,
+          houseSlug: h2?.slug || null,
+        };
+      }
+    });
+  }
+
   state.castles.forEach(castle => {
     if (castle.map_x == null) return;
 
-    // Fog of war check — always show own castles, hide others outside scan range
+    // Fog of war check — own castles always visible; others use last known state if fogged
+    let isFogged = false;
     if (visibleSlugs) {
       const gc = castleStateMap?.get(castle.slug);
       const isMine = gc && gc.owner_player_id === state.currentPlayer?.id;
-      if (!isMine && !visibleSlugs.has(castle.slug)) return;
+      if (!isMine && !visibleSlugs.has(castle.slug)) {
+        const lk = fogLastKnown[castle.slug];
+        if (!lk) return; // never seen — hide completely
+        isFogged = true;
+        // Render fogged ghost marker with last known owner info
+        const fogMarker = document.createElement('div');
+        const fogTier = (() => {
+          const eff = lk.effective_influence ?? castle.base_influence ?? 10;
+          return eff >= 41 ? 3 : eff >= 21 ? 2 : 1;
+        })();
+        const fogTierClass = fogTier === 3 ? 't3' : fogTier === 2 ? 't2' : 't1';
+        fogMarker.className = 'marker fogged' + (lk.owner_player_id ? ' owned' : '');
+        fogMarker.dataset.slug = castle.slug;
+        fogMarker.dataset.mapx = castle.map_x;
+        fogMarker.dataset.mapy = castle.map_y;
+        fogMarker.style.setProperty('--halo-size', haloSize(lk.effective_influence || castle.base_influence) + 'px');
+        if (lk.color)  fogMarker.style.setProperty('--owner-color',  lk.color);
+        if (lk.color2) fogMarker.style.setProperty('--owner-color2', lk.color2);
+        fogMarker.innerHTML = `
+          <div class="castle-icon ${fogTierClass}">${CASTLE_ICONS[fogTier]}</div>
+          <div class="marker-label">${escapeHtml(castle.name)}</div>
+        `;
+        el.markerLayer.appendChild(fogMarker);
+        return;
+      }
     }
 
     const isSelected = state.selectedCastle === castle.slug;
@@ -3612,10 +3748,12 @@ function renderMarkers() {
         cmdChipHtml = `<div class="shield-fan">${fanItems}${overflow > 0 ? `<div class="shield-fan-overflow">+${overflow}</div>` : ''}</div>`;
       }
     }
-    const castleInfluence = (state.mode === 'game')
-      ? (state.gameCastles.find(g => g.castle_slug === castle.slug)?.effective_influence ?? castle.influence ?? 10)
-      : (castle.influence ?? 10);
-    const castleIconTier = castleInfluence >= 41 ? 3 : castleInfluence >= 21 ? 2 : 1;
+    const castleIconTier = (state.mode === 'game')
+      ? (() => {
+          const eff = state.gameCastles.find(g => g.castle_slug === castle.slug)?.effective_influence ?? castle.base_influence ?? 10;
+          return eff >= 41 ? 3 : eff >= 21 ? 2 : 1;
+        })()
+      : (castle.tier === 1 ? 3 : castle.tier === 2 ? 2 : 1);
     const tierClass = castleIconTier === 3 ? 't3' : castleIconTier === 2 ? 't2' : 't1';
     marker.innerHTML = `
       <div class="castle-icon ${tierClass}">${CASTLE_ICONS[castleIconTier]}</div>
@@ -3627,19 +3765,25 @@ function renderMarkers() {
     marker.addEventListener('click', (e) => {
       e.stopPropagation();
       if (_rulerMode) { handleRulerClick(castle); return; }
+      if (state.isEditingRoute) {
+        addWaypointToEdit(castle);
+        return;
+      }
       if (state.isPickingDestination) {
         handleDestinationPick(castle);
         return;
       }
-      selectAtClick(e.clientX, e.clientY, { preferCastle: castle.slug });
+      selectAtClick(e.clientX, e.clientY);
     });
     el.markerLayer.appendChild(marker);
   });
 
   positionMarkers();
-  // If we're in destination-picking mode, mark valid/invalid targets
   if (state.isPickingDestination) {
     applyDestinationHighlights();
+  }
+  if (state.isEditingRoute) {
+    applyRouteEditHighlights();
   }
 }
 
@@ -3727,9 +3871,26 @@ function exitGamePanelMode() {
 }
 
 function renderCastleInfo() {
+  // New route builder (panel-based march initiation)
+  if (state.isBuildingNewRoute && state.mode === 'game') {
+    renderNewRouteBuilder();
+    return;
+  }
+  // Entity picker — multiple things at one map location
+  if (state.entityPicker && state.mode === 'game') {
+    renderEntityPicker(state.entityPicker.entities);
+    return;
+  }
+  // Garrisoned commander selected
+  if (state.selectedCommanderId && state.mode === 'game') {
+    renderCommanderDetail(state.selectedCommanderId);
+    return;
+  }
   // If an in-flight movement is selected, show that instead of castle info.
   if (state.selectedMovementId && state.mode === 'game') {
-    renderMovementInfo();
+    if (state.movementPanel === 'detail') renderMovementInfo();
+    else if (state.movementPanel === 'route') renderRouteEditor();
+    else renderMovementMiniBar();
     return;
   }
   const castle = state.castles.find(c => c.slug === state.selectedCastle);
@@ -3753,7 +3914,6 @@ function renderCastleInfo() {
     const gc = state.gameCastles.find(g => g.castle_slug === castle.slug);
     const owner = gc && gc.owner_player_id ? state.gamePlayers.find(p => p.id === gc.owner_player_id) : null;
     const ownerHouse = owner ? state.houses.find(h => h.slug === owner.house_slug) : null;
-    const commandersHere = state.commanders.filter(c => c.current_castle_slug === castle.slug);
     const youOwnThis = owner && owner.user_id === state.user.id;
 
     // Compute upgrade costs for player-owned castles
@@ -3849,85 +4009,6 @@ function renderCastleInfo() {
         </div>
       ` : ''}
 
-      ${commandersHere.length > 0 ? `
-        <div class="section-title" style="margin-top:14px;font-size:14px;letter-spacing:.1em;">Commanders Here</div>
-        ${commandersHere.map(cmd => {
-          const isDead    = cmd.status === 'dead';
-          const isYours   = youOwnThis && !isDead;
-          const cmdOwner  = state.gamePlayers.find(p => p.id === cmd.owner_player_id);
-          const cmdHouse  = cmdOwner ? state.houses.find(h => h.slug === cmdOwner.house_slug) : null;
-          const pColor    = cmdHouse ? cmdHouse.color : (ownerHouse ? ownerHouse.color : 'var(--accent)');
-          const initial   = (cmd.name || '?')[0].toUpperCase();
-          const sigilSlug = cmdHouse ? cmdHouse.slug : (ownerHouse ? ownerHouse.slug : '');
-          const pSrc      = nameToPortrait(cmd.name);
-          // Troop counts — commander may have pre-loaded troops (idle)
-          const cmdTroops = cmd.troops || 0;
-          const garr      = gc ? gc.troops : 0;
-          const marchable = cmdTroops > 0 ? cmdTroops : garr;  // pre-loaded or garrison
-
-          return `
-            <div class="cmd-detail-panel" data-commander-id="${cmd.id}">
-              <div class="cmd-detail-header">
-                <div class="cmd-detail-portrait" style="--portrait-color:${pColor}">
-                  <div style="position:relative;z-index:1;">${initial}</div>
-                  <img src="${pSrc}" alt="${escapeHtml(cmd.name)}"
-                    onload="this.classList.add('loaded')"
-                    onerror="this.style.display='none'">
-                  <div style="position:absolute;bottom:-2px;right:-2px;z-index:3;background:var(--bg-deep);border:2px solid ${pColor};border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:10px;font-weight:700;color:${pColor};">L${cmd.level}</div>
-                </div>
-                <div class="cmd-detail-info">
-                  <div class="cmd-detail-name">${escapeHtml(cmd.name)}${isDead ? ' <span style="color:var(--error);font-size:11px;">✝ Fallen</span>' : ''}</div>
-                  <div class="cmd-detail-sub">${cmdHouse ? cmdHouse.name : 'Unknown House'}</div>
-                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <span class="cmd-detail-badge">⚔ Level ${cmd.level}</span>
-                    ${cmdTroops > 0 ? `<span class="cmd-detail-badge" style="border-color:rgba(100,200,80,.4);color:#80d060;">🛡 ${cmdTroops} ready</span>` : ''}
-                  </div>
-                </div>
-              </div>
-              ${isYours ? `
-              <div class="cmd-transfer-panel">
-                <div class="cmd-transfer-label">⇄ Troop Transfer — Garrison to Commander</div>
-                <div class="cmd-transfer-row">
-                  <div class="cmd-transfer-side you-own">
-                    <div class="cmd-transfer-side-label">Garrison</div>
-                    <div class="cmd-transfer-count garrison-display">${garr}</div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">${escapeHtml(castle.name)}</div>
-                  </div>
-                  <div class="cmd-transfer-arrows">
-                    <button class="cmd-arrow-btn transfer-to-cmd" data-cmd="${cmd.id}" title="Move to commander" ${garr <= 0 ? 'disabled' : ''}>→</button>
-                    <button class="cmd-arrow-btn transfer-to-garr" data-cmd="${cmd.id}" title="Return to garrison" ${cmdTroops <= 0 ? 'disabled' : ''}>←</button>
-                  </div>
-                  <div class="cmd-transfer-side">
-                    <div class="cmd-transfer-side-label">${escapeHtml(cmd.name)}</div>
-                    <div class="cmd-transfer-count cmd-side cmd-troops-display">${cmdTroops}</div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Commander</div>
-                  </div>
-                </div>
-                <div class="cmd-transfer-controls">
-                  <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="min">Min</button>
-                  <input class="cmd-transfer-amt" type="number" min="0" max="${garr + cmdTroops}" value="${cmdTroops}" data-cmd="${cmd.id}">
-                  <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="half">Half</button>
-                  <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="max">Max</button>
-                  <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="apply" style="background:var(--accent);color:#06070e;border-color:var(--accent);">Set</button>
-                </div>
-              </div>
-              <div class="cmd-action-row">
-                <button class="cmd-march-btn" data-action="send" data-commander-id="${cmd.id}"
-                  ${marchable <= 0 ? 'disabled' : ''}>
-                  <i class="ti ti-sword"></i>
-                  ${marchable > 0 ? `March with ${marchable} troops` : 'No troops available'}
-                </button>
-                <button class="cmd-route-btn" data-action="route" data-commander-id="${cmd.id}">
-                  <i class="ti ti-route"></i> Route
-                </button>
-              </div>` : `
-              <div style="padding:12px 16px;font-size:13px;color:var(--text-muted);font-family:'EB Garamond',Georgia,serif;font-style:italic;">
-                ${isDead ? 'Fallen in battle.' : 'Enemy commander — stationed here.'}
-              </div>`}
-            </div>
-          `;
-        }).join('')}
-      ` : ''}
 
       ${youOwnThis ? `
         <div class="action-btn-row" style="margin-top:10px;">
@@ -3946,67 +4027,9 @@ function renderCastleInfo() {
     el.infoPanelBody.querySelectorAll('[data-action="upgrade"]').forEach(btn => {
       btn.addEventListener('click', () => upgradeInfrastructure(btn.dataset.castle, btn.dataset.type));
     });
-    // Wire up send-forces buttons
-    el.infoPanelBody.querySelectorAll('[data-action="send"]').forEach(btn => {
-      btn.addEventListener('click', () => startPickingDestination(parseInt(btn.dataset.commanderId)));
-    });
-    // Wire up plan-route buttons
-    el.infoPanelBody.querySelectorAll('[data-action="route"]').forEach(btn => {
-      btn.addEventListener('click', () => startBuildingRoute(parseInt(btn.dataset.commanderId)));
-    });
     // Wire up recruit buttons
     el.infoPanelBody.querySelectorAll('[data-action="recruit"]').forEach(btn => {
       btn.addEventListener('click', () => openRecruitModal(btn.dataset.castle));
-    });
-    // Wire troop transfer controls
-    el.infoPanelBody.querySelectorAll('.cmd-transfer-amt').forEach(input => {
-      const cmdId = parseInt(input.dataset.cmd);
-      const gc = state.gameCastles.find(g => g.castle_slug === state.selectedCastle);
-      const cmd = state.commanders.find(c => c.id === cmdId);
-      const total = (gc?.troops || 0) + (cmd?.troops || 0);
-      input.max = total;
-      input.addEventListener('input', () => {
-        const v = Math.max(0, Math.min(total, parseInt(input.value) || 0));
-        updateTransferDisplay(input.closest('.cmd-detail-panel'), v, total - v);
-      });
-    });
-    el.infoPanelBody.querySelectorAll('.cmd-transfer-preset').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const cmdId = parseInt(btn.dataset.cmd);
-        const gc = state.gameCastles.find(g => g.castle_slug === state.selectedCastle);
-        const cmd = state.commanders.find(c => c.id === cmdId);
-        const total = (gc?.troops || 0) + (cmd?.troops || 0);
-        const panel = btn.closest('.cmd-detail-panel');
-        const amtInput = panel.querySelector('.cmd-transfer-amt');
-        let newCmdTroops = parseInt(amtInput.value) || 0;
-        const preset = btn.dataset.preset;
-        if (preset === 'min') newCmdTroops = 0;
-        else if (preset === 'max') newCmdTroops = total;
-        else if (preset === 'half') newCmdTroops = Math.floor(total / 2);
-        else if (preset === 'apply') {
-          newCmdTroops = Math.max(0, Math.min(total, parseInt(amtInput.value) || 0));
-          await applyTroopTransfer(cmdId, newCmdTroops, total);
-          return;
-        }
-        amtInput.value = newCmdTroops;
-        updateTransferDisplay(panel, newCmdTroops, total - newCmdTroops);
-      });
-    });
-    el.infoPanelBody.querySelectorAll('.transfer-to-cmd, .transfer-to-garr').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const cmdId = parseInt(btn.dataset.cmd);
-        const gc = state.gameCastles.find(g => g.castle_slug === state.selectedCastle);
-        const cmd = state.commanders.find(c => c.id === cmdId);
-        const total = (gc?.troops || 0) + (cmd?.troops || 0);
-        const isToCmD = btn.classList.contains('transfer-to-cmd');
-        const step = Math.max(1, Math.floor(total * 0.1));
-        const panel = btn.closest('.cmd-detail-panel');
-        const amtInput = panel.querySelector('.cmd-transfer-amt');
-        let cur = parseInt(amtInput.value) || 0;
-        cur = isToCmD ? Math.min(total, cur + step) : Math.max(0, cur - step);
-        amtInput.value = cur;
-        updateTransferDisplay(panel, cur, total - cur);
-      });
     });
   } else {
     // Lobby mode (reference info)
@@ -4060,23 +4083,28 @@ document.addEventListener('mouseup', () => {
 el.mapContainer.addEventListener('click', (e) => {
   if (e.target.closest('.marker') || e.target.closest('.movement-icon') || e.target.closest('.stack-picker')) return;
   if (wasDragging) { wasDragging = false; return; }
+  if (state.isBuildingNewRoute) { return; }
   if (state.isPickingDestination) { cancelPickingDestination(); return; }
-  if (state.selectedCastle || state.selectedMovementId) {
+  if (state.isEditingRoute) { return; }
+  if (state.selectedCastle || state.selectedMovementId || state.selectedCommanderId || state.entityPicker) {
     state.selectedCastle = null;
     state.selectedMovementId = null;
+    state.selectedCommanderId = null;
+    state.entityPicker = null;
     renderMarkers();
     renderMovements();
     renderCastleInfo();
   }
-  hideStackPicker();
 });
 
 // Escape key cancels destination picking or closes modals
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   if (_rulerMode) { toggleRuler(); return; }
+  if (state.isEditingRoute) { cancelEditingRoute(); return; }
+  if (state.isBuildingNewRoute) { cancelNewRouteBuild(); return; }
   if (state.isPickingDestination) { cancelPickingDestination(); return; }
-  if (el.stackPicker.classList.contains('open')) { hideStackPicker(); return; }
+  if (state.entityPicker) { state.entityPicker = null; renderCastleInfo(); return; }
   if (el.recruitCommanderModal.classList.contains('open')) {
     el.recruitCommanderModal.classList.remove('open');
     return;
@@ -4097,7 +4125,7 @@ document.addEventListener('keydown', (e) => {
 el.mapContainer.addEventListener('wheel', (e) => {
   e.preventDefault();
   const rect = el.mapContainer.getBoundingClientRect();
-  const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+  const factor = e.deltaY < 0 ? 1.02 : 1 / 1.02;
   setZoom(state.zoom * factor, e.clientX - rect.left, e.clientY - rect.top);
 }, { passive: false });
 document.getElementById('zoomIn').addEventListener('click', () => setZoom(state.zoom * 1.3));
@@ -4886,11 +4914,26 @@ function computeVisibleSlugs() {
     c.owner_player_id === state.currentPlayer.id && c.status === 'idle' && c.current_castle_slug
   );
 
-  // Castle-to-castle scan
+  // Find active allies (status === 'ally' only — vision drops immediately on alliance break)
+  const allyIds = new Set();
+  if (state.diplomacy) {
+    state.diplomacy.forEach(d => {
+      if (d.status !== 'ally') return;
+      if (d.player_a_id === state.currentPlayer.id) allyIds.add(d.player_b_id);
+      if (d.player_b_id === state.currentPlayer.id) allyIds.add(d.player_a_id);
+    });
+  }
+  const allyCastles  = state.gameCastles.filter(gc => allyIds.has(gc.owner_player_id));
+  const allyIdleCmds = state.commanders.filter(c =>
+    allyIds.has(c.owner_player_id) && c.status === 'idle' && c.current_castle_slug
+  );
+
+  // Castle-to-castle scan (own + allied)
+  const scanSources = [...myCastles, ...allyCastles];
   state.castles.forEach(target => {
     if (target.map_x == null) return;
-    for (const mine of myCastles) {
-      const src = state.castles.find(c => c.slug === mine.castle_slug);
+    for (const src_gc of scanSources) {
+      const src = state.castles.find(c => c.slug === src_gc.castle_slug);
       if (!src || src.map_x == null) continue;
       const dx = (target.map_x - src.map_x) * MAP_NATIVE_W;
       const dy = (target.map_y - src.map_y) * MAP_NATIVE_H;
@@ -4898,8 +4941,8 @@ function computeVisibleSlugs() {
     }
   });
 
-  // Commander scan (idle commanders at owned castles)
-  myIdleCmds.forEach(cmd => {
+  // Commander scan (own + allied idle commanders)
+  [...myIdleCmds, ...allyIdleCmds].forEach(cmd => {
     const cmdScanPx = FOG_CMD_BASE + cmd.level * FOG_CMD_PER_LV;
     const cmdCastle = state.castles.find(c => c.slug === cmd.current_castle_slug);
     if (!cmdCastle || cmdCastle.map_x == null) return;
@@ -4917,85 +4960,179 @@ function computeVisibleSlugs() {
 // =====================================================
 // ROUTES  (multi-waypoint send)
 // =====================================================
-let _routeWaypoints = [];  // [{slug, name}] list being built
+let _routeWaypoints = [];  // [{slug, name, action, delay, amount}] list being built
 let _routeCommanderId = null;
 let _routeIsLoop = false;
+let _cmdActionEdits = null; // {commanderId, edits: [{slug, name, action, delay, amount}]} for commander detail page
+let _cmdActionSaveTimer = null;
+let fogLastKnown = {}; // slug → {owner_player_id, effective_influence, color, color2, houseSlug}
+
+const WAYPOINT_ACTIONS = [
+  { value: 'pass',            label: 'Do Nothing',         hasAmount: false },
+  { value: 'collect_all',     label: 'Collect All',        hasAmount: false },
+  { value: 'deposit_all',     label: 'Drop All',           hasAmount: false },
+  { value: 'collect',         label: 'Collect...',         hasAmount: true  },
+  { value: 'deposit',         label: 'Drop...',            hasAmount: true  },
+  { value: 'collect_all_but', label: 'Collect All But...', hasAmount: true  },
+  { value: 'deposit_all_but', label: 'Drop All But...',    hasAmount: true  },
+  { value: 'garrison',        label: 'Garrison Castle...', hasAmount: true  },
+];
 
 function startBuildingRoute(commanderId) {
   _routeCommanderId = commanderId;
   _routeWaypoints = [];
   _routeIsLoop = false;
-  openRoutePicker();
-}
-
-function openRoutePicker() {
-  const commander = state.commanders.find(c => c.id === _routeCommanderId);
-  if (!commander) { cancelPickingDestination(); return; }
+  state.selectedCommanderId = null;
+  state.entityPicker = null;
+  state.isBuildingNewRoute = true;
   state.isPickingDestination = true;
-  state.pickingForCommanderId = _routeCommanderId;
-  el.destCommanderName.textContent = `${commander.name} — Waypoint ${_routeWaypoints.length + 1}`;
-  el.destinationBanner.classList.add('open');
-  document.querySelector('.map-area').classList.add('selecting-destination');
+  state.pickingForCommanderId = commanderId;
+  document.querySelector('.map-area').classList.add('editing-route');
   renderMarkers();
+  const cmd = state.commanders.find(c => c.id === commanderId);
+  if (state.mode === 'game') openPanel(cmd?.name ?? 'March', false);
+  renderNewRouteBuilder();
 }
 
 function handleRouteDestinationPick(castle) {
-  _routeWaypoints.push({ slug: castle.slug, name: castle.name });
-  cancelPickingDestination();
-  openRouteConfirmModal();
+  _routeWaypoints.push({ slug: castle.slug, name: castle.name, action: 'pass', delay: 0, amount: null });
+  renderMarkers();
+  renderMovements();
+  renderNewRouteBuilder();
 }
 
-function openRouteConfirmModal() {
-  const commander = state.commanders.find(c => c.id === _routeCommanderId);
-  if (!commander) return;
-  const fromGc = state.gameCastles.find(g => g.castle_slug === commander.current_castle_slug);
-  const maxTroops = fromGc ? fromGc.troops : 0;
+function renderNewRouteBuilder() {
+  const cmd = state.commanders.find(c => c.id === _routeCommanderId);
+  if (!cmd) { cancelNewRouteBuild(); return; }
+  const origin = state.castles.find(c => c.slug === cmd.current_castle_slug);
+  const fromGc = state.gameCastles.find(g => g.castle_slug === cmd.current_castle_slug);
+  const troops = cmd.troops > 0 ? cmd.troops : (fromGc?.troops ?? 0);
 
-  // Build ETA for each leg
-  let legSlugs = [commander.current_castle_slug, ..._routeWaypoints.map(w => w.slug)];
   let totalTicks = 0;
+  const legSlugs = [cmd.current_castle_slug, ..._routeWaypoints.map(w => w.slug)];
   for (let i = 0; i < legSlugs.length - 1; i++) {
     const from = state.castles.find(c => c.slug === legSlugs[i]);
     const to   = state.castles.find(c => c.slug === legSlugs[i + 1]);
     if (from && to) totalTicks += estimateTravelTicks(from, to);
   }
-  if (_routeIsLoop) {
-    const last = state.castles.find(c => c.slug === legSlugs[legSlugs.length - 1]);
-    const first = state.castles.find(c => c.slug === legSlugs[1]);
-    if (last && first) totalTicks += estimateTravelTicks(last, first);
+  const etaStr = totalTicks > 0 ? formatDuration(totalTicks, state.activeGame.tick_speed) : null;
+  const canSave = _routeWaypoints.length > 0 && troops > 0;
+  // Loop is only valid when the last stop returns to the origin castle
+  const lastSlug = _routeWaypoints.length > 0 ? _routeWaypoints[_routeWaypoints.length - 1].slug : null;
+  const canLoop  = lastSlug === cmd.current_castle_slug;
+  if (!canLoop) _routeIsLoop = false;
+
+  const waypointRows = _routeWaypoints.map((w, i) => {
+    const needsAmount = WAYPOINT_ACTIONS.find(a => a.value === w.action)?.hasAmount;
+    const actionOpts = WAYPOINT_ACTIONS.map(a =>
+      `<option value="${a.value}"${w.action === a.value ? ' selected' : ''}>${a.label}</option>`
+    ).join('');
+    return `
+    <div style="border-bottom:1px solid var(--border);padding:7px 10px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+        <span style="font-size:11px;color:var(--text-muted);min-width:16px;">${i + 1}.</span>
+        <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);">${escapeHtml(w.name)}</span>
+        <button onclick="removeNewRouteWaypoint(${i})"
+          style="background:none;border:none;color:var(--error);cursor:pointer;font-size:16px;padding:0 2px;line-height:1;">&times;</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding-left:22px;flex-wrap:wrap;">
+        <select onchange="updateWaypointAction(${i},this.value)"
+          style="flex:1;min-width:0;font-size:12px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:3px;padding:3px 5px;">
+          ${actionOpts}
+        </select>
+        ${needsAmount ? `<input type="number" min="0" placeholder="Amount" value="${w.amount ?? ''}"
+          oninput="updateWaypointAmount(${i},this.value)"
+          style="width:72px;font-size:12px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:3px;padding:3px 5px;">` : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;padding-left:22px;margin-top:4px;">
+        <span style="font-size:11px;color:var(--text-muted);">Delay:</span>
+        <input type="number" min="0" value="${w.delay || 0}" oninput="updateWaypointDelay(${i},this.value)"
+          style="width:45px;font-size:12px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:3px;padding:3px 5px;">
+        <span style="font-size:11px;color:var(--text-muted);">ticks</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.infoPanelBody.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);background:var(--bg-elevated);">
+      <button onclick="cancelNewRouteBuild()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;padding:0;">&#8592; Cancel</button>
+      <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);">March — ${escapeHtml(cmd.name)}</span>
+    </div>
+    <div style="padding:7px 14px 5px;font-size:12px;color:var(--accent);background:rgba(201,168,76,0.08);border-bottom:1px solid var(--border);">
+      Click castles on the map to add stops.
+    </div>
+    <div style="border:1px solid var(--border);border-radius:4px;margin:10px 10px 0;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);">
+        <span style="font-size:12px;color:var(--text-muted);font-style:italic;">From</span>
+        <span style="flex:1;font-size:13px;color:var(--text-muted);">${escapeHtml(origin?.name ?? '?')}</span>
+      </div>
+      ${waypointRows}
+      ${_routeWaypoints.length === 0
+        ? `<div style="padding:8px 10px;font-size:12px;color:var(--text-muted);font-style:italic;">No stops added yet.</div>`
+        : ''}
+    </div>
+    ${canLoop ? `
+    <label style="display:flex;align-items:center;gap:8px;padding:8px 12px 4px;font-size:12px;cursor:pointer;">
+      <input type="checkbox" id="newRouteLoopCheck" ${_routeIsLoop ? 'checked' : ''}
+        onchange="_routeIsLoop=this.checked"> Loop route
+    </label>` : ''}
+    ${etaStr ? `<div style="padding:${canLoop ? '0' : '8px'} 12px 6px;font-size:12px;color:var(--text-muted);">ETA first stop: ~${etaStr} · ${troops} troops</div>` : ''}
+    <div style="padding:8px 10px 10px;">
+      <button onclick="saveNewRoute()" ${!canSave ? 'disabled' : ''}
+        style="width:100%;padding:9px;background:var(--accent);color:var(--bg-deep);border:none;border-radius:4px;font-size:13px;font-weight:700;cursor:pointer;${!canSave ? 'opacity:.4;pointer-events:none;' : ''}">
+        Save${_routeIsLoop ? ' (loop)' : ''}
+      </button>
+    </div>`;
+}
+
+async function saveNewRoute() {
+  const cmd = state.commanders.find(c => c.id === _routeCommanderId);
+  if (!cmd || _routeWaypoints.length === 0) return;
+  const fromGc = state.gameCastles.find(g => g.castle_slug === cmd.current_castle_slug);
+  const troops = cmd.troops > 0 ? cmd.troops : (fromGc?.troops ?? 0);
+  if (troops <= 0) { toast('No troops available to march.', true); return; }
+
+  const waypoints = _routeWaypoints.map(w => {
+    const obj = { castle_slug: w.slug, action: w.action || 'pass', delay: w.delay || 0 };
+    if (w.amount != null && w.amount !== '') obj.amount = Number(w.amount);
+    return obj;
+  });
+  try {
+    const { data, error } = await supabase.rpc('send_on_route', {
+      p_game_id:      state.activeGame.id,
+      p_commander_id: _routeCommanderId,
+      p_waypoints:    waypoints,
+      p_troops:       troops,
+      p_is_loop:      _routeIsLoop,
+    });
+    if (error) throw error;
+    const loopLabel = _routeIsLoop ? ' (looping)' : '';
+    toast(`${escapeHtml(cmd.name)} marching${loopLabel} — ${data.waypoints} stop${data.waypoints !== 1 ? 's' : ''}`);
+    cancelNewRouteBuild();
+    await refreshGameState(state.activeGame.id);
+  } catch (err) {
+    toast('Failed to march: ' + err.message, true);
   }
+}
 
-  const routeList = _routeWaypoints.map((w, i) => `${i + 1}. ${escapeHtml(w.name)}`).join('<br>');
-  el.sendForcesInfo.innerHTML = `
-    <div style="margin-bottom:8px;"><strong>${escapeHtml(commander.name)}</strong> — Multi-stop route</div>
-    <div style="font-size:12px;color:var(--text-muted);line-height:1.8;margin-bottom:10px;">${routeList}</div>
-    <label style="font-size:12px;display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;">
-      <input type="checkbox" id="routeLoopCheck" ${_routeIsLoop ? 'checked' : ''}> Loop back to start
-    </label>
-    <button class="send-forces-btn" id="addWaypointBtn"
-      style="background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);margin-bottom:8px;font-size:12px;">
-      + Add another waypoint
-    </button>
-  `;
-  document.getElementById('addWaypointBtn')?.addEventListener('click', () => {
-    el.sendForcesModal.classList.remove('open');
-    openRoutePicker();
-  });
-  document.getElementById('routeLoopCheck')?.addEventListener('change', (e) => {
-    _routeIsLoop = e.target.checked;
-    openRouteConfirmModal();
-  });
+function cancelNewRouteBuild() {
+  _routeWaypoints = [];
+  _routeCommanderId = null;
+  _routeIsLoop = false;
+  state.isBuildingNewRoute = false;
+  state.isPickingDestination = false;
+  state.pickingForCommanderId = null;
+  document.querySelector('.map-area').classList.remove('editing-route');
+  document.querySelector('.map-area').classList.remove('selecting-destination');
+  renderMarkers();
+  renderCastleInfo();
+}
 
-  el.sendForcesSlider.min = 1;
-  el.sendForcesSlider.max = maxTroops;
-  el.sendForcesSlider.value = Math.min(maxTroops, Math.max(1, Math.floor(maxTroops * (state.prefs.defaultTroopPct / 100))));
-  el.sendForcesMax.textContent = maxTroops;
-  el.sendForcesAmount.textContent = el.sendForcesSlider.value;
-  el.sendForcesETA.innerHTML = `Full circuit: ~<strong>${totalTicks} ticks</strong> (${formatDuration(totalTicks, state.activeGame.tick_speed)})`;
-
-  el.sendForcesModal.dataset.isRoute = 'true';
-  el.sendForcesModal.dataset.commanderId = _routeCommanderId;
-  el.sendForcesModal.classList.add('open');
+function removeNewRouteWaypoint(idx) {
+  _routeWaypoints.splice(idx, 1);
+  renderMarkers();
+  renderMovements();
+  renderNewRouteBuilder();
 }
 
 function renderGameResources() {
@@ -5496,40 +5633,228 @@ function cancelPickingDestination() {
 
 el.cancelDestBtn.addEventListener('click', cancelPickingDestination);
 
+// =====================================================
+// ROUTE EDITING (modify waypoints on a marching army)
+// =====================================================
+function startEditingRoute(commanderId) {
+  state.selectedMovementId = state.movements.find(m => m.commander_id === commanderId)?.id ?? state.selectedMovementId;
+  state.selectedCommanderId = null;
+  showRouteEditor();
+}
+
+function showMovementMiniBar() {
+  cancelEditingRoute();
+}
+
+function showMovementDetail() {
+  state.movementPanel = 'detail';
+  renderCastleInfo();
+}
+
+function showRouteEditor() {
+  const mov = state.movements.find(m => m.id === state.selectedMovementId);
+  if (!mov) return;
+  const commander = state.commanders.find(c => c.id === mov.commander_id);
+  if (!commander) return;
+  state.movementPanel = 'route';
+  state.isEditingRoute = true;
+  state.editingRouteCommanderId = commander.id;
+  const route = state.routes?.find(r => r.commander_id === commander.id && r.status === 'active');
+  if (route) {
+    const future = route.waypoints.slice(route.current_idx + 1);
+    state.pendingRouteEdits = future.map(wp => {
+      const c = state.castles.find(x => x.slug === wp.castle_slug);
+      return {
+        slug:   wp.castle_slug,
+        name:   c ? c.name : wp.castle_slug,
+        action: wp.action || 'pass',
+        delay:  wp.delay  || 0,
+        amount: wp.amount ?? null,
+      };
+    });
+  } else {
+    state.pendingRouteEdits = [];
+  }
+  document.querySelector('.map-area').classList.add('editing-route');
+  renderMarkers();
+  renderMovements();
+  renderCastleInfo();
+}
+
+function cancelEditingRoute() {
+  state.isEditingRoute = false;
+  state.editingRouteCommanderId = null;
+  state.pendingRouteEdits = [];
+  if (state.selectedMovementId) state.movementPanel = 'mini';
+  document.querySelector('.map-area').classList.remove('editing-route');
+  renderMarkers();
+  renderMovements();
+  renderCastleInfo();
+}
+
+function addWaypointToEdit(castle) {
+  const mov = state.movements.find(m => m.commander_id === state.editingRouteCommanderId);
+  if (mov && castle.slug === mov.to_castle_slug && state.pendingRouteEdits.length === 0) {
+    toast('That is already the current destination.', true);
+    return;
+  }
+  if (state.pendingRouteEdits.some(w => w.slug === castle.slug)) {
+    toast('That castle is already in the queue.', true);
+    return;
+  }
+  const originCastle = _routeEditScanOrigin();
+  if (originCastle && originCastle.map_x != null && castle.map_x != null) {
+    const whispLv = state.councilSeats.find(s => s.seat === 'whisperers')?.level || 0;
+    const radiusPx = FOG_SCAN_BASE + whispLv * FOG_SCAN_PER_LV;
+    const dx = (castle.map_x - originCastle.map_x) * MAP_NATIVE_W;
+    const dy = (castle.map_y - originCastle.map_y) * MAP_NATIVE_H;
+    if (Math.hypot(dx, dy) > radiusPx) {
+      toast('Out of range — add a closer stop first.', true);
+      return;
+    }
+  }
+  state.pendingRouteEdits.push({ slug: castle.slug, name: castle.name, action: 'pass', delay: 0, amount: null });
+  renderMarkers();
+  renderMovements();
+  renderCastleInfo();
+}
+
+function removeWaypointFromEdit(idx) {
+  state.pendingRouteEdits.splice(idx, 1);
+  renderMarkers();
+  renderMovements();
+  renderCastleInfo();
+}
+
+async function saveRouteEdits(commanderId) {
+  const waypoints = state.pendingRouteEdits.map(w => {
+    const obj = { castle_slug: w.slug, action: w.action || 'pass', delay: w.delay || 0 };
+    if (w.amount != null && w.amount !== '') obj.amount = Number(w.amount);
+    return obj;
+  });
+  const isLoop = state.pendingRouteIsLoop ?? false;
+  const { error } = await supabase.rpc('update_route', {
+    p_game_id:       state.activeGame.id,
+    p_commander_id:  commanderId,
+    p_new_remaining: waypoints,
+    p_is_loop:       isLoop,
+  });
+  if (error) { toast(error.message, true); return; }
+  state.pendingRouteIsLoop = undefined;
+  toast(waypoints.length > 0
+    ? `Route updated — ${waypoints.length} stop${waypoints.length > 1 ? 's' : ''} queued.`
+    : 'Route recalled — commander will stop at next destination.');
+  cancelEditingRoute();
+  await refreshGameState(state.activeGame.id);
+}
+
+async function recallRoute(commanderId) {
+  const { error } = await supabase.rpc('update_route', {
+    p_game_id:       state.activeGame.id,
+    p_commander_id:  commanderId,
+    p_new_remaining: [],
+    p_is_loop:       false,
+  });
+  if (error) { toast(error.message, true); return; }
+  toast('Route recalled — commander will stop at next destination.');
+  cancelEditingRoute();
+  await refreshGameState(state.activeGame.id);
+}
+
+async function abortRoute(commanderId) {
+  const { error } = await supabase.rpc('abort_route', {
+    p_game_id:       state.activeGame.id,
+    p_commander_id:  commanderId,
+  });
+  if (error) { toast(error.message, true); return; }
+  toast('March aborted — forces returned to origin.');
+  cancelEditingRoute();
+  state.selectedMovementId = null;
+  await refreshGameState(state.activeGame.id);
+}
+
+function _routeEditScanOrigin() {
+  const mov = state.movements.find(m => m.commander_id === state.editingRouteCommanderId);
+  if (!mov) return null;
+  const lastSlug = state.pendingRouteEdits.length > 0
+    ? state.pendingRouteEdits[state.pendingRouteEdits.length - 1].slug
+    : mov.to_castle_slug;
+  return state.castles.find(c => c.slug === lastSlug) || null;
+}
+
+function applyRouteEditHighlights() {
+  const mov = state.movements.find(m => m.commander_id === state.editingRouteCommanderId);
+  const pendingSlugs = new Set(state.pendingRouteEdits.map(w => w.slug));
+  const whispLv = state.councilSeats.find(s => s.seat === 'whisperers')?.level || 0;
+  const radiusPx = FOG_SCAN_BASE + whispLv * FOG_SCAN_PER_LV;
+  const originCastle = _routeEditScanOrigin();
+
+  el.markerLayer.querySelectorAll('.marker').forEach(marker => {
+    const slug = marker.dataset.slug;
+    if (!slug) return;
+    if (mov && slug === mov.to_castle_slug) {
+      marker.classList.add('current-dest');
+      return;
+    }
+    if (pendingSlugs.has(slug)) {
+      marker.classList.add('queued-waypoint');
+      return;
+    }
+    if (originCastle && originCastle.map_x != null) {
+      const tgt = state.castles.find(c => c.slug === slug);
+      if (tgt && tgt.map_x != null) {
+        const dx = (tgt.map_x - originCastle.map_x) * MAP_NATIVE_W;
+        const dy = (tgt.map_y - originCastle.map_y) * MAP_NATIVE_H;
+        if (Math.hypot(dx, dy) > radiusPx) {
+          marker.classList.add('out-of-range');
+        }
+      }
+    }
+  });
+}
+
 function applyDestinationHighlights() {
   if (!state.pickingForCommanderId) return;
   const commander = state.commanders.find(c => c.id === state.pickingForCommanderId);
   if (!commander) return;
 
-  const srcCastle = state.castles.find(c => c.slug === commander.current_castle_slug);
-  const whispLv   = state.councilSeats.find(s => s.seat === 'whisperers')?.level || 0;
-  const radiusPx  = FOG_SCAN_BASE + whispLv * FOG_SCAN_PER_LV;
+  // Range origin is last added waypoint, or commander's current castle
+  const srcSlug = _routeWaypoints.length > 0
+    ? _routeWaypoints[_routeWaypoints.length - 1].slug
+    : commander.current_castle_slug;
+  const srcCastle  = state.castles.find(c => c.slug === srcSlug);
+  const whispLv    = state.councilSeats.find(s => s.seat === 'whisperers')?.level || 0;
+  const radiusPx   = FOG_SCAN_BASE + whispLv * FOG_SCAN_PER_LV;
+  const queuedSlugs = new Set(_routeWaypoints.map(w => w.slug));
 
   el.markerLayer.querySelectorAll('.marker').forEach(marker => {
     const slug = marker.dataset.slug;
+    // Origin castle — locked start
     if (slug === commander.current_castle_slug) {
-      marker.classList.add('invalid-target');
+      marker.classList.add('current-dest');
       return;
     }
-
-    // Range check
+    // Already queued waypoints
+    if (queuedSlugs.has(slug)) {
+      marker.classList.add('queued-waypoint');
+      return;
+    }
+    // Range check from last waypoint
     const tgtCastle = state.castles.find(c => c.slug === slug);
     let inRange = true;
     if (srcCastle && tgtCastle && srcCastle.map_x != null && tgtCastle.map_x != null) {
-      const dx   = (tgtCastle.map_x - srcCastle.map_x) * MAP_NATIVE_W;
-      const dy   = (tgtCastle.map_y - srcCastle.map_y) * MAP_NATIVE_H;
+      const dx = (tgtCastle.map_x - srcCastle.map_x) * MAP_NATIVE_W;
+      const dy = (tgtCastle.map_y - srcCastle.map_y) * MAP_NATIVE_H;
       inRange = Math.hypot(dx, dy) <= radiusPx;
     }
-
     if (!inRange) {
       marker.classList.add('out-of-range');
       return;
     }
-
     const gc = state.gameCastles.find(g => g.castle_slug === slug);
     if (!gc || gc.owner_player_id === null) {
       marker.classList.add('valid-target');
-    } else if (gc.owner_player_id === state.currentPlayer.id) {
+    } else if (gc.owner_player_id === state.currentPlayer?.id) {
       marker.classList.add('valid-target');
     } else {
       marker.classList.add('hostile-target');
@@ -5539,31 +5864,36 @@ function applyDestinationHighlights() {
 
 function handleDestinationPick(castle) {
   const commander = state.commanders.find(c => c.id === state.pickingForCommanderId);
-  if (!commander) { cancelPickingDestination(); return; }
+  if (!commander) { cancelNewRouteBuild(); return; }
+
+  // Block origin castle as first stop
   if (castle.slug === commander.current_castle_slug && _routeWaypoints.length === 0) {
     toast("That's where the commander already is.", true);
     return;
   }
+  // Block duplicates
+  if (_routeWaypoints.some(w => w.slug === castle.slug)) {
+    toast('Already in route.', true);
+    return;
+  }
 
-  // Range enforcement
-  const srcCastle = state.castles.find(c => c.slug === commander.current_castle_slug);
+  // Range enforcement — origin is last queued waypoint, or commander's current castle
+  const srcSlug = _routeWaypoints.length > 0
+    ? _routeWaypoints[_routeWaypoints.length - 1].slug
+    : commander.current_castle_slug;
+  const srcCastle = state.castles.find(c => c.slug === srcSlug);
   if (srcCastle && castle.map_x != null && srcCastle.map_x != null) {
     const whispLv  = state.councilSeats.find(s => s.seat === 'whisperers')?.level || 0;
     const radiusPx = FOG_SCAN_BASE + whispLv * FOG_SCAN_PER_LV;
     const dx = (castle.map_x - srcCastle.map_x) * MAP_NATIVE_W;
     const dy = (castle.map_y - srcCastle.map_y) * MAP_NATIVE_H;
     if (Math.hypot(dx, dy) > radiusPx) {
-      toast('⚠ Out of range — capture an intermediate castle, or level up Master of Whisperers to extend reach.', true);
+      toast('Out of range — add a closer stop first.', true);
       return;
     }
   }
 
-  // If we're building a route (waypoints already started), add the waypoint
-  if (_routeCommanderId !== null) {
-    handleRouteDestinationPick(castle);
-    return;
-  }
-  openSendForcesModal(commander, castle);
+  handleRouteDestinationPick(castle);
 }
 
 function openSendForcesModal(commander, destCastle) {
@@ -5668,8 +5998,9 @@ el.confirmSendForces.addEventListener('click', async () => {
 });
 
 function renderMovements() {
-  // Draw an SVG line from origin → destination for each in-progress movement,
-  // plus an icon at the commander's current interpolated screen position.
+  // Draw SVG lines for all in-progress movements and position commander icons.
+  // Icons are reused across calls (portrait images stay loaded) — only SVG lines
+  // are regenerated. This prevents portrait flickering on zoom/pan.
   const iw = el.mapImage.naturalWidth;
   const ih = el.mapImage.naturalHeight;
   if (!iw || !ih) return;
@@ -5679,68 +6010,692 @@ function renderMovements() {
   el.movementsOverlay.setAttribute('width', containerRect.width);
   el.movementsOverlay.setAttribute('height', containerRect.height);
 
-  // Clear previous content (lines AND icon divs)
+  // Clear SVG lines only — leave icon divs in place to avoid image reload flicker
   el.movementsOverlay.innerHTML = '';
-  el.markerLayer.querySelectorAll('.movement-icon').forEach(n => n.remove());
 
-  if (!state.movements || state.movements.length === 0) return;
+  // Route planning preview lines (show connector as waypoints are added)
+  if (state.isBuildingNewRoute && _routeWaypoints.length > 0) {
+    const planCmd = state.commanders.find(c => c.id === _routeCommanderId);
+    const legSlugs = [planCmd?.current_castle_slug, ..._routeWaypoints.map(w => w.slug)].filter(Boolean);
+    for (let i = 0; i < legSlugs.length - 1; i++) {
+      const fromC = state.castles.find(c => c.slug === legSlugs[i]);
+      const toC   = state.castles.find(c => c.slug === legSlugs[i + 1]);
+      if (!fromC || !toC) continue;
+      const pfx = fromC.map_x * iw * state.zoom + state.panX;
+      const pfy = fromC.map_y * ih * state.zoom + state.panY;
+      const ptx = toC.map_x   * iw * state.zoom + state.panX;
+      const pty = toC.map_y   * ih * state.zoom + state.panY;
+      const pl = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      pl.setAttribute('class', 'movement-path');
+      pl.setAttribute('x1', pfx); pl.setAttribute('y1', pfy);
+      pl.setAttribute('x2', ptx); pl.setAttribute('y2', pty);
+      el.movementsOverlay.appendChild(pl);
+    }
+  }
 
-  state.movements.forEach(mov => {
-    const fromCastle = state.castles.find(c => c.slug === mov.from_castle_slug);
-    const toCastle = state.castles.find(c => c.slug === mov.to_castle_slug);
-    if (!fromCastle || !toCastle) return;
+  // Route edit preview lines — show pending stops before the player saves
+  if (state.isEditingRoute && state.editingRouteCommanderId && state.pendingRouteEdits.length > 0) {
+    const editMov = state.movements.find(m => m.commander_id === state.editingRouteCommanderId);
+    if (editMov) {
+      const legSlugs = [editMov.to_castle_slug, ...state.pendingRouteEdits.map(w => w.slug)];
+      for (let i = 0; i < legSlugs.length - 1; i++) {
+        const fromC = state.castles.find(c => c.slug === legSlugs[i]);
+        const toC   = state.castles.find(c => c.slug === legSlugs[i + 1]);
+        if (!fromC || !toC) continue;
+        const epx = fromC.map_x * iw * state.zoom + state.panX;
+        const epy = fromC.map_y * ih * state.zoom + state.panY;
+        const etx = toC.map_x   * iw * state.zoom + state.panX;
+        const ety = toC.map_y   * ih * state.zoom + state.panY;
+        const el2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        el2.setAttribute('class', 'movement-path future-leg');
+        el2.setAttribute('x1', epx); el2.setAttribute('y1', epy);
+        el2.setAttribute('x2', etx); el2.setAttribute('y2', ety);
+        el.movementsOverlay.appendChild(el2);
+      }
+    }
+  }
 
-    const isSelected = state.selectedMovementId === mov.id;
+  // Track which movement IDs are still active so stale icons can be removed
+  const handledIds = new Set();
 
-    // Determine if hostile: destination owned by someone other than the attacker
-    const movCommander = state.commanders.find(c => c.id === mov.commander_id);
-    const destGc = state.gameCastles.find(g => g.castle_slug === mov.to_castle_slug);
-    const isHostile = movCommander && destGc && destGc.owner_player_id &&
-                      destGc.owner_player_id !== movCommander.owner_player_id;
+  if (state.movements && state.movements.length > 0) {
+    state.movements.forEach(mov => {
+      const fromCastle = state.castles.find(c => c.slug === mov.from_castle_slug);
+      const toCastle = state.castles.find(c => c.slug === mov.to_castle_slug);
+      if (!fromCastle || !toCastle) return;
 
-    const fx = fromCastle.map_x * iw * state.zoom + state.panX;
-    const fy = fromCastle.map_y * ih * state.zoom + state.panY;
-    const tx = toCastle.map_x * iw * state.zoom + state.panX;
-    const ty = toCastle.map_y * ih * state.zoom + state.panY;
+      const movCommander = state.commanders.find(c => c.id === mov.commander_id);
 
-    // Path line
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('class', ['movement-path', isSelected ? 'selected' : '', isHostile ? 'hostile' : ''].join(' ').trim());
-    line.setAttribute('x1', fx); line.setAttribute('y1', fy);
-    line.setAttribute('x2', tx); line.setAttribute('y2', ty);
-    el.movementsOverlay.appendChild(line);
+      // Fog of war: hide enemy movements where neither castle is visible
+      if (visibleSlugs && movCommander?.owner_player_id !== state.currentPlayer?.id) {
+        if (!visibleSlugs.has(mov.to_castle_slug) && !visibleSlugs.has(mov.from_castle_slug)) return;
+      }
 
-    // Interpolated icon position
-    const total = mov.arrives_at_tick - mov.departed_at_tick;
-    const elapsed = Math.max(0, Math.min(total, state.activeGame.current_tick - mov.departed_at_tick));
-    const t = total > 0 ? elapsed / total : 0;
-    const ix = fx + (tx - fx) * t;
-    const iy = fy + (ty - fy) * t;
+      handledIds.add(mov.id);
 
-    const icon = document.createElement('div');
-    icon.className = ['movement-icon', isSelected ? 'selected' : '', isHostile ? 'hostile' : ''].join(' ').trim();
-    icon.style.left = ix + 'px';
-    icon.style.top = iy + 'px';
-    const movPlayer = state.gamePlayers?.find(p => p.id === movCommander?.owner_player_id);
-    const movHouse = movPlayer ? state.houses?.find(h => h.slug === movPlayer.house_slug) : null;
-    const shieldSlug = movHouse?.slug || '';
-    const shieldImgSrc = shieldSlug ? shieldSrc(shieldSlug) : '';
-    icon.innerHTML = shieldImgSrc
-      ? `<div style="position:relative;width:100%;height:100%;">
-           <img src="${shieldImgSrc}" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="shieldFallback(this,'${shieldSlug}',0)">
-           <div style="position:absolute;bottom:-3px;right:-5px;background:var(--bg-deep);color:var(--accent);font-size:9px;font-weight:700;padding:0 2px;border-radius:2px;border:1px solid var(--accent);line-height:1.4;">${mov.troops}</div>
-         </div>`
-      : String(mov.troops);
-    const mScale = Math.max(0.45, Math.min(2.0, Math.pow(state.zoom, 0.68)));
-    const iconSize = Math.round(26 * mScale);
-    icon.style.width = icon.style.height = iconSize + 'px';
-    icon.title = isHostile ? '⚔ Assault in progress' : 'Reinforcements en route';
-    icon.addEventListener('click', (e) => {
-      e.stopPropagation();
-      selectAtClick(e.clientX, e.clientY, { preferMovement: mov.id });
+      const isSelected = state.selectedMovementId === mov.id;
+      const destGc = state.gameCastles.find(g => g.castle_slug === mov.to_castle_slug);
+      const isHostile = movCommander && destGc && destGc.owner_player_id &&
+                        destGc.owner_player_id !== movCommander.owner_player_id;
+
+      const fx = fromCastle.map_x * iw * state.zoom + state.panX;
+      const fy = fromCastle.map_y * ih * state.zoom + state.panY;
+      const tx = toCastle.map_x * iw * state.zoom + state.panX;
+      const ty = toCastle.map_y * ih * state.zoom + state.panY;
+
+      // Active leg line
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', ['movement-path', isSelected ? 'selected' : '', isHostile ? 'hostile' : ''].join(' ').trim());
+      line.setAttribute('x1', fx); line.setAttribute('y1', fy);
+      line.setAttribute('x2', tx); line.setAttribute('y2', ty);
+      el.movementsOverlay.appendChild(line);
+
+      // Future route legs — suppressed while editing (pending edits drawn separately below)
+      const route = state.routes?.find(r => r.commander_id === mov.commander_id && r.status === 'active');
+      const editingThisRoute = state.isEditingRoute && mov.commander_id === state.editingRouteCommanderId;
+      if (route && Array.isArray(route.waypoints) && !editingThisRoute) {
+        const futureWps = route.waypoints.slice(route.current_idx + 1);
+        let prevSlug = mov.to_castle_slug;
+        futureWps.forEach(wp => {
+          const wpSlug = typeof wp === 'string' ? wp : wp.castle_slug;
+          const prevC = state.castles.find(c => c.slug === prevSlug);
+          const nextC = state.castles.find(c => c.slug === wpSlug);
+          if (prevC && nextC) {
+            const px = prevC.map_x * iw * state.zoom + state.panX;
+            const py = prevC.map_y * ih * state.zoom + state.panY;
+            const nx = nextC.map_x * iw * state.zoom + state.panX;
+            const ny = nextC.map_y * ih * state.zoom + state.panY;
+            const fl = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            fl.setAttribute('class', ['movement-path future-leg', route.is_loop ? 'is-loop' : '', isSelected ? 'selected' : ''].filter(Boolean).join(' '));
+            fl.setAttribute('x1', px); fl.setAttribute('y1', py);
+            fl.setAttribute('x2', nx); fl.setAttribute('y2', ny);
+            el.movementsOverlay.appendChild(fl);
+          }
+          prevSlug = wpSlug;
+        });
+      }
+
+      // Interpolated icon position
+      const total = mov.arrives_at_tick - mov.departed_at_tick;
+      const elapsed = Math.max(0, Math.min(total, state.activeGame.current_tick - mov.departed_at_tick));
+      const t = total > 0 ? elapsed / total : 0;
+      const ix = fx + (tx - fx) * t;
+      const iy = fy + (ty - fy) * t;
+
+      const mScale = Math.max(0.45, Math.min(2.0, Math.pow(state.zoom, 0.68)));
+      const iconSize = Math.round(26 * mScale);
+
+      // Reuse existing icon element if present — avoids image reload on zoom
+      let icon = el.markerLayer.querySelector(`.movement-icon[data-mov-id="${mov.id}"]`);
+      if (!icon) {
+        icon = document.createElement('div');
+        icon.dataset.movId = mov.id;
+        const movPlayer = state.gamePlayers?.find(p => p.id === movCommander?.owner_player_id);
+        const movHouse = movPlayer ? state.houses?.find(h => h.slug === movPlayer.house_slug) : null;
+        const movColor = movHouse ? movHouse.color : 'var(--accent)';
+        const movInitial = (movCommander?.name || '?')[0].toUpperCase();
+        const portraitSrc = movCommander ? nameToPortrait(movCommander.name) : '';
+        icon.innerHTML = `<div style="position:relative;width:100%;height:100%;">
+            <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${movColor};">${movInitial}</span>
+            <img src="${portraitSrc}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:2px;opacity:0;transition:opacity 0.2s;"
+              onload="this.style.opacity=1;this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
+            <div style="position:absolute;bottom:-3px;right:-5px;background:var(--bg-deep);color:var(--accent);font-size:9px;font-weight:700;padding:0 2px;border-radius:2px;border:1px solid var(--accent);line-height:1.4;">${mov.troops}</div>
+          </div>`;
+        const cmdLabel = movCommander?.name || 'Unknown';
+        icon.insertAdjacentHTML('beforeend', `<div class="movement-label">${escapeHtml(cmdLabel)}</div>`);
+        icon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (state.isEditingRoute || state.isBuildingNewRoute) return;
+          if (movCommander) {
+            selectEntity({ type: 'commander', commander: movCommander, screenX: ix, screenY: iy });
+          } else {
+            selectEntity({ type: 'movement', movement: mov, screenX: ix, screenY: iy });
+          }
+        });
+        el.markerLayer.appendChild(icon);
+      }
+
+      // Always update position, size, and selection state
+      icon.className = ['movement-icon', isSelected ? 'selected' : '', isHostile ? 'hostile' : ''].join(' ').trim();
+      icon.style.left = ix + 'px';
+      icon.style.top = iy + 'px';
+      icon.style.width = icon.style.height = iconSize + 'px';
     });
-    el.markerLayer.appendChild(icon);
+  }
+
+  // Remove icons for movements that are no longer active
+  el.markerLayer.querySelectorAll('.movement-icon').forEach(n => {
+    if (!handledIds.has(Number(n.dataset.movId))) n.remove();
   });
+}
+
+function renderEntityPicker(entities) {
+  if (state.mode === 'game') openPanel('Select', false);
+
+  const rows = entities.map((ent, idx) => {
+    if (ent.type === 'castle') {
+      const gc = state.gameCastles.find(g => g.castle_slug === ent.castle.slug);
+      const owner = gc?.owner_player_id ? state.gamePlayers.find(p => p.id === gc.owner_player_id) : null;
+      const house = owner ? state.houses.find(h => h.slug === owner.house_slug) : null;
+      const color = house ? house.color : '#444';
+      const troops = gc ? gc.troops : 0;
+      const shieldHtml = house
+        ? `<img src="${shieldSrc(house.slug)}" style="width:100%;height:100%;object-fit:contain;" onerror="shieldFallback(this,'${house.slug}',0)">`
+        : `<span style="font-size:14px;color:${color};">⌂</span>`;
+      return `
+        <div class="entity-pick-row" data-idx="${idx}">
+          <div class="ep-shield" style="--ep-house-color:${color};">${shieldHtml}</div>
+          <div class="ep-info">
+            <div class="ep-name">${escapeHtml(ent.castle.name)}</div>
+            <div class="ep-meta">Castle · ${troops} troops</div>
+          </div>
+          <div class="ep-arrow">›</div>
+        </div>`;
+    } else if (ent.type === 'commander') {
+      const cmd = ent.commander;
+      const player = state.gamePlayers.find(p => p.id === cmd.owner_player_id);
+      const house = player ? state.houses.find(h => h.slug === player.house_slug) : null;
+      const color = house ? house.color : 'var(--accent)';
+      const initial = (cmd.name || '?')[0].toUpperCase();
+      const cmdTroops = cmd.troops ?? 0;
+      return `
+        <div class="entity-pick-row" data-idx="${idx}">
+          <div class="ep-portrait" style="--portrait-color:${color};">
+            <span class="ep-initial">${initial}</span>
+            <img src="${nameToPortrait(cmd.name)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:3px;opacity:0;transition:opacity 0.2s;"
+              onload="this.style.opacity=1;this.parentElement.querySelector('.ep-initial').style.display='none'" onerror="this.style.display='none'">
+          </div>
+          <div class="ep-info">
+            <div class="ep-name">${escapeHtml(cmd.name)}</div>
+            <div class="ep-meta">Commander · ${cmdTroops} troops</div>
+          </div>
+          <div class="ep-arrow">›</div>
+        </div>`;
+    } else {
+      const mov = ent.movement;
+      const cmd = state.commanders.find(c => c.id === mov.commander_id);
+      const player = cmd ? state.gamePlayers.find(p => p.id === cmd.owner_player_id) : null;
+      const house = player ? state.houses.find(h => h.slug === player.house_slug) : null;
+      const color = house ? house.color : 'var(--accent)';
+      const initial = (cmd?.name || '?')[0].toUpperCase();
+      const remaining = mov.arrives_at_tick - state.activeGame.current_tick;
+      const eta = remaining > 0 ? formatDuration(remaining, state.activeGame.tick_speed) : 'arriving';
+      return `
+        <div class="entity-pick-row" data-idx="${idx}">
+          <div class="ep-portrait" style="--portrait-color:${color};">
+            <span class="ep-initial">${initial}</span>
+            <img src="${nameToPortrait(cmd?.name || '')}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:3px;opacity:0;transition:opacity 0.2s;"
+              onload="this.style.opacity=1;this.parentElement.querySelector('.ep-initial').style.display='none'" onerror="this.style.display='none'">
+          </div>
+          <div class="ep-info">
+            <div class="ep-name">${escapeHtml(cmd ? cmd.name : 'Force')}</div>
+            <div class="ep-meta">Marching · ${mov.troops} troops · ETA ${eta}</div>
+          </div>
+          <div class="ep-arrow">›</div>
+        </div>`;
+    }
+  }).join('');
+
+  el.infoPanelBody.innerHTML = `
+    <div style="padding:6px 12px 4px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-faint);border-bottom:1px solid var(--border);">
+      ${entities.length} at this location
+    </div>
+    <div class="entity-picker-list">${rows}</div>`;
+
+  el.infoPanelBody.querySelectorAll('.entity-pick-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const ent = entities[parseInt(row.dataset.idx)];
+      selectEntity(ent);
+    });
+  });
+}
+
+function renderCommanderDetail(commanderId) {
+  const cmd = state.commanders.find(c => c.id === commanderId);
+  if (!cmd) { state.selectedCommanderId = null; renderCastleInfo(); return; }
+  const player = state.gamePlayers.find(p => p.id === cmd.owner_player_id);
+  const house = player ? state.houses.find(h => h.slug === player.house_slug) : null;
+  const color = house ? house.color : 'var(--accent)';
+  const initial = (cmd.name || '?')[0].toUpperCase();
+  const isYours = player && state.user && player.user_id === state.user.id;
+  const cmdTroops = cmd.troops ?? 0;
+  const bio = getCommanderBio(cmd.name);
+  const lvl = cmd.level ?? 1;
+  const xp = cmd.experience ?? 0;
+
+  if (state.mode === 'game') openPanel(cmd.name, false);
+
+  const isMarching = cmd.status === 'moving';
+  const mov = isMarching ? state.movements.find(m => m.commander_id === cmd.id) : null;
+  const route = isMarching ? state.routes?.find(r => r.commander_id === cmd.id && r.status === 'active') : null;
+
+  const gc = cmd.current_castle_slug ? state.gameCastles.find(g => g.castle_slug === cmd.current_castle_slug) : null;
+  const garr = gc ? gc.troops : 0;
+  const marchable = cmdTroops > 0 ? cmdTroops : garr;
+  const total = garr + cmdTroops;
+  const castleName = cmd.current_castle_slug
+    ? (state.castles.find(c => c.slug === cmd.current_castle_slug)?.name ?? cmd.current_castle_slug)
+    : 'Garrison';
+
+  // Commander rank title by level
+  const CMD_RANKS = ['', 'Sworn Sword', 'Sworn Sword', 'Ser', 'Ser', 'Knight', 'Knight', 'Champion', 'Champion', 'Lord Commander', 'Legend'];
+  const rankTitle = CMD_RANKS[Math.min(lvl, 10)] || 'Sworn Sword';
+
+  // XP bar — level N requires N*100 XP
+  const xpNeeded = lvl * 100;
+  const xpPct = Math.min(100, Math.round((xp / xpNeeded) * 100));
+  const xpBarHtml = `
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
+        <span style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Experience</span>
+        <span style="font-size:11px;color:var(--text-muted);">${xp} / ${xpNeeded} XP</span>
+      </div>
+      <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${xpPct}%;background:${color};border-radius:3px;transition:width 0.4s;"></div>
+      </div>
+    </div>`;
+
+  // Stats row — location + troop count
+  const fromCastleName = mov ? (state.castles.find(c => c.slug === mov.from_castle_slug)?.name ?? '?') : null;
+  const toCastleName   = mov ? (state.castles.find(c => c.slug === mov.to_castle_slug)?.name   ?? '?') : null;
+  const locationStr = isMarching
+    ? `${fromCastleName} → ${toCastleName}`
+    : castleName;
+  const troopDisplay = isMarching ? cmdTroops : (cmdTroops > 0 ? cmdTroops : garr);
+  const statsRowHtml = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);">
+      <div style="padding:8px 14px;border-right:1px solid var(--border);min-width:0;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:2px;">Location</div>
+        <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(locationStr)}">${escapeHtml(locationStr)}</div>
+      </div>
+      <div style="padding:8px 14px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:2px;">Troops</div>
+        <div style="font-size:13px;color:var(--text);font-weight:700;">${troopDisplay}</div>
+      </div>
+    </div>`;
+
+  // March status block
+  let marchStatusHtml = '';
+  if (isMarching && mov) {
+    const destCastle = state.castles.find(c => c.slug === mov.to_castle_slug);
+    const remaining = Math.max(0, mov.arrives_at_tick - state.activeGame.current_tick);
+    const eta = remaining > 0 ? formatDuration(remaining, state.activeGame.tick_speed) : 'arriving';
+    const canAbort = mov.departed_at_tick === state.activeGame.current_tick;
+
+    // Init editable action list — keep existing edits if viewing the same commander
+    if (!_cmdActionEdits || _cmdActionEdits.commanderId !== cmd.id) {
+      const curWp     = route ? route.waypoints[route.current_idx] : null;
+      const futureWps = route ? route.waypoints.slice(route.current_idx + 1) : [];
+      _cmdActionEdits = {
+        commanderId:       cmd.id,
+        currentDestAction: curWp?.action ?? 'pass',
+        currentDestAmount: curWp?.amount ?? null,
+        edits: futureWps.map(wp => {
+          const slug = typeof wp === 'string' ? wp : wp.castle_slug;
+          const c = state.castles.find(x => x.slug === slug);
+          return {
+            slug,
+            name:   c ? c.name : slug,
+            action: wp.action || 'pass',
+            delay:  wp.delay  || 0,
+            amount: wp.amount ?? null,
+          };
+        }),
+      };
+    }
+
+    const stopRows = _cmdActionEdits.edits.map((w, i) => {
+      const needsAmount = WAYPOINT_ACTIONS.find(a => a.value === w.action)?.hasAmount;
+      const actionOpts = WAYPOINT_ACTIONS.map(a =>
+        `<option value="${a.value}"${w.action === a.value ? ' selected' : ''}>${a.label}</option>`
+      ).join('');
+      return `
+      <div style="border-bottom:1px solid var(--border);padding:6px 14px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="font-size:11px;color:var(--text-muted);min-width:16px;">${i + 1}.</span>
+          <span style="flex:1;font-size:12px;font-weight:600;color:var(--text);">${escapeHtml(w.name)}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;padding-left:22px;flex-wrap:wrap;">
+          <select onchange="updateCmdStopAction(${i},this.value)"
+            style="flex:1;min-width:0;font-size:11px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:3px;padding:2px 4px;">
+            ${actionOpts}
+          </select>
+          ${needsAmount ? `<input type="number" min="0" placeholder="Amt" value="${w.amount ?? ''}"
+            oninput="updateCmdStopAmount(${i},this.value)"
+            style="width:52px;font-size:11px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:3px;padding:2px 4px;">` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;padding-left:22px;margin-top:3px;">
+          <span style="font-size:10px;color:var(--text-muted);">Delay:</span>
+          <input type="number" min="0" value="${w.delay || 0}" oninput="updateCmdStopDelay(${i},this.value)"
+            style="width:40px;font-size:11px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:3px;padding:2px 4px;">
+          <span style="font-size:10px;color:var(--text-muted);">ticks</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    marchStatusHtml = `
+      <div style="border-bottom:1px solid var(--border);">
+        <div style="padding:8px 14px 6px;display:flex;align-items:baseline;">
+          <span style="flex:1;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">On the March</span>
+          ${isYours ? `<span style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);text-align:center;min-width:120px;">Actions</span>` : ''}
+          <div style="display:flex;justify-content:flex-end;align-items:baseline;gap:6px;flex:1;">
+            <span style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">ETA</span>
+            ${canAbort && isYours ? `<button id="cmdDetailAbortBtn"
+              style="padding:3px 8px;background:none;border:1px solid var(--error);color:var(--error);border-radius:3px;font-size:11px;cursor:pointer;">
+              Abort
+            </button>` : ''}
+          </div>
+        </div>
+        ${(() => {
+          const cdAction = _cmdActionEdits.currentDestAction || 'pass';
+          const cdNeedsAmt = WAYPOINT_ACTIONS.find(a => a.value === cdAction)?.hasAmount;
+          const cdActionOpts = isYours ? WAYPOINT_ACTIONS.map(a =>
+            `<option value="${a.value}"${cdAction === a.value ? ' selected' : ''}>${a.label}</option>`
+          ).join('') : '';
+          return `
+        <div style="padding:0 14px 8px;">
+          <div style="display:flex;align-items:center;">
+            <span style="flex:1;font-size:13px;color:var(--text);font-weight:600;white-space:nowrap;">→ ${escapeHtml(destCastle?.name ?? mov.to_castle_slug)}</span>
+            ${isYours ? `<select onchange="updateCmdCurrentDestAction(this.value)"
+              style="font-size:11px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:3px;padding:2px 6px;width:120px;text-align:center;margin:0 10px;">
+              ${cdActionOpts}
+            </select>` : ''}
+            <span style="flex:1;text-align:right;font-size:12px;color:var(--accent);white-space:nowrap;">~${eta}</span>
+          </div>
+          ${cdNeedsAmt ? `<div style="margin-top:4px;padding-left:16px;">
+            <input type="number" min="0" placeholder="Amount" value="${_cmdActionEdits.currentDestAmount ?? ''}"
+              oninput="updateCmdCurrentDestAmount(this.value)"
+              style="width:80px;font-size:11px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:3px;padding:2px 4px;">
+          </div>` : ''}
+        </div>`;
+        })()}
+        ${_cmdActionEdits.edits.length > 0 ? `
+        <div style="border-top:1px solid var(--border);">
+          <div style="padding:5px 14px 3px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Queued Stops</div>
+          ${stopRows}
+        </div>` : ''}
+        ${isYours ? `<div style="padding:6px 14px 8px;">
+          <button id="cmdDetailEditRouteBtn"
+            style="width:100%;padding:5px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text);border-radius:3px;font-size:12px;cursor:pointer;">
+            Edit Route
+          </button>
+        </div>` : ''}
+      </div>`;
+  }
+
+  // Transfer + march button (idle only)
+  const transferHtml = isYours && !isMarching ? `
+    <div class="cmd-transfer-panel" id="cmdDetailTransfer">
+      <div class="cmd-transfer-label">⇄ Troops</div>
+      <div class="cmd-transfer-row">
+        <div class="cmd-transfer-side you-own">
+          <div class="cmd-transfer-side-label">${escapeHtml(castleName)} Garrison</div>
+          <div class="cmd-transfer-count garrison-display">${garr}</div>
+        </div>
+        <div class="cmd-transfer-arrows">
+          <button class="cmd-arrow-btn transfer-to-cmd" data-cmd="${cmd.id}" ${garr <= 0 ? 'disabled' : ''}>→</button>
+          <button class="cmd-arrow-btn transfer-to-garr" data-cmd="${cmd.id}" ${cmdTroops <= 0 ? 'disabled' : ''}>←</button>
+        </div>
+        <div class="cmd-transfer-side">
+          <div class="cmd-transfer-side-label">${escapeHtml(cmd.name)}</div>
+          <div class="cmd-transfer-count cmd-side cmd-troops-display">${cmdTroops}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Commander</div>
+        </div>
+      </div>
+      <div class="cmd-transfer-controls">
+        <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="min">Min</button>
+        <input class="cmd-transfer-amt" type="number" min="0" max="${total}" value="${cmdTroops}" data-cmd="${cmd.id}">
+        <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="half">Half</button>
+        <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="max">Max</button>
+        <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="apply" style="background:var(--accent);color:#06070e;border-color:var(--accent);">Set</button>
+      </div>
+    </div>
+    <div style="padding:0 12px 8px;">
+      <button id="cmdDetailMarchBtn"
+        style="width:100%;padding:9px;background:var(--accent);color:var(--bg-deep);border:none;border-radius:4px;font-size:13px;font-weight:700;cursor:pointer;${marchable <= 0 ? 'opacity:.4;pointer-events:none;' : ''}">
+        <i class="ti ti-route"></i> ${marchable > 0 ? `March with ${marchable} troops` : 'No troops available'}
+      </button>
+    </div>` : '';
+
+  el.infoPanelBody.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg-elevated);">
+      <div class="cmd-detail-portrait" style="--portrait-color:${color};width:56px;height:56px;font-size:20px;flex-shrink:0;">
+        <div class="cmd-detail-initial">${initial}</div>
+        <img src="${nameToPortrait(cmd.name)}" alt="" onload="this.classList.add('loaded');this.parentElement.querySelector('.cmd-detail-initial').style.display='none'" onerror="this.style.display='none'">
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px;">${escapeHtml(cmd.name)}</div>
+        ${house ? `<div style="font-size:12px;color:${color};margin-bottom:1px;">${escapeHtml(house.name)}</div>` : ''}
+        <div style="font-size:11px;color:var(--text-muted);">
+          <span style="color:var(--accent);font-weight:600;">${rankTitle}</span>
+          <span style="margin:0 4px;opacity:.4;">·</span>
+          Lv ${lvl}
+          <span style="margin:0 4px;opacity:.4;">·</span>
+          <span style="color:${isMarching ? 'var(--accent)' : 'var(--text-muted)'};">${isMarching ? 'Marching' : (cmd.status === 'dead' ? 'Dead' : 'Idle')}</span>
+        </div>
+      </div>
+    </div>
+    ${bio ? `<div style="padding:9px 14px;font-size:12px;color:var(--text-muted);font-style:italic;border-bottom:1px solid var(--border);">${escapeHtml(bio)}</div>` : ''}
+    ${xpBarHtml}
+    ${statsRowHtml}
+    ${marchStatusHtml}
+    <div id="cmdBattleHistory" style="padding:10px 14px;border-bottom:1px solid var(--border);">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:8px;">Battle Record</div>
+      <div style="font-size:12px;color:var(--text-muted);">Loading...</div>
+    </div>
+    ${transferHtml}
+    <div style="padding:6px 12px 10px;">
+      <button id="cmdDetailBackBtn"
+        style="background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;padding:4px 0;">
+        &#8592; ${isMarching ? 'Dismiss' : 'Back to castle'}
+      </button>
+    </div>`;
+
+  // Wire buttons
+  el.infoPanelBody.querySelector('#cmdDetailBackBtn')?.addEventListener('click', () => {
+    clearTimeout(_cmdActionSaveTimer);
+    _cmdActionEdits = null;
+    const castle = cmd.current_castle_slug ? state.castles.find(c => c.slug === cmd.current_castle_slug) : null;
+    state.selectedCommanderId = null;
+    if (castle) state.selectedCastle = castle.slug;
+    renderCastleInfo();
+  });
+  el.infoPanelBody.querySelector('#cmdDetailAbortBtn')?.addEventListener('click', () => abortRoute(cmd.id));
+  el.infoPanelBody.querySelector('#cmdDetailEditRouteBtn')?.addEventListener('click', () => startEditingRoute(cmd.id));
+  el.infoPanelBody.querySelector('#cmdDetailMarchBtn')?.addEventListener('click', () => startBuildingRoute(cmd.id));
+
+  // Wire transfer controls
+  const transferPanel = el.infoPanelBody.querySelector('#cmdDetailTransfer');
+  if (transferPanel) {
+    const amtInput = transferPanel.querySelector('.cmd-transfer-amt');
+    amtInput?.addEventListener('input', () => {
+      const v = Math.max(0, Math.min(total, parseInt(amtInput.value) || 0));
+      updateTransferDisplay(transferPanel, v, total - v);
+    });
+    transferPanel.querySelectorAll('.cmd-transfer-preset').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        let newCmdTroops = parseInt(amtInput?.value) || 0;
+        const preset = btn.dataset.preset;
+        if (preset === 'min') newCmdTroops = 0;
+        else if (preset === 'max') newCmdTroops = total;
+        else if (preset === 'half') newCmdTroops = Math.floor(total / 2);
+        else if (preset === 'apply') {
+          newCmdTroops = Math.max(0, Math.min(total, parseInt(amtInput?.value) || 0));
+          await applyTroopTransfer(cmd.id, newCmdTroops, total);
+          return;
+        }
+        if (amtInput) amtInput.value = newCmdTroops;
+        updateTransferDisplay(transferPanel, newCmdTroops, total - newCmdTroops);
+      });
+    });
+    transferPanel.querySelectorAll('.transfer-to-cmd, .transfer-to-garr').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const isToCmD = btn.classList.contains('transfer-to-cmd');
+        const step = Math.max(1, Math.floor(total * 0.1));
+        let cur = parseInt(amtInput?.value) || 0;
+        cur = isToCmD ? Math.min(total, cur + step) : Math.max(0, cur - step);
+        if (amtInput) amtInput.value = cur;
+        updateTransferDisplay(transferPanel, cur, total - cur);
+      });
+    });
+  }
+
+  // Load battle history async
+  loadCommanderBattles(cmd.id);
+}
+
+async function loadCommanderBattles(commanderId) {
+  const { data, error } = await supabase
+    .from('commander_battles')
+    .select('*')
+    .eq('commander_id', commanderId)
+    .order('tick', { ascending: false })
+    .limit(15);
+
+  const section = document.getElementById('cmdBattleHistory');
+  if (!section) return; // panel was closed
+
+  const battles = data || [];
+  const wins = battles.filter(b => b.result === 'victory').length;
+  const losses = battles.filter(b => b.result === 'defeat').length;
+
+  if (battles.length === 0) {
+    section.innerHTML = `
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:6px;">Battle Record</div>
+      <div style="font-size:12px;color:var(--text-muted);font-style:italic;">No battles yet.</div>`;
+    return;
+  }
+
+  const rows = battles.map(b => {
+    const isWin = b.result === 'victory';
+    const castleName = state.castles.find(c => c.slug === b.castle_slug)?.name ?? b.castle_slug ?? '?';
+    return `
+      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+        <div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:${isWin ? 'var(--success,#4caf50)' : 'var(--error)'};"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isWin ? 'Victory' : 'Defeat'} at ${escapeHtml(castleName)}</div>
+          <div style="font-size:10px;color:var(--text-muted);">Tick ${b.tick} · Sent ${b.troops_sent ?? '?'} vs ${b.troops_faced ?? '?'}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const total = wins + losses;
+  const winPct = total > 0 ? Math.round((wins / total) * 100) : null;
+  const winPctStr = winPct !== null ? `<span style="color:var(--text-muted);margin-left:6px;font-size:10px;">${winPct}%</span>` : '';
+
+  section.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+      <span style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Battle Record</span>
+      <span style="font-size:12px;">
+        <span style="color:var(--success,#4caf50);font-weight:600;">${wins}W</span>
+        <span style="color:var(--text-muted);margin:0 3px;">·</span>
+        <span style="color:var(--error);font-weight:600;">${losses}L</span>
+        ${winPctStr}
+      </span>
+    </div>
+    ${rows}`;
+}
+
+function renderMovementMiniBar() {
+  const mov = state.movements.find(m => m.id === state.selectedMovementId);
+  if (!mov) {
+    state.selectedMovementId = null;
+    el.infoPanelBody.innerHTML = '<div class="info-empty">That force has arrived. Click a castle to view it.</div>';
+    return;
+  }
+  const commander = state.commanders.find(c => c.id === mov.commander_id);
+  const player = commander ? state.gamePlayers.find(p => p.id === commander.owner_player_id) : null;
+  const house = player ? state.houses.find(h => h.slug === player.house_slug) : null;
+  const route = state.routes?.find(r => r.commander_id === mov.commander_id && r.status === 'active');
+  const isYours = player && player.user_id === state.user.id;
+  const pColor = house ? house.color : 'var(--accent)';
+  const initial = commander ? (commander.name || '?')[0].toUpperCase() : '?';
+
+  const remaining = route ? (route.waypoints.length - route.current_idx) : 1;
+  const loopTag = route?.is_loop ? ' ↺' : '';
+  const stopLabel = `${remaining} stop${remaining !== 1 ? 's' : ''}${loopTag}`;
+
+  el.infoPanelBody.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-elevated);border-bottom:1px solid var(--border);">
+      <div class="cmd-detail-portrait" style="--portrait-color:${pColor};width:36px;height:36px;font-size:13px;flex-shrink:0;">
+        <div style="position:relative;z-index:1;">${initial}</div>
+        ${commander ? `<img src="${nameToPortrait(commander.name)}" alt="" onload="this.classList.add('loaded')" onerror="this.style.display='none'">` : ''}
+      </div>
+      <div style="font-size:15px;font-weight:700;color:var(--success);min-width:28px;text-align:right;">${mov.troops}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(commander ? commander.name : 'Unknown')}</div>
+        <div style="font-size:11px;color:var(--text-muted);">${stopLabel}</div>
+      </div>
+      ${isYours ? `<button onclick="showRouteEditor()" title="Edit route"
+        style="background:var(--bg-deep);border:1px solid var(--border);color:var(--accent);font-size:18px;font-weight:700;width:30px;height:30px;border-radius:4px;cursor:pointer;padding:0;line-height:1;">+</button>` : ''}
+      <button onclick="showMovementDetail()" title="View details"
+        style="background:var(--bg-deep);border:1px solid var(--border);color:var(--text);font-size:11px;height:30px;padding:0 8px;border-radius:4px;cursor:pointer;white-space:nowrap;">View</button>
+    </div>`;
+}
+
+function renderRouteEditor() {
+  const mov = state.movements.find(m => m.id === state.selectedMovementId);
+  if (!mov) { cancelEditingRoute(); return; }
+  const commander = state.commanders.find(c => c.id === mov.commander_id);
+  const toCastle = state.castles.find(c => c.slug === mov.to_castle_slug);
+  const remainingTicks = mov.arrives_at_tick - state.activeGame.current_tick;
+  const eta = remainingTicks > 0 ? formatDuration(remainingTicks, state.activeGame.tick_speed) : null;
+  const route = state.routes?.find(r => r.commander_id === mov.commander_id && r.status === 'active');
+  const lastEditSlug = state.pendingRouteEdits.length > 0
+    ? state.pendingRouteEdits[state.pendingRouteEdits.length - 1].slug
+    : null;
+  const canLoop  = lastEditSlug === mov.from_castle_slug;
+  const isLoop   = canLoop ? (state.pendingRouteIsLoop ?? route?.is_loop ?? false) : false;
+  if (!canLoop) state.pendingRouteIsLoop = false;
+  const canAbort = mov.departed_at_tick === state.activeGame.current_tick;
+
+  const pendingRows = state.pendingRouteEdits.map((w, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 10px;border-bottom:1px solid var(--border);">
+      <span style="font-size:11px;color:var(--text-muted);min-width:16px;">${i + 1}.</span>
+      <span style="flex:1;font-size:13px;color:var(--text);">${escapeHtml(w.name)}</span>
+      <button onclick="removeWaypointFromEdit(${i})"
+        style="background:none;border:none;color:var(--error);cursor:pointer;font-size:16px;padding:0 2px;line-height:1;">&times;</button>
+    </div>`).join('');
+
+  el.infoPanelBody.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);background:var(--bg-elevated);">
+      <button onclick="showMovementMiniBar()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;padding:0;">&#8592; Back</button>
+      <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);">Route for ${escapeHtml(commander ? commander.name : 'Commander')}</span>
+    </div>
+    <div style="padding:7px 14px 5px;font-size:12px;color:var(--accent);background:rgba(201,168,76,0.08);border-bottom:1px solid var(--border);">
+      Click any castle on the map to add a stop.
+    </div>
+    <div style="border:1px solid var(--border);border-radius:4px;margin:10px 10px 0;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg-elevated);border-bottom:1px solid var(--border);">
+        <span style="font-size:12px;color:var(--accent);">→</span>
+        <span style="flex:1;font-size:13px;color:var(--text-muted);">${escapeHtml(toCastle ? toCastle.name : mov.to_castle_slug)}</span>
+        <span style="font-size:11px;color:var(--text-muted);">${eta ? '~' + eta : 'arriving'} · locked</span>
+      </div>
+      ${pendingRows}
+      ${state.pendingRouteEdits.length === 0
+        ? `<div style="padding:8px 10px;font-size:12px;color:var(--text-muted);font-style:italic;">No further stops — will halt here.</div>`
+        : ''}
+    </div>
+    ${canLoop ? `
+    <label style="display:flex;align-items:center;gap:8px;padding:8px 12px 4px;font-size:12px;cursor:pointer;">
+      <input type="checkbox" id="routeEditorLoop" ${isLoop ? 'checked' : ''}
+        onchange="state.pendingRouteIsLoop=this.checked"> Loop route
+    </label>` : ''}
+    <div style="display:flex;gap:6px;padding:8px 10px 6px;flex-wrap:wrap;">
+      ${canAbort ? `
+      <button onclick="abortRoute(${commander?.id})"
+        style="width:100%;padding:7px;background:rgba(229,115,115,0.12);border:1px solid rgba(229,115,115,0.4);border-radius:4px;color:var(--error);font-size:12px;cursor:pointer;margin-bottom:4px;">
+        Abort March — return to ${escapeHtml(state.castles.find(c => c.slug === mov.from_castle_slug)?.name ?? 'origin')}
+      </button>` : ''}
+      <button onclick="recallRoute(${commander?.id})"
+        style="flex:1;padding:7px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:4px;color:var(--text-muted);font-size:12px;cursor:pointer;">
+        Cancel Route
+      </button>
+      <button onclick="saveRouteEdits(${commander?.id})"
+        style="flex:2;padding:7px;background:var(--accent);border:1px solid var(--accent);border-radius:4px;color:var(--bg-deep);font-size:12px;font-weight:700;cursor:pointer;">
+        Save Route
+      </button>
+    </div>`;
 }
 
 function renderMovementInfo() {
@@ -5783,10 +6738,13 @@ function renderMovementInfo() {
   const atkBonus  = commander ? commander.level * 10 : 0;
 
   el.infoPanelBody.innerHTML = `
-    <div class="castle-header">
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 12px 6px;border-bottom:1px solid var(--border);background:var(--bg-elevated);">
+      <button onclick="showMovementMiniBar()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;padding:0 4px 0 0;">&#8592; Back</button>
+      <div class="castle-region" style="flex:1;margin:0;">In transit</div>
+      <span class="tier-badge tier-1" style="background:var(--accent);color:var(--bg-deep);">Marching</span>
+    </div>
+    <div class="castle-header" style="padding-top:10px;">
       <div class="castle-name">${escapeHtml(commander ? commander.name : 'Unknown commander')}</div>
-      <div class="castle-region">In transit</div>
-      <span class="tier-badge tier-1" style="background: var(--accent); color: var(--bg-deep);">Marching</span>
     </div>
 
     <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg-elevated);border-radius:6px;margin-bottom:10px;">
@@ -5821,12 +6779,33 @@ function renderMovementInfo() {
       ${remainingDuration ? `<div class="info-row" style="font-size:13px;padding:5px 0;"><span class="label">In about</span><span class="value">${remainingDuration}</span></div>` : ''}
     </div>
 
-    ${isYours ? `
-      <div style="margin-top:14px;padding:10px 14px;background:var(--bg-elevated);border-radius:4px;font-size:12px;color:var(--text-muted);line-height:1.5;">
-        Route editing is not yet available. The current leg is locked once a commander is on the march.
-      </div>
-    ` : ''}
+    ${isYours ? buildRouteSection(mov) : ''}
   `;
+}
+
+function buildRouteSection(mov) {
+  const route = state.routes?.find(r => r.commander_id === mov.commander_id && r.status === 'active');
+  const toCastle = state.castles.find(c => c.slug === mov.to_castle_slug);
+  const futureWps = route ? route.waypoints.slice(route.current_idx + 1) : [];
+  const futureRows = futureWps.map((wp, i) => {
+    const c = state.castles.find(x => x.slug === wp.castle_slug);
+    return `<div style="padding:4px 10px;font-size:12px;color:var(--text-muted);">${i + 1}. ${escapeHtml(c ? c.name : wp.castle_slug)}</div>`;
+  }).join('');
+
+  return `
+    <div class="section-title" style="margin-top:8px;">Route Queue</div>
+    <div style="border:1px solid var(--border);border-radius:4px;margin:4px 10px 0;overflow:hidden;">
+      <div style="padding:5px 10px;font-size:12px;color:var(--text-muted);background:var(--bg-elevated);border-bottom:${futureWps.length ? '1px solid var(--border)' : 'none'};">
+        → ${escapeHtml(toCastle ? toCastle.name : mov.to_castle_slug)} <span style="opacity:0.5;">(current leg)</span>
+      </div>
+      ${futureWps.length > 0 ? futureRows : `<div style="padding:5px 10px;font-size:12px;color:var(--text-muted);font-style:italic;">No further stops.</div>`}
+    </div>
+    <div style="padding:8px 10px 4px;">
+      <button onclick="showRouteEditor()"
+        style="width:100%;padding:7px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:13px;cursor:pointer;">
+        Edit Route
+      </button>
+    </div>`;
 }
 
 // =====================================================
@@ -5870,48 +6849,71 @@ function getEntitiesNear(clientX, clientY, radiusPx) {
     }
   });
 
+  // Garrisoned commanders at nearby castles owned by current player
+  const myPlayerId = state.currentPlayer?.id;
+  if (myPlayerId) {
+    const marchingCommanderIds = new Set(state.movements.map(m => m.commander_id));
+    found.filter(e => e.type === 'castle').forEach(castleEnt => {
+      const gc = state.gameCastles.find(g => g.castle_slug === castleEnt.castle.slug);
+      if (!gc || gc.owner_player_id !== myPlayerId) return;
+      state.commanders
+        .filter(c => c.current_castle_slug === castleEnt.castle.slug && !marchingCommanderIds.has(c.id) && c.status !== 'dead')
+        .forEach(cmd => {
+          found.push({ type: 'commander', castle: castleEnt.castle, commander: cmd,
+            screenX: castleEnt.screenX, screenY: castleEnt.screenY });
+        });
+    });
+  }
+
   return found;
 }
 
 function entityKey(ent) {
-  return ent.type === 'castle' ? `castle:${ent.castle.slug}` : `movement:${ent.movement.id}`;
+  if (ent.type === 'castle') return `castle:${ent.castle.slug}`;
+  if (ent.type === 'movement') return `movement:${ent.movement.id}`;
+  return `commander:${ent.commander.id}`;
 }
 
 function selectEntity(ent) {
   if (!ent) return;
+  state.entityPicker = null;
   if (ent.type === 'castle') {
     state.selectedCastle = ent.castle.slug;
     state.selectedMovementId = null;
+    state.selectedCommanderId = null;
   } else if (ent.type === 'movement') {
     state.selectedMovementId = ent.movement.id;
     state.selectedCastle = null;
+    state.selectedCommanderId = null;
+    state.movementPanel = 'mini';
+  } else if (ent.type === 'commander') {
+    state.selectedCommanderId = ent.commander.id;
+    state.selectedCastle = null;
+    state.selectedMovementId = null;
   }
   renderMarkers();
   renderMovements();
   renderCastleInfo();
 }
 
-function selectAtClick(clientX, clientY, prefer = {}) {
+function selectAtClick(clientX, clientY) {
   const entities = getEntitiesNear(clientX, clientY, 24);
   if (entities.length === 0) return;
 
-  // Determine which to select by default - prefer what the user clicked on directly
-  let chosen = null;
-  if (prefer.preferCastle) {
-    chosen = entities.find(e => e.type === 'castle' && e.castle.slug === prefer.preferCastle);
+  if (entities.length === 1) {
+    state.entityPicker = null;
+    selectEntity(entities[0]);
+    return;
   }
-  if (!chosen && prefer.preferMovement) {
-    chosen = entities.find(e => e.type === 'movement' && e.movement.id === prefer.preferMovement);
-  }
-  chosen = chosen || entities[0];
 
-  selectEntity(chosen);
-
-  if (entities.length > 1) {
-    showStackPicker(entities, chosen);
-  } else {
-    hideStackPicker();
-  }
+  // Multiple entities — show picker in left panel
+  state.entityPicker = { entities };
+  state.selectedCastle = null;
+  state.selectedMovementId = null;
+  state.selectedCommanderId = null;
+  renderMarkers();
+  renderMovements();
+  renderCastleInfo();
 }
 
 function showStackPicker(entities, selected) {
@@ -6108,7 +7110,7 @@ function getDiplomacyLabel(status, graceTick) {
     const rem = graceTick - (state.activeGame?.current_tick || 0);
     return `Grace Period (${Math.max(0,rem)}t remaining)`;
   }
-  return 'Neutral';
+  return 'No Pact';
 }
 function getDiplomacyColor(status) {
   return { ally:'#62C030', enemy:'#E82040', proposed:'#F5C518', grace_period:'#F5A020', neutral:'#5a5040' }[status] || '#5a5040';
@@ -6116,7 +7118,7 @@ function getDiplomacyColor(status) {
 function nameToPortrait(name) {
   return './portraits/' + (name || '').toLowerCase()
     .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '') + '.jpg';
+    .replace(/[^a-z0-9-]/g, '') + '.png';
 }
 // ── HOUSE SIGILS (hand-crafted SVG for all 9 Great Houses) ──────
 const HOUSE_SIGIL_SVGS = {
@@ -6147,6 +7149,105 @@ window.sigilFallback  = sigilFallback;
 window.shieldFallback = shieldFallback;
 window.shieldSrc      = shieldSrc;
 window.nameToPortrait = nameToPortrait;
+window.startEditingRoute      = startEditingRoute;
+window.cancelEditingRoute     = cancelEditingRoute;
+window.renderNewRouteBuilder  = renderNewRouteBuilder;
+window.saveNewRoute           = saveNewRoute;
+window.cancelNewRouteBuild    = cancelNewRouteBuild;
+window.removeNewRouteWaypoint = removeNewRouteWaypoint;
+window.updateWaypointAction = function(idx, val) {
+  if (!_routeWaypoints[idx]) return;
+  _routeWaypoints[idx].action = val;
+  _routeWaypoints[idx].amount = null;
+  renderNewRouteBuilder();
+};
+window.updateWaypointAmount = function(idx, val) {
+  if (!_routeWaypoints[idx]) return;
+  _routeWaypoints[idx].amount = val === '' ? null : Number(val);
+};
+window.updateWaypointDelay = function(idx, val) {
+  if (!_routeWaypoints[idx]) return;
+  _routeWaypoints[idx].delay = parseInt(val) || 0;
+};
+function _scheduleCmdActionSave() {
+  if (!_cmdActionEdits) return;
+  clearTimeout(_cmdActionSaveTimer);
+  _cmdActionSaveTimer = setTimeout(() => saveCmdRouteActions(_cmdActionEdits.commanderId), 700);
+}
+window.updateCmdCurrentDestAction = function(val) {
+  if (!_cmdActionEdits) return;
+  _cmdActionEdits.currentDestAction = val;
+  _cmdActionEdits.currentDestAmount = null;
+  renderCommanderDetail(_cmdActionEdits.commanderId);
+  _scheduleCmdActionSave();
+};
+window.updateCmdCurrentDestAmount = function(val) {
+  if (!_cmdActionEdits) return;
+  _cmdActionEdits.currentDestAmount = val === '' ? null : Number(val);
+  _scheduleCmdActionSave();
+};
+window.updateCmdStopAction = function(idx, val) {
+  if (!_cmdActionEdits?.edits[idx]) return;
+  _cmdActionEdits.edits[idx].action = val;
+  _cmdActionEdits.edits[idx].amount = null;
+  renderCommanderDetail(_cmdActionEdits.commanderId);
+  _scheduleCmdActionSave();
+};
+window.updateCmdStopAmount = function(idx, val) {
+  if (!_cmdActionEdits?.edits[idx]) return;
+  _cmdActionEdits.edits[idx].amount = val === '' ? null : Number(val);
+  _scheduleCmdActionSave();
+};
+window.updateCmdStopDelay = function(idx, val) {
+  if (!_cmdActionEdits?.edits[idx]) return;
+  _cmdActionEdits.edits[idx].delay = parseInt(val) || 0;
+  _scheduleCmdActionSave();
+};
+async function saveCmdRouteActions(commanderId) {
+  if (!_cmdActionEdits) return;
+  const waypoints = _cmdActionEdits.edits.map(w => {
+    const obj = { castle_slug: w.slug, action: w.action || 'pass', delay: w.delay || 0 };
+    if (w.amount != null && w.amount !== '') obj.amount = Number(w.amount);
+    return obj;
+  });
+  const route = state.routes?.find(r => r.commander_id === commanderId && r.status === 'active');
+  const isLoop = route?.is_loop ?? false;
+  const currentDest = { action: _cmdActionEdits.currentDestAction || 'pass' };
+  if (_cmdActionEdits.currentDestAmount != null) currentDest.amount = Number(_cmdActionEdits.currentDestAmount);
+  const { error } = await supabase.rpc('update_route', {
+    p_game_id:        state.activeGame.id,
+    p_commander_id:   commanderId,
+    p_new_remaining:  waypoints,
+    p_is_loop:        isLoop,
+    p_current_dest:   currentDest,
+  });
+  if (error) { toast(error.message, true); return; }
+  toast('Stop actions saved.');
+  await refreshGameState(state.activeGame.id);
+}
+window.saveCmdRouteActions = saveCmdRouteActions;
+window.updateEditWaypointAction = function(idx, val) {
+  if (!state.pendingRouteEdits[idx]) return;
+  state.pendingRouteEdits[idx].action = val;
+  state.pendingRouteEdits[idx].amount = null;
+  renderRouteEditor();
+};
+window.updateEditWaypointAmount = function(idx, val) {
+  if (!state.pendingRouteEdits[idx]) return;
+  state.pendingRouteEdits[idx].amount = val === '' ? null : Number(val);
+};
+window.updateEditWaypointDelay = function(idx, val) {
+  if (!state.pendingRouteEdits[idx]) return;
+  state.pendingRouteEdits[idx].delay = parseInt(val) || 0;
+};
+window.addWaypointToEdit      = addWaypointToEdit;
+window.removeWaypointFromEdit = removeWaypointFromEdit;
+window.saveRouteEdits         = saveRouteEdits;
+window.recallRoute            = recallRoute;
+window.abortRoute             = abortRoute;
+window.showMovementMiniBar    = showMovementMiniBar;
+window.showMovementDetail     = showMovementDetail;
+window.showRouteEditor        = showRouteEditor;
 const NAV_ICONS = {
   leaderboard:  _svg('<path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>'),
   houses:       _svg('<path d="M3 22V10l9-8 9 8v12"/><path d="M9 22V16h6v6"/><rect x="9" y="10" width="6" height="4" rx="0.5"/>'),
@@ -6332,25 +7433,17 @@ function buildDiplomacyHtml() {
       primaryBtn = `<button class="dip-btn ally" data-target="${p.id}">🤝 Propose Alliance</button>`;
     }
 
-    // Enemy toggle (always available unless grace period)
-    const enemyBtn = !isGrace && !isAlly
-      ? (status === 'enemy'
-          ? `<button class="dip-btn neutral" data-target="${p.id}">↺ Clear Enemy</button>`
-          : `<button class="dip-btn enemy" data-target="${p.id}">☠ Mark Enemy</button>`)
-      : '';
-
     return `
     <div class="dip-player-row" data-player-id="${p.id}" style="--h-color:${color}">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
         ${shieldBadgeHtml(house?.slug||'', color, 44)}
         <div style="flex:1;min-width:0;">
           <div style="font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:${color};">${escapeHtml(house?.name||p.display_name)}</div>
-          <div style="font-size:12px;color:${statusColor};margin-top:3px;">● ${statusLabel}</div>
+          ${status !== 'neutral' ? `<div style="font-size:12px;color:${statusColor};margin-top:3px;">● ${statusLabel}</div>` : ''}
         </div>
       </div>
       <div class="dip-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
         ${primaryBtn}
-        ${enemyBtn}
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="dip-btn send-gold" data-target="${p.id}">⚜ Send Gold</button>
@@ -6416,17 +7509,6 @@ function wireDiplomacySection() {
     await reloadDiplomacy();
   }));
 
-  c.querySelectorAll('.dip-btn.enemy').forEach(btn => btn.addEventListener('click', async () => {
-    const tid = parseInt(btn.dataset.target);
-    await supabase.rpc('set_enemy', { p_game_id: state.activeGame.id, p_target_player_id: tid });
-    await reloadDiplomacy();
-  }));
-
-  c.querySelectorAll('.dip-btn.neutral').forEach(btn => btn.addEventListener('click', async () => {
-    const tid = parseInt(btn.dataset.target);
-    await supabase.rpc('set_neutral', { p_game_id: state.activeGame.id, p_target_player_id: tid });
-    await reloadDiplomacy();
-  }));
 
   c.querySelectorAll('.dip-btn.send-gold').forEach(btn => btn.addEventListener('click', () => {
     const tid = parseInt(btn.dataset.target);
@@ -7499,6 +8581,34 @@ function buildIntelHtml() {
   </div>`;
 }
 
+function buildLiveSnapshot() {
+  if (!state.activeGame || !state.gamePlayers?.length) return [];
+  const tick = state.activeGame.current_tick || 0;
+  return state.gamePlayers.map(p => {
+    const castles = state.gameCastles.filter(gc => gc.owner_player_id === p.id);
+    const cmds    = state.commanders.filter(c => c.owner_player_id === p.id && c.status !== 'dead');
+    const seats   = (state.allCouncilSeats || []).filter(s => s.player_id === p.id);
+    const seatLv  = seat => seats.find(s => s.seat === seat)?.level || 0;
+    return {
+      player_id:            p.id,
+      tick,
+      castles:              castles.length,
+      troops:               castles.reduce((s, gc) => s + (gc.troops || 0), 0)
+                          + cmds.reduce((s, c) => s + (c.troops || 0), 0),
+      commanders:           cmds.length,
+      gold_level:           castles.reduce((s, gc) => s + (gc.gold_level || 0), 0),
+      industry_level:       castles.reduce((s, gc) => s + (gc.industry_level || 0), 0),
+      prestige_level:       castles.reduce((s, gc) => s + (gc.prestige_level || 0), 0),
+      hand_level:           seatLv('hand'),
+      coin_level:           seatLv('coin'),
+      lord_commander_level: seatLv('lord_commander'),
+      whisperers_level:     seatLv('whisperers'),
+      grand_maester_level:  seatLv('grand_maester'),
+      laws_level:           seatLv('laws'),
+    };
+  });
+}
+
 async function loadIntelSection() {
   const wrap = document.getElementById('intelChartWrap');
   if (!wrap || !state.activeGame) return;
@@ -7508,9 +8618,12 @@ async function loadIntelSection() {
     .order('tick', { ascending: true });
 
   if (error || !snapshots?.length) {
-    wrap.innerHTML = `<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px;">
-      No data yet. Force at least 12 ticks to generate Year 1 snapshots.
-    </div>`;
+    const live = buildLiveSnapshot();
+    if (live.length) {
+      renderIntelChart(live, wrap);
+    } else {
+      wrap.innerHTML = `<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px;">No data available.</div>`;
+    }
     return;
   }
 
