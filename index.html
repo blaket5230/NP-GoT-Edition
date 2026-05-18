@@ -3920,15 +3920,26 @@ async function onAuthChange(session) {
     const gameId = parseInt(joinId);
     const game = state.games.find(g => g.id === gameId);
     if (game) {
-      // Already a player → enter directly
       const userIn = (game.game_players || []).some(p => p.user_id === state.user.id);
       if (game.status === 'active' && userIn) enterGameMode(gameId);
       else openJoinGameModal(gameId);
     } else {
       toast('Game not found — it may have been cancelled or already finished.', true);
     }
-    // Clean URL without reloading
     history.replaceState(null, '', location.pathname);
+    return;
+  }
+
+  // Resume game after page refresh
+  const resumeId = parseInt(localStorage.getItem('westeros_resume_game'));
+  if (resumeId) {
+    const game = state.games.find(g => g.id === resumeId);
+    const userIn = game && (game.game_players || []).some(p => p.user_id === state.user.id);
+    if (game && game.status === 'active' && userIn) {
+      await enterGameMode(resumeId);
+    } else {
+      localStorage.removeItem('westeros_resume_game');
+    }
   }
 }
 
@@ -5332,6 +5343,7 @@ async function enterGameMode(gameId) {
     state.mode = 'game';
     state.activeGame = game;
     state.currentPlayer = currentPlayer;
+    localStorage.setItem('westeros_resume_game', String(gameId));
     state.gamePlayers = game.game_players || [];
     state.selectedCastle = null;
 
@@ -6286,6 +6298,7 @@ function startProductionCountdown() {
 }
 
 function exitGameMode() {
+  localStorage.removeItem('westeros_resume_game');
   if (window._productionTimer) { clearInterval(window._productionTimer); window._productionTimer = null; }
   state.mode = 'lobby';
   state.activeGame = null;
