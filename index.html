@@ -215,8 +215,8 @@
   /* Game mode: sidebar always open as permanent left column */
   .main-screen.game-mode {
     grid-template-rows: 48px 1fr;
-    grid-template-columns: 360px 1fr;
-    grid-template-areas: "header header" "sidebar map";
+    grid-template-columns: 1fr max(350px, calc(100vh * 0.4308));
+    grid-template-areas: "header map" "sidebar map";
   }
   .main-screen.game-mode .header {
     height: 48px;
@@ -522,7 +522,7 @@
     flex-direction: column;
   }
   .section-title {
-    font-size: 11px;
+    font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-muted);
@@ -1623,7 +1623,7 @@
     text-align: center;
   }
   .stat-cell .stat-label {
-    font-size: 9px;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--text-muted);
@@ -2199,7 +2199,7 @@
   }
   .stat-label {
     font-family:'Cinzel',Georgia,serif !important;
-    font-size:11px !important;
+    font-size:13px !important;
     letter-spacing:.10em !important;
     text-transform:uppercase !important;
     color:var(--text-muted) !important;
@@ -8442,17 +8442,17 @@ function buildCouncilSidebarHtml() {
     const sMeta = COUNCIL_META[traits.strength.seat];
     const wMeta = COUNCIL_META[traits.weakness.seat];
     traitsHtml = `
-    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px;">House Character</div>
-    <div style="display:flex;gap:8px;margin-bottom:16px;">
-      <div style="flex:1;background:var(--bg-elevated);border:1px solid var(--success);border-radius:5px;padding:10px;">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--success);margin-bottom:4px;">Strength</div>
-        <div style="font-size:12px;font-weight:600;margin-bottom:3px;">${traits.strength.label}</div>
-        <div style="font-size:10px;color:var(--text-muted);">${sMeta.title}</div>
+    <div style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:10px;">House Character</div>
+    <div style="display:flex;gap:10px;margin-bottom:18px;">
+      <div style="flex:1;background:var(--bg-elevated);border:1px solid var(--success);border-radius:6px;padding:12px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--success);margin-bottom:5px;">Strength</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:4px;">${traits.strength.label}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${sMeta.title}</div>
       </div>
-      <div style="flex:1;background:var(--bg-elevated);border:1px solid var(--error);border-radius:5px;padding:10px;">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--error);margin-bottom:4px;">Weakness</div>
-        <div style="font-size:12px;font-weight:600;margin-bottom:3px;">${traits.weakness.label}</div>
-        <div style="font-size:10px;color:var(--text-muted);">${wMeta.title}</div>
+      <div style="flex:1;background:var(--bg-elevated);border:1px solid var(--error);border-radius:6px;padding:12px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--error);margin-bottom:5px;">Weakness</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:4px;">${traits.weakness.label}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${wMeta.title}</div>
       </div>
     </div>`;
   }
@@ -8465,57 +8465,57 @@ function buildCouncilSidebarHtml() {
     const active      = seat === currentSeat;
     const cost        = lv < 5 ? trainingCost(lv) : null;
     const pct         = cost ? Math.min(100, Math.round(prog / cost * 100)) : 0;
-    const dots        = Array.from({length:5},(_,i)=>`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px;background:${i<lv?'var(--accent)':'var(--border)'};"></span>`).join('');
+    const dots        = Array.from({length:5},(_,i)=>`<span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:4px;background:${i<lv?'var(--accent)':'var(--border)'};"></span>`).join('');
     const isStrength  = traits?.strength.seat === seat;
     const isWeakness  = traits?.weakness.seat === seat;
     const traitBadge  = isStrength
-      ? `<span style="font-size:9px;color:var(--success);border:1px solid var(--success);padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle;">STRENGTH</span>`
+      ? `<span style="font-size:11px;color:var(--success);border:1px solid var(--success);padding:2px 6px;border-radius:3px;margin-left:6px;vertical-align:middle;">STRENGTH</span>`
       : isWeakness
-      ? `<span style="font-size:9px;color:var(--error);border:1px solid var(--error);padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle;">WEAKNESS</span>`
+      ? `<span style="font-size:11px;color:var(--error);border:1px solid var(--error);padding:2px 6px;border-radius:3px;margin-left:6px;vertical-align:middle;">WEAKNESS</span>`
       : '';
-    return `<div style="background:var(--bg-elevated);border:1px solid ${active?'var(--accent)':'var(--border)'};border-radius:5px;padding:10px;margin-bottom:8px;">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+    return `<div style="background:var(--bg-elevated);border:1px solid ${active?'var(--accent)':'var(--border)'};border-radius:6px;padding:14px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
         <div style="flex:1;">
-          <div style="font-size:13px;font-weight:600;">${meta.title}${traitBadge}</div>
-          <div style="margin-top:3px;">${dots}<span style="font-size:10px;color:var(--text-muted);"> Level ${lv}/5</span></div>
+          <div style="font-size:16px;font-weight:600;">${meta.title}${traitBadge}</div>
+          <div style="margin-top:4px;">${dots}<span style="font-size:12px;color:var(--text-muted);"> Level ${lv}/5</span></div>
         </div>
-        ${active ? '<span style="font-size:10px;background:var(--accent);color:var(--bg-deep);padding:2px 7px;border-radius:3px;font-weight:700;">FOCUS</span>' : ''}
-        ${lv >= 5 ? '<span style="font-size:10px;color:var(--success);font-weight:700;">MASTERED</span>' : ''}
+        ${active ? '<span style="font-size:11px;background:var(--accent);color:var(--bg-deep);padding:3px 9px;border-radius:3px;font-weight:700;">FOCUS</span>' : ''}
+        ${lv >= 5 ? '<span style="font-size:12px;color:var(--success);font-weight:700;">MASTERED</span>' : ''}
       </div>
       ${lv < 5
-        ? `<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:4px;"><div style="height:100%;width:${pct}%;background:${active?'var(--accent)':'var(--border-strong)'};border-radius:2px;"></div></div><div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">${prog} / ${cost}${active ? ' \u00b7 '+pct+'%' : ''}</div>`
-        : '<div style="font-size:10px;color:var(--success);margin-bottom:6px;">Fully trained</div>'
+        ? `<div style="height:5px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px;"><div style="height:100%;width:${pct}%;background:${active?'var(--accent)':'var(--border-strong)'};border-radius:2px;"></div></div><div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">${prog} / ${cost}${active ? ' \u00b7 '+pct+'%' : ''}</div>`
+        : '<div style="font-size:12px;color:var(--success);margin-bottom:8px;">Fully trained</div>'
       }
-      <div style="font-size:10px;color:var(--text-muted);line-height:1.5;border-top:1px solid var(--border);padding-top:6px;">${COUNCIL_DESC[seat]}</div>
+      <div style="font-size:13px;color:var(--text-muted);line-height:1.6;border-top:1px solid var(--border);padding-top:8px;">${COUNCIL_DESC[seat]}</div>
     </div>`;
   }).join('');
 
   return `
-    <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-start;">
+    <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-start;">
       <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:3px;">Prestige Income</div>
-        <div style="font-size:20px;font-weight:700;color:var(--accent);line-height:1;">${prestigePerCycle}<span style="font-size:11px;font-weight:400;color:var(--text-muted);"> / cycle</span></div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${prestigePerTick} per tick</div>
-        ${grandMaesterBonus > 0 ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">+${grandMaesterBonus} random / cycle</div>` : ''}
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:4px;">Prestige Income</div>
+        <div style="font-size:26px;font-weight:700;color:var(--accent);line-height:1;">${prestigePerCycle}<span style="font-size:13px;font-weight:400;color:var(--text-muted);"> / cycle</span></div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:3px;">${prestigePerTick} per tick</div>
+        ${grandMaesterBonus > 0 ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">+${grandMaesterBonus} random / cycle</div>` : ''}
       </div>
-      <div style="text-align:right;max-width:55%;">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:3px;">ETA</div>
-        <div style="font-size:11px;line-height:1.5;">${etaHtml}</div>
+      <div style="text-align:right;max-width:50%;">
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:4px;">ETA</div>
+        <div style="font-size:13px;line-height:1.5;">${etaHtml}</div>
       </div>
     </div>
-    <div style="margin-bottom:8px;">
-      <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);display:block;margin-bottom:4px;">Current Focus</label>
-      <select id="councilFocusSelect" style="width:100%;background:var(--bg-elevated);color:var(--text);border:1px solid ${currentSeat?'var(--accent)':'var(--border)'};border-radius:4px;padding:8px;font-family:inherit;font-size:13px;">${seatOpts(currentSeat, true, '\u2014 No investment \u2014')}</select>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);display:block;margin-bottom:5px;">Current Focus</label>
+      <select id="councilFocusSelect" style="width:100%;background:var(--bg-elevated);color:var(--text);border:1px solid ${currentSeat?'var(--accent)':'var(--border)'};border-radius:4px;padding:10px;font-family:inherit;font-size:15px;">${seatOpts(currentSeat, true, '\u2014 No investment \u2014')}</select>
     </div>
-    <div style="margin-bottom:16px;">
-      <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);display:block;margin-bottom:4px;">Next Focus <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-faint);font-size:10px;margin-left:4px;">(queues automatically)</span></label>
-      <select id="councilNextSelect" style="width:100%;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px;font-family:inherit;font-size:13px;">
+    <div style="margin-bottom:18px;">
+      <label style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);display:block;margin-bottom:5px;">Next Focus <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-faint);font-size:12px;margin-left:5px;">(queues automatically)</span></label>
+      <select id="councilNextSelect" style="width:100%;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:10px;font-family:inherit;font-size:15px;">
         <option value="" ${!nextSeat?'selected':''}>&#8629; Same as current</option>
         ${seatOpts(nextSeat, false, '')}
       </select>
     </div>
     ${traitsHtml}
-    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px;">Council Seats</div>
+    <div style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:10px;">Council Seats</div>
     ${cards}
   `;
 }
