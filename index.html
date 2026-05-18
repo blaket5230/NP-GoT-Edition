@@ -2730,6 +2730,171 @@
   }
   #exitGameBtn:hover { color:var(--text) !important; border-color:var(--border-strong) !important; }
 
+  /* ===== LOBBY NAV ===== */
+  .main-screen:not(.game-mode) .sidebar { padding: 0; }
+
+  .lnav { display: flex; flex-direction: column; }
+
+  .lnav-hdr {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    padding: 13px 16px;
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-align: left;
+    transition: color 0.15s, background 0.15s;
+  }
+  .lnav-hdr:hover { color: var(--text); background: var(--bg-elevated); }
+  .lnav-hdr.lnav-group-open { color: var(--text); }
+  .lnav-hdr.lnav-active { color: var(--accent); }
+
+  .lnav-caret {
+    font-size: 14px;
+    transition: transform 0.2s;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .lnav-group-open .lnav-caret { transform: rotate(90deg); color: var(--accent); }
+
+  .lnav-kids {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+    background: var(--bg-deep);
+  }
+  .lnav-group.open .lnav-kids { max-height: 200px; }
+
+  .lnav-kid {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    border-left: 2px solid transparent;
+    padding: 10px 16px 10px 28px;
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 14px;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-align: left;
+    transition: color 0.15s, background 0.15s, border-left-color 0.15s;
+  }
+  .lnav-kid:hover { color: var(--text); background: var(--bg-elevated); }
+  .lnav-kid.lnav-active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(201,168,76,0.06);
+  }
+
+  .lnav-divider { height: 1px; background: var(--border-gold); margin: 8px 0; flex-shrink: 0; }
+
+  .lnav-content { padding: 14px 16px; flex: 1; overflow-y: auto; }
+
+  .lview-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .lview-hdr-title {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .lview-hdr-actions { display: flex; gap: 8px; }
+
+  .lview-coming-soon {
+    padding: 24px 0;
+    text-align: center;
+  }
+  .lview-coming-soon-title {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .lview-coming-soon-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .lview-section { margin-bottom: 20px; }
+  .lview-section-title {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .lview-form-row { margin-bottom: 12px; }
+  .lview-form-row label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    letter-spacing: 0.04em;
+  }
+  .lview-form-row input {
+    width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    padding: 7px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    box-sizing: border-box;
+  }
+  .lview-form-row input:focus { outline: none; border-color: var(--accent); }
+  .lview-form-row input:disabled { color: var(--text-muted); cursor: default; }
+  .lview-save-btn {
+    background: var(--accent);
+    color: var(--bg-deep);
+    border: none;
+    border-radius: 4px;
+    padding: 7px 16px;
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .lview-save-btn:hover { background: var(--accent-bright); }
+
+  .lview-help-section { margin-bottom: 18px; }
+  .lview-help-q {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .lview-help-a {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
 </style>
 </head>
 <body>
@@ -2833,20 +2998,58 @@
     </div>
     <!-- Lobby mode content -->
     <div id="lobbyContent">
-      <div class="section-title">
-        Games
-        <span class="actions">
-          <button class="action-link" id="refreshGamesBtn">Refresh</button>
-          <button class="action-link" id="createGameBtn">+ Create</button>
-        </span>
-      </div>
-      <div id="gamesList"></div>
+      <nav class="lnav" id="lobbyNav">
+        <div class="lnav-group" id="lnav-sp">
+          <button class="lnav-hdr" data-group="sp">
+            <span>Single Player</span><span class="lnav-caret">›</span>
+          </button>
+          <div class="lnav-kids">
+            <button class="lnav-kid" data-view="sp-mygames">My Games</button>
+            <button class="lnav-kid" data-view="sp-create">Create Game</button>
+          </div>
+        </div>
+        <div class="lnav-group" id="lnav-mp">
+          <button class="lnav-hdr" data-group="mp">
+            <span>Online Multiplayer</span><span class="lnav-caret">›</span>
+          </button>
+          <div class="lnav-kids">
+            <button class="lnav-kid" data-view="mp-mygames">My Games</button>
+            <button class="lnav-kid" data-view="mp-join">Join Games</button>
+            <button class="lnav-kid" data-view="mp-create">Create Game</button>
+          </div>
+        </div>
+        <div class="lnav-group" id="lnav-coop">
+          <button class="lnav-hdr" data-group="coop">
+            <span>Co-Op Mode</span><span class="lnav-caret">›</span>
+          </button>
+          <div class="lnav-kids">
+            <button class="lnav-kid" data-view="coop-mygames">My Games</button>
+            <button class="lnav-kid" data-view="coop-join">Join Games</button>
+            <button class="lnav-kid" data-view="coop-create">Create Game</button>
+          </div>
+        </div>
+        <button class="lnav-hdr lnav-solo" data-view="achievements">Achievements</button>
+        <button class="lnav-hdr lnav-solo" data-view="account">Account Settings</button>
+        <button class="lnav-hdr lnav-solo" data-view="help">Help</button>
+      </nav>
 
-      <div class="section-title">Reference</div>
-      <div style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">
-        <div><span id="castleCount">—</span> castles loaded</div>
-        <div><span id="houseCount">—</span> houses loaded</div>
+      <div class="lnav-divider"></div>
+
+      <div class="lnav-content" id="lobbyViewContent">
+        <div id="gamesViewHeader" class="lview-hdr" style="display:none;">
+          <span class="lview-hdr-title" id="gamesViewTitle">My Games</span>
+          <div class="lview-hdr-actions">
+            <button class="action-link" id="refreshGamesBtn">Refresh</button>
+            <button class="action-link" id="createGameBtn" style="display:none;">+ Create</button>
+          </div>
+        </div>
+        <div id="gamesList"></div>
+        <div id="lobbyStaticView"></div>
       </div>
+
+      <!-- Hidden reference spans — updated by JS, not displayed -->
+      <span id="castleCount" style="display:none">—</span>
+      <span id="houseCount" style="display:none">—</span>
     </div>
 
     <!-- Game mode content - NP-style sidebar navigation -->
@@ -3538,11 +3741,13 @@ function showAuthScreen() {
   el.authScreen.classList.remove('hidden');
   el.mainScreen.classList.add('hidden');
 }
+let _lobbyNavInited = false;
 function showMainScreen() {
   el.authScreen.classList.add('hidden');
   el.mainScreen.classList.remove('hidden');
   void el.mainScreen.getBoundingClientRect(); // force layout before reading container dims
   if (el.mapImage.naturalWidth > 0) startHomePanAnimation();
+  if (!_lobbyNavInited) { _lobbyNavInited = true; initLobbyNav(); }
 }
 
 // =====================================================
@@ -4378,16 +4583,27 @@ async function loadGames() {
   }
 }
 
+let _lobbyNavMode = 'my'; // 'my' | 'join'
+
 function renderGamesList() {
   const visibleGames = state.games.filter(game => {
+    const players = game.game_players || [];
+    const userIn = players.some(p => p.user_id === state.user?.id);
+    if (_lobbyNavMode === 'join') {
+      return game.status === 'lobby' && !userIn;
+    }
+    // 'my' mode: lobby games + user's active/ended games
     if (game.status === 'lobby') return true;
-    if (game.status === 'active') return (game.game_players || []).some(p => p.user_id === state.user.id);
-    if (game.status === 'cancelled' || game.status === 'finished') return game.created_by === state.user.id;
+    if (game.status === 'active') return userIn;
+    if (game.status === 'cancelled' || game.status === 'finished') return game.created_by === state.user?.id;
     return false;
   });
 
   if (visibleGames.length === 0) {
-    el.gamesList.innerHTML = '<div class="empty-state">No games yet. Create one to get started.</div>';
+    const msg = _lobbyNavMode === 'join'
+      ? 'No open games to join right now.'
+      : 'No games yet. Create one to get started.';
+    el.gamesList.innerHTML = `<div class="empty-state">${msg}</div>`;
     return;
   }
 
@@ -4471,6 +4687,205 @@ function renderGamesList() {
 }
 
 el.refreshGamesBtn.addEventListener('click', () => loadGames());
+
+// =====================================================
+// LOBBY NAV
+// =====================================================
+let _activeNavView = null;
+
+function initLobbyNav() {
+  // Group header toggles
+  document.querySelectorAll('.lnav-hdr[data-group]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const group = btn.dataset.group;
+      const groupEl = document.getElementById('lnav-' + group);
+      const isOpen = groupEl.classList.contains('open');
+      document.querySelectorAll('.lnav-group').forEach(g => {
+        g.classList.remove('open');
+        g.querySelector('.lnav-hdr')?.classList.remove('lnav-group-open');
+      });
+      if (!isOpen) {
+        groupEl.classList.add('open');
+        btn.classList.add('lnav-group-open');
+      }
+    });
+  });
+
+  // Sub-item clicks
+  document.querySelectorAll('.lnav-kid[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => setLobbyView(btn.dataset.view));
+  });
+
+  // Solo top-level clicks (Achievements, Account, Help)
+  document.querySelectorAll('.lnav-solo[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.lnav-group').forEach(g => {
+        g.classList.remove('open');
+        g.querySelector('.lnav-hdr')?.classList.remove('lnav-group-open');
+      });
+      setLobbyView(btn.dataset.view);
+    });
+  });
+
+  // Default: open MP, show my games
+  const mpGroup = document.getElementById('lnav-mp');
+  mpGroup.classList.add('open');
+  mpGroup.querySelector('.lnav-hdr').classList.add('lnav-group-open');
+  setLobbyView('mp-mygames');
+}
+
+function setLobbyView(view) {
+  _activeNavView = view;
+
+  // Highlight active item
+  document.querySelectorAll('.lnav-kid, .lnav-solo').forEach(btn => {
+    btn.classList.toggle('lnav-active', btn.dataset.view === view);
+  });
+
+  const gamesHeader  = document.getElementById('gamesViewHeader');
+  const gamesTitle   = document.getElementById('gamesViewTitle');
+  const createBtn    = el.createGameBtn;
+  const gamesList    = el.gamesList;
+  const staticView   = document.getElementById('lobbyStaticView');
+
+  // "Create Game" items: open modal, don't change view
+  if (view.endsWith('-create')) {
+    createBtn.click();
+    return;
+  }
+
+  const isGamesView = view.endsWith('-mygames') || view.endsWith('-join');
+
+  if (isGamesView) {
+    gamesHeader.style.display = 'flex';
+    gamesList.style.display = '';
+    staticView.innerHTML = '';
+    staticView.style.display = 'none';
+
+    if (view.endsWith('-join')) {
+      gamesTitle.textContent = 'Join Games';
+      createBtn.style.display = 'none';
+      _lobbyNavMode = 'join';
+    } else {
+      gamesTitle.textContent = 'My Games';
+      createBtn.style.display = '';
+      _lobbyNavMode = 'my';
+    }
+    renderGamesList();
+  } else {
+    gamesHeader.style.display = 'none';
+    gamesList.style.display = 'none';
+    staticView.style.display = '';
+
+    if (view === 'achievements')  renderLobbyComingSoon(staticView, 'Achievements', 'Earn glory on the battlefield. Track your victories, conquests, and council achievements here.');
+    else if (view === 'account')  renderLobbyAccount(staticView);
+    else if (view === 'help')     renderLobbyHelp(staticView);
+    else if (view.startsWith('coop-') || view.startsWith('sp-')) renderLobbyComingSoon(staticView, 'Coming Soon', 'This game mode is under development. Check back in a future update.');
+  }
+}
+
+function renderLobbyComingSoon(container, title, text) {
+  container.innerHTML = `
+    <div class="lview-coming-soon">
+      <div class="lview-coming-soon-title">${title}</div>
+      <div class="lview-coming-soon-text">${text}</div>
+    </div>`;
+}
+
+function renderLobbyAccount(container) {
+  container.innerHTML = `
+    <div class="lview-section">
+      <div class="lview-section-title">Email</div>
+      <div class="lview-form-row">
+        <label>Current Email</label>
+        <input type="email" id="acctCurrentEmail" disabled value="${escapeHtml(state.user?.email || '')}">
+      </div>
+      <div class="lview-form-row">
+        <label>New Email</label>
+        <input type="email" id="acctNewEmail" placeholder="Enter new email">
+      </div>
+      <button class="lview-save-btn" id="acctSaveEmail">Update Email</button>
+    </div>
+    <div class="lnav-divider"></div>
+    <div class="lview-section" style="margin-top:16px;">
+      <div class="lview-section-title">Password</div>
+      <div class="lview-form-row">
+        <label>New Password</label>
+        <input type="password" id="acctNewPassword" placeholder="At least 6 characters" minlength="6">
+      </div>
+      <div class="lview-form-row">
+        <label>Confirm Password</label>
+        <input type="password" id="acctConfirmPassword" placeholder="Repeat new password">
+      </div>
+      <button class="lview-save-btn" id="acctSavePassword">Update Password</button>
+    </div>`;
+
+  document.getElementById('acctSaveEmail').addEventListener('click', async () => {
+    const newEmail = document.getElementById('acctNewEmail').value.trim();
+    if (!newEmail) { toast('Enter a new email address', true); return; }
+    try {
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
+      if (error) throw error;
+      toast('Confirmation email sent. Check your inbox to verify the change.');
+    } catch (err) { toast(`Failed: ${err.message}`, true); }
+  });
+
+  document.getElementById('acctSavePassword').addEventListener('click', async () => {
+    const pw  = document.getElementById('acctNewPassword').value;
+    const cpw = document.getElementById('acctConfirmPassword').value;
+    if (!pw || pw.length < 6) { toast('Password must be at least 6 characters', true); return; }
+    if (pw !== cpw)           { toast('Passwords do not match', true); return; }
+    try {
+      const { error } = await supabase.auth.updateUser({ password: pw });
+      if (error) throw error;
+      toast('Password updated.');
+      document.getElementById('acctNewPassword').value = '';
+      document.getElementById('acctConfirmPassword').value = '';
+    } catch (err) { toast(`Failed: ${err.message}`, true); }
+  });
+}
+
+function renderLobbyHelp(container) {
+  const sections = [
+    {
+      q: 'How do I start a game?',
+      a: 'Click <strong>Create Game</strong> under Online Multiplayer, fill in the name and settings, then share your invite link with up to 8 other players. Once all seats are filled, the host starts the game.'
+    },
+    {
+      q: 'How does the tick system work?',
+      a: 'The game runs on ticks — real-time intervals set when the game is created. Everything happens on ticks: movement, production, combat resolution. You do not need to be online when ticks fire.'
+    },
+    {
+      q: 'How do armies move?',
+      a: 'Select a castle and assign a commander to lead a march. Armies travel along castle connections. Travel time depends on distance and your Master of Horses council level.'
+    },
+    {
+      q: 'What is the Small Council?',
+      a: 'The Small Council has 7 seats, each held by a named commander. Each seat level provides passive bonuses: gold, troops, scan range, march speed, influence, combat strength, and prestige.'
+    },
+    {
+      q: 'How does fog of war work?',
+      a: 'You can always see the full map, but enemy castle ownership and army strength are hidden unless they fall within your scan radius. Scan range is set by your Master of Whisperers level.'
+    },
+    {
+      q: 'How is combat resolved?',
+      a: 'When an army arrives at an enemy castle, combat resolves automatically. Your Hand of the King level sets the flat damage your troops deal per round. Commander skill adds a percentage bonus.'
+    },
+    {
+      q: 'What are the win conditions?',
+      a: 'Control a majority of castles on the map or eliminate all rival houses. Prestige rankings determine the winner if the game ends by time limit.'
+    },
+    {
+      q: 'What is Co-Op Mode?',
+      a: 'Co-Op Mode pits all human players as allies against an AI-controlled White Walker invasion from beyond the Wall. This mode is currently in development.'
+    },
+  ];
+  container.innerHTML = sections.map(s => `
+    <div class="lview-help-section">
+      <div class="lview-help-q">${s.q}</div>
+      <div class="lview-help-a">${s.a}</div>
+    </div>`).join('<div class="lnav-divider" style="margin:10px 0;"></div>');
+}
 
 // =====================================================
 // CREATE GAME
