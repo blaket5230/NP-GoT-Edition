@@ -2771,7 +2771,7 @@
     transition: max-height 0.25s ease;
     background: var(--bg-deep);
   }
-  .lnav-group.open .lnav-kids { max-height: 200px; }
+  .lnav-group.open .lnav-kids { max-height: 300px; }
 
   .lnav-kid {
     display: block;
@@ -2895,6 +2895,70 @@
     line-height: 1.6;
   }
 
+  /* Mode picker cards (Standard / Scenarios) */
+  .lview-mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .lview-mode-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 14px 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .lview-mode-card:hover { border-color: var(--accent); background: var(--bg-hover); }
+  .lview-mode-card.coming { opacity: 0.5; cursor: default; }
+  .lview-mode-card.coming:hover { border-color: var(--border-strong); background: var(--bg-elevated); }
+  .lview-mode-icon { font-size: 22px; margin-bottom: 6px; }
+  .lview-mode-name {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .lview-mode-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+  .lview-mode-badge {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 6px;
+  }
+
+  /* Join filter tabs */
+  .lview-filter-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .lview-filter-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 6px 12px;
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    cursor: pointer;
+    margin-bottom: -1px;
+    transition: color 0.15s;
+  }
+  .lview-filter-tab:hover { color: var(--text); }
+  .lview-filter-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
 </style>
 </head>
 <body>
@@ -3006,6 +3070,7 @@
           <div class="lnav-kids">
             <button class="lnav-kid" data-view="sp-mygames">My Games</button>
             <button class="lnav-kid" data-view="sp-create">Create Game</button>
+            <button class="lnav-kid" data-view="sp-coop">Co-Op Mode</button>
           </div>
         </div>
         <div class="lnav-group" id="lnav-mp">
@@ -3016,16 +3081,7 @@
             <button class="lnav-kid" data-view="mp-mygames">My Games</button>
             <button class="lnav-kid" data-view="mp-join">Join Games</button>
             <button class="lnav-kid" data-view="mp-create">Create Game</button>
-          </div>
-        </div>
-        <div class="lnav-group" id="lnav-coop">
-          <button class="lnav-hdr" data-group="coop">
-            <span>Co-Op Mode</span><span class="lnav-caret">›</span>
-          </button>
-          <div class="lnav-kids">
-            <button class="lnav-kid" data-view="coop-mygames">My Games</button>
-            <button class="lnav-kid" data-view="coop-join">Join Games</button>
-            <button class="lnav-kid" data-view="coop-create">Create Game</button>
+            <button class="lnav-kid" data-view="mp-coop">Co-Op Mode</button>
           </div>
         </div>
         <button class="lnav-hdr lnav-solo" data-view="achievements">Achievements</button>
@@ -4742,46 +4798,129 @@ function setLobbyView(view) {
     btn.classList.toggle('lnav-active', btn.dataset.view === view);
   });
 
-  const gamesHeader  = document.getElementById('gamesViewHeader');
-  const gamesTitle   = document.getElementById('gamesViewTitle');
-  const createBtn    = el.createGameBtn;
-  const gamesList    = el.gamesList;
-  const staticView   = document.getElementById('lobbyStaticView');
+  const gamesHeader = document.getElementById('gamesViewHeader');
+  const gamesTitle  = document.getElementById('gamesViewTitle');
+  const createBtn   = el.createGameBtn;
+  const gamesList   = el.gamesList;
+  const staticView  = document.getElementById('lobbyStaticView');
 
-  // "Create Game" items: open modal, don't change view
-  if (view.endsWith('-create')) {
-    createBtn.click();
-    return;
-  }
-
-  const isGamesView = view.endsWith('-mygames') || view.endsWith('-join');
-
-  if (isGamesView) {
-    gamesHeader.style.display = 'flex';
-    gamesList.style.display = '';
-    staticView.innerHTML = '';
-    staticView.style.display = 'none';
-
-    if (view.endsWith('-join')) {
-      gamesTitle.textContent = 'Join Games';
-      createBtn.style.display = 'none';
-      _lobbyNavMode = 'join';
-    } else {
-      gamesTitle.textContent = 'My Games';
-      createBtn.style.display = '';
-      _lobbyNavMode = 'my';
-    }
-    renderGamesList();
-  } else {
+  const hideGames = () => {
     gamesHeader.style.display = 'none';
     gamesList.style.display = 'none';
-    staticView.style.display = '';
+  };
+  const showStatic = () => { staticView.style.display = ''; };
+  const hideStatic = () => { staticView.innerHTML = ''; staticView.style.display = 'none'; };
 
-    if (view === 'achievements')  renderLobbyComingSoon(staticView, 'Achievements', 'Earn glory on the battlefield. Track your victories, conquests, and council achievements here.');
-    else if (view === 'account')  renderLobbyAccount(staticView);
-    else if (view === 'help')     renderLobbyHelp(staticView);
-    else if (view.startsWith('coop-') || view.startsWith('sp-')) renderLobbyComingSoon(staticView, 'Coming Soon', 'This game mode is under development. Check back in a future update.');
+  if (view.endsWith('-mygames')) {
+    hideStatic();
+    gamesHeader.style.display = 'flex';
+    gamesTitle.textContent = 'My Games';
+    createBtn.style.display = '';
+    gamesList.style.display = '';
+    _lobbyNavMode = 'my';
+    renderGamesList();
+
+  } else if (view.endsWith('-join')) {
+    hideStatic();
+    gamesHeader.style.display = 'flex';
+    gamesTitle.textContent = 'Join Games';
+    createBtn.style.display = 'none';
+    gamesList.style.display = '';
+    _lobbyNavMode = 'join';
+    renderLobbyJoinView(gamesList);
+
+  } else if (view.endsWith('-create')) {
+    hideGames();
+    showStatic();
+    renderLobbyCreateView(staticView);
+
+  } else if (view.endsWith('-coop')) {
+    hideGames();
+    showStatic();
+    renderLobbyComingSoon(staticView, 'Co-Op Mode', 'Defend the realm together against the White Walker invasion beyond the Wall. Co-Op Mode is currently in development.');
+
+  } else if (view === 'achievements') {
+    hideGames();
+    showStatic();
+    renderLobbyComingSoon(staticView, 'Achievements', 'Earn glory on the battlefield. Track your victories, conquests, and council achievements here.');
+
+  } else if (view === 'account') {
+    hideGames();
+    showStatic();
+    renderLobbyAccount(staticView);
+
+  } else if (view === 'help') {
+    hideGames();
+    showStatic();
+    renderLobbyHelp(staticView);
   }
+}
+
+function renderLobbyCreateView(container) {
+  container.innerHTML = `
+    <div class="lview-section-title" style="margin-bottom:12px;">Choose Game Mode</div>
+    <div class="lview-mode-grid">
+      <div class="lview-mode-card" id="modePickStandard">
+        <div class="lview-mode-icon">⚔</div>
+        <div class="lview-mode-name">Standard</div>
+        <div class="lview-mode-desc">9 great houses compete to control all of Westeros</div>
+      </div>
+      <div class="lview-mode-card coming" title="Coming soon">
+        <div class="lview-mode-icon">📜</div>
+        <div class="lview-mode-name">Scenarios</div>
+        <div class="lview-mode-desc">Historical moments and alternate timelines</div>
+        <div class="lview-mode-badge">Coming Soon</div>
+      </div>
+    </div>`;
+  document.getElementById('modePickStandard').addEventListener('click', () => {
+    el.createGameBtn.click();
+  });
+}
+
+function renderLobbyJoinView(container) {
+  let joinFilter = 'standard';
+
+  const render = () => {
+    const filtered = state.games.filter(game => {
+      if (game.status !== 'lobby') return false;
+      const userIn = (game.game_players || []).some(p => p.user_id === state.user?.id);
+      return !userIn;
+    });
+
+    container.innerHTML = `
+      <div class="lview-filter-tabs">
+        <button class="lview-filter-tab${joinFilter === 'standard' ? ' active' : ''}" data-filter="standard">Standard</button>
+        <button class="lview-filter-tab${joinFilter === 'scenarios' ? ' active' : ''}" data-filter="scenarios">Scenarios</button>
+      </div>
+      ${joinFilter === 'scenarios'
+        ? `<div class="lview-coming-soon"><div class="lview-coming-soon-title">Coming Soon</div><div class="lview-coming-soon-text">Scenario games are not yet available.</div></div>`
+        : filtered.length === 0
+          ? `<div class="empty-state">No open games to join right now.</div>`
+          : filtered.map(game => {
+              const players = game.game_players || [];
+              const inviteUrl = `${location.origin}${location.pathname}?join=${game.id}`;
+              return `<div class="game-card" data-game-id="${game.id}">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span class="name" style="flex:1;">${escapeHtml(game.name)}</span>
+                  <span class="status-pill lobby">lobby</span>
+                </div>
+                <div class="meta">${players.length}/${game.max_players} players · ${escapeHtml(game.tick_speed)}</div>
+              </div>`;
+            }).join('')
+      }`;
+
+    container.querySelectorAll('.lview-filter-tab').forEach(tab => {
+      tab.addEventListener('click', () => { joinFilter = tab.dataset.filter; render(); });
+    });
+    container.querySelectorAll('.game-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const gameId = parseInt(card.dataset.gameId);
+        if (gameId) openJoinGameModal(gameId);
+      });
+    });
+  };
+
+  render();
 }
 
 function renderLobbyComingSoon(container, title, text) {
