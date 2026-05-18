@@ -215,8 +215,6 @@
   .main-screen:not(.game-mode) .info-panel { display: none; }
   .main-screen:not(.game-mode) .map-controls { display: none; }
   .main-screen:not(.game-mode) .map-area { pointer-events: none; }
-  .main-screen.game-mode .ticker-bar { display: none; }
-
   /* ===== TICKER ===== */
   .ticker-bar {
     grid-area: ticker;
@@ -282,6 +280,8 @@
     0%   { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
+  .main-screen.game-mode .ticker-bar { display: none !important; }
+
   /* Home screen: dim the map and show the centered logo */
   .main-screen:not(.game-mode) .map-container::after {
     content: '';
@@ -464,15 +464,6 @@
     transition: color .15s;
   }
   .tb-menu-btn:hover { color: var(--accent); background: var(--bg-elevated); }
-  .tb-house-dot {
-    width: 26px; height: 26px;
-    border-radius: 50%;
-    border: 1.5px solid currentColor;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700;
-    font-family: 'Cinzel', Georgia, serif;
-    flex-shrink: 0;
-  }
   .tb-brand-wrap {
     display: flex; align-items: center; gap: 8px;
     padding: 0 16px 0 12px;
@@ -3063,7 +3054,6 @@
 
     <!-- Brand -->
     <div class="tb-brand-wrap header-brand">
-      <div class="tb-house-dot hidden" id="tbHouseDot"></div>
       <div class="title">Westeros</div>
       <div class="stage" id="stageLabel">Lobby</div>
     </div>
@@ -3743,7 +3733,6 @@ const el = {
   npPanelBack:  document.getElementById('npPanelBack'),
   npPanelClose: document.getElementById('npPanelClose'),
   panelOverlay: document.getElementById('panelOverlay'),
-  tbHouseDot:   document.getElementById('tbHouseDot'),
   toast: document.getElementById('toast'),
   createGameModal: document.getElementById('createGameModal'),
   createGameForm: document.getElementById('createGameForm'),
@@ -4405,20 +4394,12 @@ function enterGamePanelMode() {
   document.getElementById('mainScreen').classList.add('game-mode');
   // menuBtn (hamburger) stays hidden — panel is always visible
   el.npPanelHeader?.classList.remove('hidden');
-  // Show player house dot in topbar
-  const myHouse = state.currentPlayer ? state.houses.find(h => h.slug === state.currentPlayer.house_slug) : null;
-  if (myHouse && el.tbHouseDot) {
-    el.tbHouseDot.textContent = myHouse.name[0].toUpperCase();
-    el.tbHouseDot.style.color = myHouse.color;
-    el.tbHouseDot.classList.remove('hidden');
-  }
 }
 
 function exitGamePanelMode() {
   document.getElementById('mainScreen').classList.remove('game-mode');
   el.menuBtn?.classList.add('hidden');
   el.npPanelHeader?.classList.add('hidden');
-  el.tbHouseDot?.classList.add('hidden');
   closePanel();
   startHomePanAnimation();
 }
