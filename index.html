@@ -215,14 +215,16 @@
   /* Game mode: sidebar always open as permanent left column */
   .main-screen.game-mode {
     grid-template-rows: 48px 1fr;
-    grid-template-columns: 1fr 3fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
     grid-template-areas: "header map" "sidebar map";
   }
   .main-screen.game-mode .header {
     height: 48px;
     min-height: 48px;
+    min-width: 0;
     padding: 0;
     gap: 0;
+    overflow: hidden;
   }
   .main-screen.game-mode .stage { display: none; }
   .main-screen.game-mode .sidebar {
