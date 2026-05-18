@@ -2744,16 +2744,6 @@
 
       <div class="tb-vsep"></div>
 
-      <div class="tb-stat-block">
-        <i class="ti ti-star" aria-hidden="true"></i>
-        <div class="tb-stat-vals">
-          <strong id="resourcePrestige">0</strong>
-          <span id="ratePrestige"></span>
-        </div>
-      </div>
-
-      <div class="tb-vsep"></div>
-
       <div class="tb-cycle-block" id="cyclePill">
         <svg class="tb-moon-svg" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
@@ -3385,9 +3375,7 @@ const el = {
   gameName: document.getElementById('gameName'),
   gameYearLabel: document.getElementById('gameYearLabel'),
   resourceGold: document.getElementById('resourceGold'),
-  resourcePrestige: document.getElementById('resourcePrestige'),
   rateGold: document.getElementById('rateGold'),
-  ratePrestige: document.getElementById('ratePrestige'),
   cycleCountdown: document.getElementById('cycleCountdown'),
   refreshGameBtn: null,   // moved to toolbar ⟳
   forceTickWrap:  null,   // moved to Options sidebar section
@@ -5490,7 +5478,6 @@ function removeNewRouteWaypoint(idx) {
 function renderGameResources() {
   if (!state.activeGame || !state.currentPlayer) return;
   el.resourceGold.textContent = state.currentPlayer.gold;
-  el.resourcePrestige.textContent = state.currentPlayer.prestige || 0;
 
   // Moon / year label
   const tick = state.activeGame.current_tick;
@@ -5501,9 +5488,7 @@ function renderGameResources() {
   // Production rates
   const myCastles = state.gameCastles.filter(gc => gc.owner_player_id === state.currentPlayer.id);
   const goldRate = myCastles.reduce((s, c) => s + c.gold_level, 0);
-  const prestigeRate = myCastles.reduce((s, c) => s + c.prestige_level, 0);
   if (el.rateGold) el.rateGold.textContent = goldRate > 0 ? `+${goldRate * cycleLen}/cycle` : '';
-  if (el.ratePrestige) el.ratePrestige.textContent = prestigeRate > 0 ? `+${prestigeRate * cycleLen}/cycle` : '';
 
   // Start the live production countdown (drift-free via absolute timestamp)
   startProductionCountdown();
@@ -8378,6 +8363,18 @@ function trainingCost(currentLevel) {
   return Math.round(72 * Math.pow(2, currentLevel) * mult);  // 72, 144, 288, 576, 1152 × mult
 }
 
+const HOUSE_TRAITS = {
+  stark:     { strength: { label: 'Warriors of the North',   seat: 'lord_commander' }, weakness: { label: 'Honor above Gold',        seat: 'coin'          } },
+  lannister: { strength: { label: 'Casterly Rock Gold',      seat: 'coin'           }, weakness: { label: 'Blind to Their Enemies',  seat: 'whisperers'    } },
+  tyrell:    { strength: { label: 'The Reach Provides',      seat: 'coin'           }, weakness: { label: 'Schemers, Not Warriors',  seat: 'hand'          } },
+  baratheon: { strength: { label: "Robert's War Hammer",     seat: 'hand'           }, weakness: { label: 'No Time for Subtlety',   seat: 'whisperers'    } },
+  targaryen: { strength: { label: 'Ancient Valyrian Legacy', seat: 'grand_maester'  }, weakness: { label: 'Above the Law',          seat: 'laws'          } },
+  martell:   { strength: { label: "Doran's Long Game",       seat: 'whisperers'     }, weakness: { label: 'Dorne Will Not Fight',   seat: 'hand'          } },
+  greyjoy:   { strength: { label: 'The Iron Price',          seat: 'lord_commander' }, weakness: { label: 'We Do Not Bow',          seat: 'laws'          } },
+  arryn:     { strength: { label: 'As High as Honor',        seat: 'laws'           }, weakness: { label: 'Vale Isolation',         seat: 'coin'          } },
+  tully:     { strength: { label: 'Rivers of Information',   seat: 'whisperers'     }, weakness: { label: 'Practical, Not Scholarly', seat: 'grand_maester' } },
+};
+
 const COUNCIL_DESC = {
   hand:           "Your Hand commands the realm's military might. Each level adds +10% to the attack strength of all your forces in battle.",
   coin:           "The Master of Coin ensures wealth flows into your treasury. Each level multiplies your gold income per production cycle by +25%.",
@@ -8391,33 +8388,38 @@ function buildCouncilSidebarHtml() {
   const me = state.currentPlayer;
   if (!me) return '<div style="padding:20px;color:var(--text-muted)">Not in a game.</div>';
 
+  const cycleLen         = state.activeGame?.production_cycle_ticks ?? 20;
   const myCastles        = state.gameCastles.filter(gc => gc.owner_player_id === me.id);
   const maesterLv        = state.councilSeats.find(s => s.seat === 'grand_maester')?.level || 0;
-  const rawPerCycle      = myCastles.reduce((s, c) => s + c.prestige_level, 0) * 12;
+  const rawPerCycle      = myCastles.reduce((s, c) => s + c.prestige_level, 0) * cycleLen;
   const prestigePerCycle = Math.round(rawPerCycle * (1 + maesterLv * 0.25));
+  const ptRaw            = cycleLen > 0 ? prestigePerCycle / cycleLen : 0;
+  const prestigePerTick  = Number.isInteger(ptRaw) ? String(ptRaw) : ptRaw.toFixed(2);
   const currentSeat      = me.research_seat;
   const nextSeat         = me.next_research_seat;
   const seatOrder        = ['hand','coin','lord_commander','whisperers','grand_maester','laws'];
+  const houseSlug        = state.houses.find(h => h.slug === me.house_slug)?.slug || '';
+  const traits           = HOUSE_TRAITS[houseSlug] || null;
 
   let etaHtml = '';
   if (currentSeat && prestigePerCycle > 0) {
-    const row   = state.councilSeats.find(s => s.seat === currentSeat);
-    const lv    = row?.level || 0;
-    const prog  = row?.research_progress || 0;
+    const row  = state.councilSeats.find(s => s.seat === currentSeat);
+    const lv   = row?.level || 0;
+    const prog = row?.research_progress || 0;
     if (lv < 5) {
       const cost   = trainingCost(lv);
       const remain = Math.max(0, cost - prog);
       const cycles = Math.ceil(remain / prestigePerCycle);
-      const ticks  = cycles * 12;
+      const ticks  = cycles * cycleLen;
       const dur    = formatDuration(ticks, state.activeGame?.tick_speed || 'normal');
-      etaHtml = `<span style="color:var(--text);">Level ${lv + 1} in ~${ticks} ticks</span><span style="color:var(--text-muted);font-size:10px;"> (${cycles} cycle${cycles !== 1 ? 's' : ''} \xb7 ${dur})</span>`;
+      etaHtml = `<span style="color:var(--accent);font-weight:600;">Level ${lv + 1} in ~${dur}</span><span style="color:var(--text-muted);font-size:10px;"> \u00b7 ${cycles} cycle${cycles !== 1 ? 's' : ''} \u00b7 ${ticks} ticks</span>`;
     } else {
       etaHtml = `<span style="color:var(--success);">Fully trained \u2014 set a new focus.</span>`;
     }
   } else if (!currentSeat) {
-    etaHtml = `<span style="color:var(--error);">No seat in training \u2014 prestige wasted each cycle.</span>`;
+    etaHtml = `<span style="color:var(--error);">No focus set \u2014 prestige wasted each cycle.</span>`;
   } else {
-    etaHtml = `<span style="color:var(--text-muted);">Build Prestige infrastructure to generate training points.</span>`;
+    etaHtml = `<span style="color:var(--text-muted);">No prestige income \u2014 build Castle Influence.</span>`;
   }
 
   const seatOpts = (selectedVal, includeNone, noneLabel) => {
@@ -8425,55 +8427,88 @@ function buildCouncilSidebarHtml() {
     return none + seatOrder.map(seat => {
       const meta = COUNCIL_META[seat];
       const lv   = state.councilSeats.find(s => s.seat === seat)?.level || 0;
-      return `<option value="${seat}" ${selectedVal === seat ? 'selected' : ''} ${lv >= 5 ? 'disabled' : ''}>${meta.icon} ${meta.title}${lv >= 5 ? ' (Mastered)' : ` \u2014 Lv ${lv}`}</option>`;
+      return `<option value="${seat}" ${selectedVal === seat ? 'selected' : ''} ${lv >= 5 ? 'disabled' : ''}>${meta.title}${lv >= 5 ? ' (Mastered)' : ` \u2014 Lv ${lv}`}</option>`;
     }).join('');
   };
 
+  let traitsHtml = '';
+  if (traits) {
+    const sMeta = COUNCIL_META[traits.strength.seat];
+    const wMeta = COUNCIL_META[traits.weakness.seat];
+    traitsHtml = `
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px;">House Character</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <div style="flex:1;background:var(--bg-elevated);border:1px solid var(--success);border-radius:5px;padding:10px;">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--success);margin-bottom:4px;">Strength</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:3px;">${traits.strength.label}</div>
+        <div style="font-size:10px;color:var(--text-muted);">${sMeta.title}</div>
+      </div>
+      <div style="flex:1;background:var(--bg-elevated);border:1px solid var(--error);border-radius:5px;padding:10px;">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--error);margin-bottom:4px;">Weakness</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:3px;">${traits.weakness.label}</div>
+        <div style="font-size:10px;color:var(--text-muted);">${wMeta.title}</div>
+      </div>
+    </div>`;
+  }
+
   const cards = seatOrder.map(seat => {
-    const meta   = COUNCIL_META[seat];
-    const row    = state.councilSeats.find(s => s.seat === seat);
-    const lv     = row?.level || 0;
-    const prog   = row?.research_progress || 0;
-    const active = seat === currentSeat;
-    const cost   = lv < 5 ? trainingCost(lv) : null;
-    const pct    = cost ? Math.min(100, Math.round(prog / cost * 100)) : 0;
-    const dots   = Array.from({length:5},(_,i)=>`<span style="display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:3px;background:${i<lv?'var(--accent)':'var(--border)'};"></span>`).join('');
+    const meta        = COUNCIL_META[seat];
+    const row         = state.councilSeats.find(s => s.seat === seat);
+    const lv          = row?.level || 0;
+    const prog        = row?.research_progress || 0;
+    const active      = seat === currentSeat;
+    const cost        = lv < 5 ? trainingCost(lv) : null;
+    const pct         = cost ? Math.min(100, Math.round(prog / cost * 100)) : 0;
+    const dots        = Array.from({length:5},(_,i)=>`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px;background:${i<lv?'var(--accent)':'var(--border)'};"></span>`).join('');
+    const isStrength  = traits?.strength.seat === seat;
+    const isWeakness  = traits?.weakness.seat === seat;
+    const traitBadge  = isStrength
+      ? `<span style="font-size:9px;color:var(--success);border:1px solid var(--success);padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle;">STRENGTH</span>`
+      : isWeakness
+      ? `<span style="font-size:9px;color:var(--error);border:1px solid var(--error);padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle;">WEAKNESS</span>`
+      : '';
     return `<div style="background:var(--bg-elevated);border:1px solid ${active?'var(--accent)':'var(--border)'};border-radius:5px;padding:10px;margin-bottom:8px;">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-        <span style="font-size:18px;line-height:1;">${meta.icon}</span>
         <div style="flex:1;">
-          <div style="font-size:13px;font-weight:600;">${meta.title}</div>
-          <div style="margin-top:2px;">${dots}<span style="font-size:10px;color:var(--text-muted);"> Level ${lv}/5</span></div>
+          <div style="font-size:13px;font-weight:600;">${meta.title}${traitBadge}</div>
+          <div style="margin-top:3px;">${dots}<span style="font-size:10px;color:var(--text-muted);"> Level ${lv}/5</span></div>
         </div>
         ${active ? '<span style="font-size:10px;background:var(--accent);color:var(--bg-deep);padding:2px 7px;border-radius:3px;font-weight:700;">FOCUS</span>' : ''}
         ${lv >= 5 ? '<span style="font-size:10px;color:var(--success);font-weight:700;">MASTERED</span>' : ''}
       </div>
-      ${lv < 5 ? `<div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:4px;"><div style="height:100%;width:${pct}%;background:${active?'var(--accent)':'var(--border-strong)'};border-radius:3px;"></div></div><div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">${prog} / ${cost} prestige invested${active?' \xb7 '+pct+'%':''}</div>` : '<div style="font-size:10px;color:var(--success);margin-bottom:6px;">Fully trained</div>'}
-      <div style="font-size:11px;color:var(--text-muted);line-height:1.5;">${COUNCIL_DESC[seat]}</div>
+      ${lv < 5
+        ? `<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:4px;"><div style="height:100%;width:${pct}%;background:${active?'var(--accent)':'var(--border-strong)'};border-radius:2px;"></div></div><div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">${prog} / ${cost}${active ? ' \u00b7 '+pct+'%' : ''}</div>`
+        : '<div style="font-size:10px;color:var(--success);margin-bottom:6px;">Fully trained</div>'
+      }
+      <div style="font-size:10px;color:var(--text-muted);line-height:1.5;border-top:1px solid var(--border);padding-top:6px;">${COUNCIL_DESC[seat]}</div>
     </div>`;
   }).join('');
 
   return `
-    <div style="font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:12px;">
-      Each production cycle your domain's prestige is invested toward your chosen council seat.
-      Set a <em>Next Focus</em> to automatically shift investment when the current seat levels up.
+    <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:3px;">Prestige Income</div>
+        <div style="font-size:20px;font-weight:700;color:var(--accent);line-height:1;">${prestigePerCycle}<span style="font-size:11px;font-weight:400;color:var(--text-muted);"> / cycle</span></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${prestigePerTick} per tick</div>
+      </div>
+      <div style="text-align:right;max-width:55%;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:3px;">ETA</div>
+        <div style="font-size:11px;line-height:1.5;">${etaHtml}</div>
+      </div>
     </div>
     <div style="margin-bottom:8px;">
       <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);display:block;margin-bottom:4px;">Current Focus</label>
       <select id="councilFocusSelect" style="width:100%;background:var(--bg-elevated);color:var(--text);border:1px solid ${currentSeat?'var(--accent)':'var(--border)'};border-radius:4px;padding:8px;font-family:inherit;font-size:13px;">${seatOpts(currentSeat, true, '\u2014 No investment \u2014')}</select>
     </div>
-    <div style="margin-bottom:4px;">
-      <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);display:block;margin-bottom:4px;">Next Focus <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-faint);font-size:10px;margin-left:4px;">(defaults to same seat)</span></label>
+    <div style="margin-bottom:16px;">
+      <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);display:block;margin-bottom:4px;">Next Focus <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-faint);font-size:10px;margin-left:4px;">(queues automatically)</span></label>
       <select id="councilNextSelect" style="width:100%;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px;font-family:inherit;font-size:13px;">
         <option value="" ${!nextSeat?'selected':''}>&#8629; Same as current</option>
         ${seatOpts(nextSeat, false, '')}
       </select>
     </div>
-    <div style="font-size:11px;padding:6px 0 10px;border-bottom:1px solid var(--border);margin-bottom:12px;">
-      ${etaHtml}
-      <span style="float:right;font-size:10px;color:var(--text-muted);">${prestigePerCycle} prestige/cycle</span>
-    </div>
-    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px;">Council Progress</div>
+    ${traitsHtml}
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px;">Council Seats</div>
     ${cards}
   `;
 }
