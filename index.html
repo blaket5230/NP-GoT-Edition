@@ -10023,18 +10023,19 @@ function getPrimaryCastle() {
   const myPlayer = state.currentPlayer;
   if (!myPlayer) return null;
   const house     = state.houses.find(h => h.slug === myPlayer.house_slug);
+  // game_castles uses castle_slug (not slug)
   const myCastles = state.gameCastles.filter(gc => gc.owner_player_id === myPlayer.id);
   if (!myCastles.length) return null;
   // 1. Seat castle if still owned
   if (house?.seat_castle_slug) {
-    const owned = myCastles.find(gc => gc.slug === house.seat_castle_slug);
+    const owned = myCastles.find(gc => gc.castle_slug === house.seat_castle_slug);
     if (owned) return state.castles.find(c => c.slug === house.seat_castle_slug) || null;
   }
   // 2. Highest effective_influence castle owned
   const best = myCastles.reduce((a, b) =>
     (b.effective_influence || 0) > (a.effective_influence || 0) ? b : a
   );
-  return state.castles.find(c => c.slug === best.slug) || null;
+  return state.castles.find(c => c.slug === best.castle_slug) || null;
 }
 
 function panToCastle(castle, zoom = null) {
