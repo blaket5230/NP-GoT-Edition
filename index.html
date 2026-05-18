@@ -1214,6 +1214,65 @@
   }
   .combat-result-banner.won { background: rgba(70,160,100,0.2); color: var(--success); }
   .combat-result-banner.lost { background: rgba(180,50,50,0.2); color: var(--error); }
+  /* ===== ROOKERY PANES (chat / messages) ===== */
+  .rook-pane { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 10px 10px 6px;
+    display: flex; flex-direction: column; gap: 8px; min-height: 0;
+  }
+  .chat-msg { display: flex; flex-direction: column; gap: 2px; }
+  .chat-msg.mine { align-items: flex-end; }
+  .chat-meta { font-size: 10px; color: var(--text-faint); display: flex; gap: 6px; align-items: center; }
+  .chat-author { color: var(--text-muted); font-weight: 600; }
+  .chat-bubble {
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: 5px; padding: 7px 10px; font-size: 13px; line-height: 1.5;
+    max-width: 90%; word-break: break-word;
+  }
+  .chat-msg.mine .chat-bubble { background: rgba(201,168,76,.1); border-color: rgba(201,168,76,.25); }
+  .chat-input-row {
+    display: flex; gap: 6px; padding: 8px;
+    border-top: 1px solid var(--border); flex-shrink: 0;
+  }
+  .chat-input {
+    flex: 1; background: var(--bg-elevated); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px; padding: 7px 10px;
+    font-size: 13px; font-family: inherit;
+  }
+  .chat-input:focus { outline: none; border-color: var(--accent); }
+  .chat-send-btn {
+    background: var(--accent); color: #000; border: none; border-radius: 4px;
+    padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+    font-family: inherit; flex-shrink: 0;
+  }
+  .chat-send-btn:hover { filter: brightness(1.1); }
+  .chat-send-btn:disabled { opacity: .5; cursor: default; }
+  .thread-compose-bar { padding: 8px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  #threadList { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .thread-item {
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: 5px; padding: 10px 12px; cursor: pointer; transition: border-color .1s;
+  }
+  .thread-item:hover { border-color: var(--border-strong); }
+  .thread-item.unread { border-left: 3px solid #9b6fd0; }
+  .thread-item-subject { font-size: 13px; font-weight: 500; }
+  .thread-item-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+  .thread-detail-header {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+    border-bottom: 1px solid var(--border); flex-shrink: 0; font-size: 13px; font-weight: 500;
+  }
+  .thread-back-btn {
+    background: transparent; border: none; color: var(--accent);
+    cursor: pointer; font-size: 12px; font-family: inherit; flex-shrink: 0; padding: 0;
+  }
+  .thread-back-btn:hover { text-decoration: underline; }
+  .recipient-picker { display: flex; flex-wrap: wrap; gap: 5px; }
+  .recipient-chip {
+    padding: 3px 9px; border-radius: 3px; border: 1px solid var(--border);
+    font-size: 11px; cursor: pointer; color: var(--text-muted);
+    background: var(--bg-elevated); transition: all .1s;
+  }
+  .recipient-chip.selected { border-color: var(--accent); color: var(--accent); background: rgba(201,168,76,.1); }
   /* ===== NP-STYLE SIDEBAR NAV ===== */
   .sidebar-toolbar {
     display: flex;
@@ -2882,18 +2941,71 @@
   <div class="inbox-header">
     <div class="inbox-title">The Rookery</div>
     <div style="display:flex;gap:6px;align-items:center;">
-      <button class="inbox-mark-all" id="inboxMarkAll">Dismiss all</button>
+      <button class="inbox-mark-all" id="inboxMarkAll" title="Dismiss all notifications">Dismiss all</button>
       <button class="inbox-close" id="inboxClose">✕</button>
     </div>
   </div>
   <div class="inbox-tabs">
-    <button class="inbox-tab active" data-tab="all">All Ravens</button>
-    <button class="inbox-tab" data-tab="production_cycle">Castellan</button>
-    <button class="inbox-tab" data-tab="combat">War Ravens</button>
-    <button class="inbox-tab" data-tab="raven">Messages</button>
+    <button class="inbox-tab active" data-tab="notifications">Notifications</button>
+    <button class="inbox-tab" data-tab="chat">Chat</button>
+    <button class="inbox-tab" data-tab="messages">Messages</button>
   </div>
+
+  <!-- NOTIFICATIONS PANE -->
   <div class="inbox-list" id="inboxList">
     <div class="inbox-empty">No ravens have arrived.</div>
+  </div>
+
+  <!-- CHAT PANE -->
+  <div class="rook-pane" id="rookChatPane" style="display:none;">
+    <div class="chat-messages" id="chatMessages">
+      <div class="inbox-empty">Loading...</div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Send word to all lords..." maxlength="500">
+      <button class="chat-send-btn" id="chatSendBtn">Send</button>
+    </div>
+  </div>
+
+  <!-- MESSAGES PANE -->
+  <div class="rook-pane" id="rookMsgPane" style="display:none;">
+    <!-- Thread list view -->
+    <div id="threadListView" style="display:flex;flex-direction:column;overflow:hidden;flex:1;min-height:0;">
+      <div class="thread-compose-bar">
+        <button class="inbox-mark-all" id="composeThreadBtn" style="width:100%;text-align:center;">+ New Message</button>
+      </div>
+      <div id="threadList">
+        <div class="inbox-empty">No messages yet.</div>
+      </div>
+    </div>
+    <!-- Thread detail view -->
+    <div id="threadDetailView" style="display:none;flex-direction:column;overflow:hidden;flex:1;min-height:0;">
+      <div class="thread-detail-header">
+        <button class="thread-back-btn" id="threadBackBtn">← Back</button>
+        <span id="threadDetailSubject" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      </div>
+      <div class="chat-messages" id="threadMessages"></div>
+      <div class="chat-input-row">
+        <input type="text" id="threadReplyInput" class="chat-input" placeholder="Reply..." maxlength="500">
+        <button class="chat-send-btn" id="threadReplySendBtn">Send</button>
+      </div>
+    </div>
+    <!-- Compose view -->
+    <div id="composeView" style="display:none;flex-direction:column;overflow:hidden;flex:1;min-height:0;">
+      <div class="thread-detail-header">
+        <button class="thread-back-btn" id="composeBackBtn">← Back</button>
+        <span>New Message</span>
+      </div>
+      <div style="padding:10px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;flex:1;">
+        <div>
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">To</div>
+          <div id="recipientPicker" class="recipient-picker"></div>
+        </div>
+        <input type="text" id="composeSubject" class="chat-input" placeholder="Subject (optional)" style="width:100%;box-sizing:border-box;">
+        <textarea id="composeBody" class="chat-input" placeholder="Your message..." maxlength="2000" style="width:100%;box-sizing:border-box;height:100px;resize:vertical;"></textarea>
+        <button class="chat-send-btn" id="composeSendBtn" style="align-self:flex-end;">Send Raven</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -3187,6 +3299,10 @@ const state = {
   commanders: [],
   movements: [],          // active commander_movements for the game
   inbox: [],
+  chat: [],          // game_chat rows for this game
+  threads: [],       // message_threads (with .participants and .messages arrays)
+  unreadThreadIds: new Set(),   // thread IDs with new messages since last viewed
+  activeThreadId: null,
   councilSeats: [],
   allCouncilSeats: [],
   diplomacy: [],
@@ -3309,6 +3425,25 @@ const el = {
   inboxClose:     document.getElementById('inboxClose'),
   inboxMarkAll:   document.getElementById('inboxMarkAll'),
   inboxList:      document.getElementById('inboxList'),
+  rookChatPane:   document.getElementById('rookChatPane'),
+  rookMsgPane:    document.getElementById('rookMsgPane'),
+  chatMessages:   document.getElementById('chatMessages'),
+  chatInput:      document.getElementById('chatInput'),
+  chatSendBtn:    document.getElementById('chatSendBtn'),
+  threadListView: document.getElementById('threadListView'),
+  threadDetailView:document.getElementById('threadDetailView'),
+  threadDetailSubject: document.getElementById('threadDetailSubject'),
+  threadMessages: document.getElementById('threadMessages'),
+  threadReplyInput: document.getElementById('threadReplyInput'),
+  threadReplySendBtn: document.getElementById('threadReplySendBtn'),
+  threadBackBtn:  document.getElementById('threadBackBtn'),
+  composeView:    document.getElementById('composeView'),
+  composeBackBtn: document.getElementById('composeBackBtn'),
+  composeThreadBtn: document.getElementById('composeThreadBtn'),
+  recipientPicker: document.getElementById('recipientPicker'),
+  composeSubject: document.getElementById('composeSubject'),
+  composeBody:    document.getElementById('composeBody'),
+  composeSendBtn: document.getElementById('composeSendBtn'),
   // Council panel (still accessible via sidebar section)
   councilPanel:   document.getElementById('councilPanel'),
   councilClose:   document.getElementById('councilClose'),
@@ -4501,6 +4636,9 @@ async function enterGameMode(gameId) {
     // Now fetch the up-to-date game state
     await refreshGameState(gameId);
 
+    // Load chat and message thread history (one-time; Realtime handles incremental updates)
+    loadRookeryData().then(null, () => {});
+
     // Center the map on the player's seat
     const house = state.houses.find(h => h.slug === currentPlayer.house_slug);
     if (house) {
@@ -4611,12 +4749,12 @@ async function processTicks(gameId, { quiet = false } = {}) {
 // =====================================================
 // INBOX
 // =====================================================
-let _inboxActiveTab = 'all';
-
 function renderInboxBadge() {
   const myPlayer = state.currentPlayer;
   if (!myPlayer) return;
-  const unread = state.inbox.filter(m => m.player_id === myPlayer.id && !m.is_read).length;
+  const unreadNotifs  = state.inbox.filter(m => m.player_id === myPlayer.id && !m.is_read).length;
+  const unreadThreads = state.unreadThreadIds.size;
+  const unread = unreadNotifs + unreadThreads;
   if (unread > 0) {
     el.inboxBadge.textContent = unread > 99 ? '99+' : unread;
     el.inboxBadge.style.display = 'flex';
@@ -4630,21 +4768,18 @@ function renderInboxBadge() {
 function renderInboxList() {
   const myPlayer = state.currentPlayer;
   if (!myPlayer) return;
-  let msgs = state.inbox.filter(m => m.player_id === myPlayer.id);
-  if (_inboxActiveTab !== 'all') {
-    msgs = msgs.filter(m => m.type === _inboxActiveTab);
-  }
+  const msgs = state.inbox.filter(m => m.player_id === myPlayer.id);
   if (msgs.length === 0) {
-    el.inboxList.innerHTML = '<div class="inbox-empty">No ravens in this category.</div>';
+    el.inboxList.innerHTML = '<div class="inbox-empty">No ravens have arrived.</div>';
     return;
   }
   el.inboxList.innerHTML = msgs.map(msg => buildInboxMsgHtml(msg)).join('');
-  el.inboxList.querySelectorAll('.inbox-msg').forEach(el => {
-    el.addEventListener('click', () => {
-      el.classList.toggle('expanded');
-      if (!el.classList.contains('_marked')) {
-        el.classList.add('_marked');
-        markMessageRead(parseInt(el.dataset.id));
+  el.inboxList.querySelectorAll('.inbox-msg').forEach(item => {
+    item.addEventListener('click', () => {
+      item.classList.toggle('expanded');
+      if (!item.classList.contains('_marked')) {
+        item.classList.add('_marked');
+        markMessageRead(parseInt(item.dataset.id));
       }
     });
   });
@@ -4786,17 +4921,218 @@ async function markMessageRead(id) {
   renderInboxBadge();
 }
 
+// =====================================================
+// ROOKERY — PANE SWITCHING
+// =====================================================
+let _rookActiveTab = 'notifications';
+let _activeThreadId = null;
+
+function showRookPane(tab) {
+  _rookActiveTab = tab;
+  el.inboxList.style.display      = tab === 'notifications' ? '' : 'none';
+  el.rookChatPane.style.display   = tab === 'chat'          ? 'flex' : 'none';
+  el.rookMsgPane.style.display    = tab === 'messages'      ? 'flex' : 'none';
+  el.inboxMarkAll.style.display   = tab === 'notifications' ? '' : 'none';
+  if (tab === 'notifications') renderInboxList();
+  if (tab === 'chat')          renderChatPane();
+  if (tab === 'messages')      renderMessagesPane();
+}
+
+// =====================================================
+// ROOKERY — CHAT
+// =====================================================
+function renderChatPane() {
+  const myId = state.currentPlayer?.id;
+  if (!state.chat.length) {
+    el.chatMessages.innerHTML = '<div class="inbox-empty">No messages yet. Say hello!</div>';
+    return;
+  }
+  const playerMap = new Map(state.gamePlayers.map(p => [p.id, p]));
+  const houseMap  = new Map(state.houses.map(h => [h.slug, h]));
+  el.chatMessages.innerHTML = state.chat.map(msg => {
+    const p     = playerMap.get(msg.player_id);
+    const house = p ? houseMap.get(p.house_slug) : null;
+    const isMine  = msg.player_id === myId;
+    const author  = house?.name || 'Unknown';
+    const color   = house?.color || 'var(--text-muted)';
+    const time    = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `<div class="chat-msg ${isMine ? 'mine' : ''}">
+      <div class="chat-meta">
+        <span class="chat-author" style="color:${color}">${escapeHtml(author)}</span>
+        <span>Tick ${msg.tick} · ${time}</span>
+      </div>
+      <div class="chat-bubble">${escapeHtml(msg.message)}</div>
+    </div>`;
+  }).join('');
+  el.chatMessages.scrollTop = el.chatMessages.scrollHeight;
+}
+
+async function sendChatMessage() {
+  const msg = el.chatInput.value.trim();
+  if (!msg || !state.currentPlayer || !state.activeGame) return;
+  el.chatSendBtn.disabled = true;
+  el.chatInput.value = '';
+  const { error } = await supabase.rpc('send_chat_message', {
+    p_game_id:   state.activeGame.id,
+    p_player_id: state.currentPlayer.id,
+    p_message:   msg,
+  });
+  if (error) { toast('Failed to send message'); el.chatInput.value = msg; }
+  el.chatSendBtn.disabled = false;
+  el.chatInput.focus();
+}
+
+// =====================================================
+// ROOKERY — THREADS
+// =====================================================
+function renderMessagesPane() { showThreadListView(); }
+
+function showThreadListView() {
+  el.threadListView.style.display   = 'flex';
+  el.threadDetailView.style.display = 'none';
+  el.composeView.style.display      = 'none';
+  _activeThreadId = null;
+  renderThreadList();
+}
+
+function renderThreadList() {
+  const playerMap = new Map(state.gamePlayers.map(p => [p.id, p]));
+  const houseMap  = new Map(state.houses.map(h => [h.slug, h]));
+  const threadListEl = document.getElementById('threadList');
+  if (!state.threads.length) {
+    threadListEl.innerHTML = '<div class="inbox-empty">No messages yet.</div>';
+    return;
+  }
+  threadListEl.innerHTML = state.threads.map(t => {
+    const participants = t.participants.map(tp => {
+      const p = playerMap.get(tp.player_id);
+      const h = p ? houseMap.get(p.house_slug) : null;
+      return h?.name || 'Unknown';
+    }).join(', ');
+    const isUnread = state.unreadThreadIds.has(t.id);
+    return `<div class="thread-item ${isUnread ? 'unread' : ''}" onclick="openThread(${t.id})">
+      <div class="thread-item-subject">${escapeHtml(t.subject || '(No subject)')}</div>
+      <div class="thread-item-meta">${escapeHtml(participants)} · ${t.messages.length} message${t.messages.length !== 1 ? 's' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+window.openThread = function(threadId) {
+  _activeThreadId = threadId;
+  state.unreadThreadIds.delete(threadId);
+  renderInboxBadge();
+  const thread = state.threads.find(t => t.id === threadId);
+  if (!thread) return;
+  el.threadDetailSubject.textContent = thread.subject || '(No subject)';
+  el.threadListView.style.display   = 'none';
+  el.composeView.style.display      = 'none';
+  el.threadDetailView.style.display = 'flex';
+  renderThreadMessages(thread);
+};
+
+function renderThreadMessages(thread) {
+  const myId = state.currentPlayer?.id;
+  const playerMap = new Map(state.gamePlayers.map(p => [p.id, p]));
+  const houseMap  = new Map(state.houses.map(h => [h.slug, h]));
+  if (!thread.messages.length) {
+    el.threadMessages.innerHTML = '<div class="inbox-empty">No messages yet.</div>';
+    return;
+  }
+  el.threadMessages.innerHTML = thread.messages.map(msg => {
+    const p     = playerMap.get(msg.player_id);
+    const house = p ? houseMap.get(p.house_slug) : null;
+    const isMine  = msg.player_id === myId;
+    const author  = house?.name || 'Unknown';
+    const color   = house?.color || 'var(--text-muted)';
+    const time    = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `<div class="chat-msg ${isMine ? 'mine' : ''}">
+      <div class="chat-meta">
+        <span class="chat-author" style="color:${color}">${escapeHtml(author)}</span>
+        <span>Tick ${msg.tick} · ${time}</span>
+      </div>
+      <div class="chat-bubble">${escapeHtml(msg.message)}</div>
+    </div>`;
+  }).join('');
+  el.threadMessages.scrollTop = el.threadMessages.scrollHeight;
+}
+
+async function sendThreadReply() {
+  const msg = el.threadReplyInput.value.trim();
+  if (!msg || !_activeThreadId || !state.currentPlayer) return;
+  el.threadReplySendBtn.disabled = true;
+  el.threadReplyInput.value = '';
+  const { error } = await supabase.rpc('send_thread_message', {
+    p_thread_id: _activeThreadId,
+    p_player_id: state.currentPlayer.id,
+    p_message:   msg,
+  });
+  if (error) { toast('Failed to send reply'); el.threadReplyInput.value = msg; }
+  el.threadReplySendBtn.disabled = false;
+  el.threadReplyInput.focus();
+}
+
+function openComposeView() {
+  el.threadListView.style.display   = 'none';
+  el.threadDetailView.style.display = 'none';
+  el.composeView.style.display      = 'flex';
+  const myId     = state.currentPlayer?.id;
+  const houseMap = new Map(state.houses.map(h => [h.slug, h]));
+  el.recipientPicker.innerHTML = state.gamePlayers
+    .filter(p => p.id !== myId)
+    .map(p => {
+      const house = houseMap.get(p.house_slug);
+      return `<div class="recipient-chip" data-player-id="${p.id}" style="--chip-color:${house?.color||'var(--border)'}">
+        ${escapeHtml(house?.name || String(p.id))}
+      </div>`;
+    }).join('');
+  el.recipientPicker.querySelectorAll('.recipient-chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('selected'));
+  });
+  el.composeSubject.value = '';
+  el.composeBody.value = '';
+}
+
+async function refreshThreads() {
+  const gameId = state.activeGame?.id;
+  const myId   = state.currentPlayer?.id;
+  if (!gameId || !myId) return;
+  const { data: myTpRows } = await supabase.from('thread_participants').select('thread_id').eq('player_id', myId);
+  const myThreadIds = (myTpRows || []).map(r => r.thread_id);
+  if (!myThreadIds.length) { state.threads = []; return; }
+  const [{ data: threadRows }, { data: allParticipants }, { data: allMessages }] = await Promise.all([
+    supabase.from('message_threads').select('*').in('id', myThreadIds).order('created_at', { ascending: false }),
+    supabase.from('thread_participants').select('*').in('thread_id', myThreadIds),
+    supabase.from('thread_messages').select('*').in('thread_id', myThreadIds).order('created_at', { ascending: true }),
+  ]);
+  state.threads = (threadRows || []).map(t => ({
+    ...t,
+    participants: (allParticipants || []).filter(p => p.thread_id === t.id),
+    messages:     (allMessages     || []).filter(m => m.thread_id === t.id),
+  }));
+}
+
+async function loadRookeryData() {
+  const gameId = state.activeGame?.id;
+  if (!gameId) return;
+  const { data: chatRows } = await supabase.from('game_chat')
+    .select('*').eq('game_id', gameId).order('created_at', { ascending: true }).limit(200);
+  state.chat = chatRows || [];
+  await refreshThreads();
+}
+
+// =====================================================
+// ROOKERY — EVENT WIRING
+// =====================================================
 el.inboxBtn.addEventListener('click', () => {
   el.inboxPanel.classList.toggle('open');
-  if (el.inboxPanel.classList.contains('open')) renderInboxList();
+  if (el.inboxPanel.classList.contains('open')) showRookPane(_rookActiveTab);
 });
 el.inboxClose.addEventListener('click', () => el.inboxPanel.classList.remove('open'));
 el.inboxMarkAll.addEventListener('click', async () => {
   const myId = state.currentPlayer?.id;
   if (!myId) return;
   const unread = state.inbox.filter(m => m.player_id === myId && !m.is_read);
-  await supabase.from('player_inbox').update({ is_read: true })
-    .in('id', unread.map(m => m.id));
+  await supabase.from('player_inbox').update({ is_read: true }).in('id', unread.map(m => m.id));
   unread.forEach(m => { m.is_read = true; });
   renderInboxBadge();
   renderInboxList();
@@ -4805,9 +5141,35 @@ document.querySelectorAll('.inbox-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.inbox-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
-    _inboxActiveTab = tab.dataset.tab;
-    renderInboxList();
+    showRookPane(tab.dataset.tab);
   });
+});
+el.chatSendBtn.addEventListener('click', sendChatMessage);
+el.chatInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } });
+el.threadReplySendBtn.addEventListener('click', sendThreadReply);
+el.threadReplyInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendThreadReply(); } });
+el.threadBackBtn.addEventListener('click', showThreadListView);
+el.composeBackBtn.addEventListener('click', showThreadListView);
+el.composeThreadBtn.addEventListener('click', openComposeView);
+el.composeSendBtn.addEventListener('click', async () => {
+  const recipients = [...el.recipientPicker.querySelectorAll('.recipient-chip.selected')]
+    .map(c => parseInt(c.dataset.playerId));
+  const msg = el.composeBody.value.trim();
+  if (!recipients.length) { toast('Select at least one recipient'); return; }
+  if (!msg) { toast('Message cannot be empty'); return; }
+  if (!state.currentPlayer || !state.activeGame) return;
+  el.composeSendBtn.disabled = true;
+  const { data: threadId, error } = await supabase.rpc('create_thread', {
+    p_game_id:    state.activeGame.id,
+    p_player_id:  state.currentPlayer.id,
+    p_subject:    el.composeSubject.value.trim() || null,
+    p_recipients: recipients,
+    p_message:    msg,
+  });
+  el.composeSendBtn.disabled = false;
+  if (error) { toast('Failed to send message'); return; }
+  await refreshThreads();
+  if (threadId) window.openThread(threadId);
 });
 
 // =====================================================
@@ -5217,6 +5579,12 @@ function exitGameMode() {
   state.gameCastles = [];
   state.gamePlayers = [];
   state.commanders = [];
+  state.chat = [];
+  state.threads = [];
+  state.unreadThreadIds = new Set();
+  state.activeThreadId = null;
+  _activeThreadId = null;
+  _rookActiveTab = 'notifications';
   state.selectedCastle = null;
 
   el.lobbyContent.classList.remove('hidden');
@@ -9604,6 +9972,45 @@ function subscribeRealtime(gameId) {
       }
       if (updated.status === 'finished' && updated.winner_player_id) {
         setTimeout(() => checkWinCondition(), 500);
+      }
+    })
+    // Global chat → append and re-render if chat pane is open
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'game_chat',
+      filter: `game_id=eq.${gameId}`,
+    }, payload => {
+      state.chat.push(payload.new);
+      if (_rookActiveTab === 'chat' && el.inboxPanel.classList.contains('open')) {
+        renderChatPane();
+      }
+    })
+    // Thread messages → append and re-render if that thread is open
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'thread_messages',
+    }, payload => {
+      const msg = payload.new;
+      const myId = state.currentPlayer?.id;
+      const thread = state.threads.find(t => t.id === msg.thread_id);
+      if (thread) {
+        thread.messages.push(msg);
+        if (_activeThreadId === msg.thread_id && el.inboxPanel.classList.contains('open')) {
+          renderThreadMessages(thread);
+        } else if (msg.player_id !== myId) {
+          // New message in a thread I'm not currently viewing
+          state.unreadThreadIds.add(msg.thread_id);
+          renderInboxBadge();
+        }
+      } else {
+        // New thread — reload thread data
+        refreshThreads().then(() => {
+          if (msg.player_id !== myId) {
+            state.unreadThreadIds.add(msg.thread_id);
+            renderInboxBadge();
+          }
+          if (_rookActiveTab === 'messages' && el.inboxPanel.classList.contains('open')) {
+            renderThreadList();
+          }
+        });
       }
     })
     .subscribe(status => {
