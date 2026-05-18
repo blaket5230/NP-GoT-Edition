@@ -2775,18 +2775,6 @@
   }
   #rookeryBtn:hover { background:rgba(201,168,76,.16) !important; }
 
-  /* ── Exit game btn ───────────────────────────────── */
-  #exitGameBtn {
-    font-family:'Cinzel',Georgia,serif !important;
-    font-size:10px !important;
-    letter-spacing:.06em !important;
-    border:1px solid var(--border) !important;
-    background:transparent !important;
-    color:var(--text-muted) !important;
-    border-radius:3px !important;
-    padding:5px 14px !important;
-  }
-  #exitGameBtn:hover { color:var(--text) !important; border-color:var(--border-strong) !important; }
 
   /* ===== LOBBY NAV ===== */
   .main-screen:not(.game-mode) .sidebar { padding: 0; }
@@ -3177,7 +3165,6 @@
         <button class="sidebar-tool-btn" id="toolBulkUpgrade" title="Bulk Upgrade — spend gold on cheapest available upgrades"><i class="ti ti-coins" aria-hidden="true"></i></button>
         <button class="sidebar-tool-btn" id="toolWarCalc" title="War Calculator — predict battle outcomes"><i class="ti ti-sword" aria-hidden="true"></i></button>
         <button class="sidebar-tool-btn" id="toolRefresh" title="Refresh — process pending ticks"><i class="ti ti-refresh" aria-hidden="true"></i></button>
-        <button class="sidebar-tool-btn" id="exitGameBtn" title="Exit to Lobby" style="margin-left:auto;"><i class="ti ti-door-exit" aria-hidden="true"></i></button>
       </div>
       <div id="sidebarContent">
         <!-- Rendered by JS: nav list or section content -->
@@ -3804,7 +3791,6 @@ const el = {
   councilClose:   document.getElementById('councilClose'),
   councilList:    document.getElementById('councilList'),
   councilPrestigeDisplay: document.getElementById('councilPrestigeDisplay'),
-  exitGameBtn: document.getElementById('exitGameBtn'),
   gameOverOverlay: document.getElementById('gameOverOverlay'),
   gameOverIcon:    document.getElementById('gameOverIcon'),
   gameOverTitle:   document.getElementById('gameOverTitle'),
@@ -6333,7 +6319,6 @@ function exitGameMode() {
   loadGames();
 }
 
-el.exitGameBtn.addEventListener('click', exitGameMode);
 
 // el.refreshGameBtn and el.forceTickBtn removed from header — handled by toolbar ⟳ and Options sidebar
 
