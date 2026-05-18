@@ -206,15 +206,82 @@
   /* ===== MAIN SCREEN ===== */
   .main-screen {
     display: grid;
-    grid-template-rows: 52px 1fr;
+    grid-template-rows: 52px 30px 1fr;
     grid-template-columns: minmax(0, 30%) minmax(0, 70%);
-    grid-template-areas: "header header" "sidebar map";
+    grid-template-areas: "header header" "ticker ticker" "sidebar map";
     height: 100vh;
     position: relative;
   }
   .main-screen:not(.game-mode) .info-panel { display: none; }
   .main-screen:not(.game-mode) .map-controls { display: none; }
   .main-screen:not(.game-mode) .map-area { pointer-events: none; }
+  .main-screen.game-mode .ticker-bar { display: none; }
+
+  /* ===== TICKER ===== */
+  .ticker-bar {
+    grid-area: ticker;
+    display: flex;
+    align-items: stretch;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border-gold);
+    overflow: hidden;
+  }
+  .ticker-label {
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(201,168,76,0.08);
+    border-right: 1px solid var(--border-gold);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .ticker-scroll-wrap {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  .ticker-track {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    animation: ticker-scroll 80s linear infinite;
+    will-change: transform;
+  }
+  .ticker-track:hover { animation-play-state: paused; }
+  .ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 28px 0 0;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .ticker-badge {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .ticker-badge.tnew    { background: var(--accent); color: var(--bg-deep); }
+  .ticker-badge.tcoming { border: 1px solid var(--accent); color: var(--accent); }
+  .ticker-badge.tupdate { border: 1px solid var(--border-strong); color: var(--text-muted); }
+  .ticker-sep { color: var(--border-gold); padding: 0 4px; font-size: 11px; flex-shrink: 0; }
+  @keyframes ticker-scroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
   /* Home screen: dim the map and show the centered logo */
   .main-screen:not(.game-mode) .map-container::after {
     content: '';
@@ -3053,6 +3120,13 @@
     </div>
   </div>
 
+  <div class="ticker-bar" id="tickerBar">
+    <div class="ticker-label">Westeros</div>
+    <div class="ticker-scroll-wrap">
+      <div class="ticker-track" id="tickerTrack"></div>
+    </div>
+  </div>
+
   <div class="sidebar">
     <!-- NP-style panel header (game mode only) -->
     <div class="np-panel-header hidden" id="npPanelHeader">
@@ -4619,6 +4693,36 @@ el.mapImage.onload = () => {
   if (state.castles.length > 0) renderMarkers();
 };
 el.mapImage.src = MAP_IMAGE_DATA;
+
+// =====================================================
+// TICKER
+// =====================================================
+const TICKER_ITEMS = [
+  { type: 'tnew',    text: 'House Traits — Each great house now has a unique strength and weakness on the Small Council' },
+  { type: 'tnew',    text: 'Westeros Codex — Full in-game help system covering every mechanic, available under Help' },
+  { type: 'tnew',    text: 'Small Council Rework — All 7 advisor seats now use Neptune\'s Pride-exact bonus formulas' },
+  { type: 'tnew',    text: 'Master of Horses — Replaces Master of Ships; governs march range and army speed' },
+  { type: 'tnew',    text: 'Cinematic Lobby — The map now auto-pans across Westeros while you browse games' },
+  { type: 'tnew',    text: 'Online Multiplayer Lobby — Find, join, and create games with other players now live' },
+  { type: 'tcoming', text: 'Scenarios — Historical moments and alternate timelines across the history of Westeros' },
+  { type: 'tcoming', text: 'Co-Op Mode — Defend the realm together against the White Walker invasion beyond the Wall' },
+  { type: 'tcoming', text: 'Achievements — Track your victories, conquests, and council milestones across all games' },
+  { type: 'tcoming', text: 'Seasons — Summer, Autumn, and Winter cycles with regional penalties driven by Maesters' },
+  { type: 'tcoming', text: 'Iron Bank of Braavos — Active loans with interest rates, repayment schedules, and default penalties' },
+  { type: 'tcoming', text: 'Naval Warfare — Fleet building, sea lanes, and the Master of Ships returns to active command' },
+  { type: 'tcoming', text: 'Commander Capture — Post-battle outcomes including ransom, escape, and execution' },
+];
+
+(function initTicker() {
+  const track = document.getElementById('tickerTrack');
+  if (!track) return;
+  const sep = '<span class="ticker-sep">◆</span>';
+  const html = TICKER_ITEMS.map(item =>
+    `<span class="ticker-item"><span class="ticker-badge ${item.type}">${item.type === 'tnew' ? 'New' : 'Coming Soon'}</span>${escapeHtml(item.text)}</span>${sep}`
+  ).join('');
+  // Duplicate for seamless loop
+  track.innerHTML = html + html;
+})();
 
 // =====================================================
 // GAMES LIST
