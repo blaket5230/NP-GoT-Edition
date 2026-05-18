@@ -4632,10 +4632,9 @@ async function enterGameMode(gameId) {
     // Load chat and message thread history (one-time; Realtime handles incremental updates)
     loadRookeryData().then(null, () => {});
 
-    // Center map at 100% zoom on the player's primary castle
-    const primaryCastle = getPrimaryCastle();
-    if (primaryCastle) panToCastle(primaryCastle, 1.0);
-    else fitToScreen();
+    // Center map at 100% zoom on the player's primary castle.
+    // panToCastle with zoom=1.0 always sets the zoom even if no castle found.
+    panToCastle(getPrimaryCastle(), 1.0);
 
     toast(`Welcome to ${escapeHtml(game.name)}. You play ${escapeHtml(state.houses.find(h => h.slug === currentPlayer.house_slug).name)}.`);
   } catch (err) {
@@ -10039,15 +10038,19 @@ function getPrimaryCastle() {
 }
 
 function panToCastle(castle, zoom = null) {
-  if (!castle || castle.map_x == null) return;
-  const iw = el.mapImage.naturalWidth;
-  const ih = el.mapImage.naturalHeight;
-  const rect = el.mapContainer.getBoundingClientRect();
+  // Apply zoom first — before any early return — so the zoom arg is always honoured
   if (zoom !== null) {
     state.zoom = zoom;
   } else if (state.zoom < 0.5) {
     state.zoom = 0.5;
   }
+  if (!castle || castle.map_x == null) {
+    applyTransform();
+    return;
+  }
+  const iw = el.mapImage.naturalWidth;
+  const ih = el.mapImage.naturalHeight;
+  const rect = el.mapContainer.getBoundingClientRect();
   state.panX = rect.width / 2 - castle.map_x * iw * state.zoom;
   state.panY = rect.height / 2 - castle.map_y * ih * state.zoom;
   applyTransform();
