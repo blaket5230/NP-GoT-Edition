@@ -215,6 +215,48 @@
   .main-screen:not(.game-mode) .info-panel { display: none; }
   .main-screen:not(.game-mode) .map-controls { display: none; }
   .main-screen:not(.game-mode) .map-area { pointer-events: none; }
+  /* Home screen: dim the map and show the centered logo */
+  .main-screen:not(.game-mode) .map-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(6, 7, 14, 0.52);
+    pointer-events: none;
+    z-index: 10;
+  }
+  .home-logo-overlay {
+    display: none;
+  }
+  .main-screen:not(.game-mode) .home-logo-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    gap: 10px;
+  }
+  .home-logo-title {
+    font-family: 'Cinzel Decorative', 'Cinzel', Georgia, serif;
+    font-size: clamp(36px, 5vw, 72px);
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-shadow: 0 0 40px rgba(201,168,76,0.5), 0 2px 8px rgba(0,0,0,0.9);
+    line-height: 1;
+  }
+  .home-logo-subtitle {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: clamp(12px, 1.4vw, 20px);
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+  }
+  .main-screen.game-mode .home-logo-overlay { display: none; }
   /* Game mode: sidebar always open as permanent left column */
   .main-screen.game-mode {
     grid-template-rows: 48px 1fr;
@@ -2822,6 +2864,10 @@
   </div>
 
   <div class="map-area">
+    <div class="home-logo-overlay" id="homeLogoOverlay">
+      <div class="home-logo-title">Westeros</div>
+      <div class="home-logo-subtitle">A Game of Thrones</div>
+    </div>
     <div class="panel-overlay" id="panelOverlay"></div>
     <div class="map-container" id="mapContainer">
       <div class="map-inner" id="mapInner">
