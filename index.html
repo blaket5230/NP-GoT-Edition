@@ -212,11 +212,11 @@
     height: 100vh;
     position: relative;
   }
-  /* Game mode: full-width map, sidebar becomes an overlay panel */
+  /* Game mode: sidebar always open as permanent left column */
   .main-screen.game-mode {
     grid-template-rows: 48px 1fr;
-    grid-template-columns: 1fr;
-    grid-template-areas: "header" "map";
+    grid-template-columns: 360px 1fr;
+    grid-template-areas: "header header" "sidebar map";
   }
   .main-screen.game-mode .header {
     height: 48px;
@@ -225,22 +225,16 @@
     gap: 0;
   }
   .main-screen.game-mode .stage { display: none; }
-  .main-screen.game-mode .sidebar { top: 48px; }
   .main-screen.game-mode .sidebar {
-    grid-area: unset;
-    position: absolute;
-    left: 0; top: 38px; bottom: 0;
-    width: 460px;
-    z-index: 50;
-    transform: translateX(-100%);
-    transition: transform .22s cubic-bezier(.4,0,.2,1);
-    padding: 0;
+    grid-area: sidebar;
+    position: relative;
+    width: auto;
+    height: 100%;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--border-gold);
   }
-  .main-screen.game-mode .sidebar.panel-open { transform: translateX(0); }
   .main-screen.game-mode .info-panel { display: none !important; }
   /* Panel overlay — dims the map when panel is open */
   .panel-overlay {
@@ -3932,7 +3926,6 @@ function openPanel(title, showBack = false) {
   const sidebar = document.querySelector('.sidebar');
   sidebar.classList.add('panel-open');
   sidebar.classList.toggle('panel-menu', title === 'Menu' && !showBack);
-  el.panelOverlay.classList.add('visible');
 }
 
 function closePanel() {
@@ -3941,12 +3934,16 @@ function closePanel() {
   const sidebar = document.querySelector('.sidebar');
   sidebar.classList.remove('panel-open');
   sidebar.classList.remove('panel-menu');
-  el.panelOverlay.classList.remove('visible');
   // Clear selection
   state.selectedCastle = null;
   state.selectedMovementId = null;
   renderMarkers();
   renderMovements();
+  // Return to nav menu
+  if (state.mode === 'game') {
+    _sidebarSection = null;
+    renderSidebarNav();
+  }
 }
 
 function panelNav(title) {
@@ -3968,12 +3965,8 @@ el.panelOverlay?.addEventListener('click', () => {
 });
 
 el.menuBtn?.addEventListener('click', () => {
-  if (_panel.open && el.npPanelTitle.textContent === 'Menu') {
-    closePanel();
-  } else {
-    openPanel('Menu', false);
-    renderSidebarNav();
-  }
+  openPanel('Menu', false);
+  renderSidebarNav();
 });
 
 el.inboxBtn?.addEventListener('click', () => {
@@ -3986,7 +3979,7 @@ el.inboxBtn?.addEventListener('click', () => {
 function enterGamePanelMode() {
   // Switch main-screen to game-mode CSS class
   document.getElementById('mainScreen').classList.add('game-mode');
-  el.menuBtn?.classList.remove('hidden');
+  // menuBtn (hamburger) stays hidden — panel is always visible
   el.npPanelHeader?.classList.remove('hidden');
   // Show player house dot in topbar
   const myHouse = state.currentPlayer ? state.houses.find(h => h.slug === state.currentPlayer.house_slug) : null;
@@ -4639,12 +4632,10 @@ async function enterGameMode(gameId) {
     // Load chat and message thread history (one-time; Realtime handles incremental updates)
     loadRookeryData().then(null, () => {});
 
-    // Center the map on the player's seat
-    const house = state.houses.find(h => h.slug === currentPlayer.house_slug);
-    if (house) {
-      const seatCastle = state.castles.find(c => c.slug === house.seat_castle_slug);
-      if (seatCastle) panToCastle(seatCastle);
-    }
+    // Center map at 100% zoom on the player's primary castle
+    const primaryCastle = getPrimaryCastle();
+    if (primaryCastle) panToCastle(primaryCastle, 1.0);
+    else fitToScreen();
 
     toast(`Welcome to ${escapeHtml(game.name)}. You play ${escapeHtml(state.houses.find(h => h.slug === currentPlayer.house_slug).name)}.`);
   } catch (err) {
@@ -10029,13 +10020,32 @@ function unsubscribeRealtime() {
 
 
 
-function panToCastle(castle) {
+function getPrimaryCastle() {
+  const myPlayer = state.currentPlayer;
+  if (!myPlayer) return null;
+  const house     = state.houses.find(h => h.slug === myPlayer.house_slug);
+  const myCastles = state.gameCastles.filter(gc => gc.owner_player_id === myPlayer.id);
+  if (!myCastles.length) return null;
+  // 1. Seat castle if still owned
+  if (house?.seat_castle_slug) {
+    const owned = myCastles.find(gc => gc.slug === house.seat_castle_slug);
+    if (owned) return state.castles.find(c => c.slug === house.seat_castle_slug) || null;
+  }
+  // 2. Highest effective_influence castle owned
+  const best = myCastles.reduce((a, b) =>
+    (b.effective_influence || 0) > (a.effective_influence || 0) ? b : a
+  );
+  return state.castles.find(c => c.slug === best.slug) || null;
+}
+
+function panToCastle(castle, zoom = null) {
   if (!castle || castle.map_x == null) return;
   const iw = el.mapImage.naturalWidth;
   const ih = el.mapImage.naturalHeight;
   const rect = el.mapContainer.getBoundingClientRect();
-  // Set a reasonable zoom for game mode if currently zoomed out
-  if (state.zoom < 0.5) {
+  if (zoom !== null) {
+    state.zoom = zoom;
+  } else if (state.zoom < 0.5) {
     state.zoom = 0.5;
   }
   state.panX = rect.width / 2 - castle.map_x * iw * state.zoom;
