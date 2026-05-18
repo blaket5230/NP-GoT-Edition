@@ -3100,11 +3100,7 @@
         <button class="btn-secondary" id="signOutBtn">Sign Out</button>
       </div>
       <!-- Game only -->
-      <div class="game-right hidden" id="gameRight" style="padding-right:12px;gap:8px;">
-        <button class="rookery-btn compact" id="inboxBtn" title="The Rookery — open ravens" style="padding:7px 12px;">
-          <i class="ti ti-feather" style="font-size:17px;" aria-hidden="true"></i>
-          <span class="inbox-badge" id="inboxBadge" style="display:none;">0</span>
-        </button>
+      <div class="game-right hidden" id="gameRight" style="padding-right:12px;">
         <button class="btn-secondary compact" id="exitGameBtn" style="padding:7px 16px;font-size:12px;letter-spacing:.06em;">Exit</button>
       </div>
     </div>
@@ -3175,6 +3171,10 @@
     <!-- Game mode content - NP-style sidebar navigation -->
     <div id="gameContent" class="hidden">
       <div class="sidebar-toolbar">
+        <button class="sidebar-tool-btn" id="inboxBtn" title="The Rookery — open ravens" style="position:relative;">
+          <i class="ti ti-feather" aria-hidden="true"></i>
+          <span class="inbox-badge" id="inboxBadge" style="display:none;">0</span>
+        </button>
         <button class="sidebar-tool-btn" id="toolRuler" title="Distance Ruler — measure travel time between castles"><i class="ti ti-ruler-2" aria-hidden="true"></i></button>
         <button class="sidebar-tool-btn" id="toolBulkUpgrade" title="Bulk Upgrade — spend gold on cheapest available upgrades"><i class="ti ti-coins" aria-hidden="true"></i></button>
         <button class="sidebar-tool-btn" id="toolWarCalc" title="War Calculator — predict battle outcomes"><i class="ti ti-sword" aria-hidden="true"></i></button>
