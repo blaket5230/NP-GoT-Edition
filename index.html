@@ -3556,7 +3556,6 @@ async function onAuthChange(session) {
   state.user = session.user;
   el.userEmail.textContent = session.user.email;
   showMainScreen();
-  requestAnimationFrame(() => fitToScreen());
   await loadReferenceData();
   await loadGames();
 
@@ -3578,12 +3577,13 @@ async function onAuthChange(session) {
   }
 }
 
-// Also refit if the window is resized (keeps the map sensible)
+// Refit/re-pan when window is resized
 window.addEventListener('resize', () => {
-  if (!el.mainScreen.classList.contains('hidden')) {
-    // Only refit if user hasn't manually zoomed (zoom near current fit)
-    // For now, always refit on resize to keep it simple.
+  if (el.mainScreen.classList.contains('hidden')) return;
+  if (el.mainScreen.classList.contains('game-mode')) {
     fitToScreen();
+  } else {
+    startHomePanAnimation();
   }
 });
 
@@ -3653,12 +3653,16 @@ function startHomePanAnimation() {
   const panYBottom = rect.height - ih; // negative — map is taller than container
   const duration = 90000; // ms per one-way pass
 
+  const panX = (rect.width - iw) / 2;
+
   function step(timestamp) {
     if (_homePanStartTime === null) _homePanStartTime = timestamp;
     const elapsed = timestamp - _homePanStartTime;
     const cycle = elapsed / duration;
     // Triangle wave: 0→1→0→1 (ping-pong, no jump at endpoints)
     const t = 1 - Math.abs((cycle % 2) - 1);
+    state.zoom = 1.0;
+    state.panX = panX;
     state.panY = panYTop + (panYBottom - panYTop) * t;
     applyTransform();
     _homePanAnim = requestAnimationFrame(step);
