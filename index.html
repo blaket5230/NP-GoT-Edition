@@ -2890,8 +2890,9 @@
         <div style="font-weight:600;color:var(--error);margin-bottom:8px;">🛡 Defender</div>
         <div class="form-group"><label>Garrison</label><input type="number" id="wc-def-troops" value="15" min="0"></div>
         <div class="form-group"><label>Commander Level</label><input type="number" id="wc-def-lvl" value="0" min="0" max="10"></div>
+        <div class="form-group"><label>Hand Council Level</label><input type="number" id="wc-def-hand" value="0" min="0" max="5"></div>
         <div class="form-group">
-          <label>Defense Bonus</label>
+          <label>Terrain</label>
           <select id="wc-def-bonus" style="width:100%;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px;font-family:inherit;">
             <option value="1.2">Castle assault (×1.20)</option>
             <option value="1.0">Open field (×1.00)</option>
@@ -4078,7 +4079,6 @@ function renderCastleInfo() {
             <div class="ig-name">Treasury</div>
             <div class="ig-stat">
               <span class="ig-level">Level ${gc.gold_level}</span>
-              <span class="ig-rate">+${gc.gold_level * 12} gold/yr</span>
             </div>
             <button class="upgrade-btn" data-action="upgrade" data-type="gold" data-castle="${castle.slug}" ${myGold < goldCost ? 'disabled' : ''}>
               Upgrade<span class="cost">${goldCost}g</span>
@@ -4089,7 +4089,6 @@ function renderCastleInfo() {
             <div class="ig-name">Recruitment</div>
             <div class="ig-stat">
               <span class="ig-level">Level ${gc.industry_level}</span>
-              <span class="ig-rate">+${(gc.industry_level * 0.1).toFixed(1)} troops/tick</span>
             </div>
             <button class="upgrade-btn" data-action="upgrade" data-type="industry" data-castle="${castle.slug}" ${myGold < industryCost ? 'disabled' : ''}>
               Upgrade<span class="cost">${industryCost}g</span>
@@ -4100,7 +4099,6 @@ function renderCastleInfo() {
             <div class="ig-name">Prestige</div>
             <div class="ig-stat">
               <span class="ig-level">Level ${gc.prestige_level}</span>
-              <span class="ig-rate">+${gc.prestige_level * 12} prestige/yr</span>
             </div>
             <button class="upgrade-btn" data-action="upgrade" data-type="prestige" data-castle="${castle.slug}" ${myGold < prestigeCost ? 'disabled' : ''}>
               Upgrade<span class="cost">${prestigeCost}g</span>
@@ -5154,12 +5152,13 @@ el.composeSendBtn.addEventListener('click', async () => {
 // SMALL COUNCIL
 // =====================================================
 const COUNCIL_META = {
-  hand:           { title: 'Hand of the King',    icon: '⚔', bonus: '+10% attack strength / level',      costBase: 100 },
-  coin:           { title: 'Master of Coin',       icon: '💰', bonus: '+25% gold per cycle / level',       costBase: 100 },
-  lord_commander: { title: 'Lord Commander',       icon: '🛡', bonus: '+10% troop production / level',     costBase: 100 },
-  whisperers:     { title: 'Master of Whisperers', icon: '👁', bonus: '+1 scan unit visibility / level',   costBase: 100 },
-  grand_maester:  { title: 'Grand Maester',        icon: '📜', bonus: '+25% prestige per cycle / level',   costBase: 100 },
-  laws:           { title: 'Master of Laws',       icon: '⚖',  bonus: '+5 effective influence / level',    costBase: 100 },
+  hand:           { title: 'Hand of the King',    icon: '⚔', bonus: 'Armies deal (Hand+1) damage per combat round' },
+  coin:           { title: 'Master of Coin',       icon: '💰', bonus: 'Earn Economy × (10 + Coin×2) gold per cycle' },
+  lord_commander: { title: 'Lord Commander',       icon: '🛡', bonus: 'Castles produce Industry × (LCmd+4) troops per cycle' },
+  whisperers:     { title: 'Master of Whisperers', icon: '👁', bonus: 'Castles scan (Whsp+3) range units' },
+  grand_maester:  { title: 'Grand Maester',        icon: '📜', bonus: '72 × GMst prestige per cycle to a random seat' },
+  laws:           { title: 'Master of Laws',       icon: '⚖',  bonus: 'Castle influence = (Laws×5) + natural influence' },
+  horses:         { title: 'Master of Horses',     icon: '🐎', bonus: 'March range (Hrs+4) units. Speed × sqrt(Hrs+3)' },
 };
 
 function councilUpgradeCost(currentLevel) {
@@ -5171,7 +5170,7 @@ function renderCouncil() {
   if (el.councilPrestigeDisplay) {
     el.councilPrestigeDisplay.textContent = `Available Prestige: ${myPrestige}`;
   }
-  const order = ['hand', 'coin', 'lord_commander', 'whisperers', 'grand_maester', 'laws'];
+  const order = ['hand', 'coin', 'lord_commander', 'whisperers', 'grand_maester', 'laws', 'horses'];
   el.councilList.innerHTML = order.map(seat => {
     const meta = COUNCIL_META[seat];
     const row = state.councilSeats.find(s => s.seat === seat);
@@ -5231,14 +5230,14 @@ function renderCouncil() {
 // =====================================================
 // FOG OF WAR
 // =====================================================
-// Scan radius in native map pixels: base + whisperers_level * per_level
+// Scan radius: (whisperers_level + 3) * FOG_SCAN_PER_LV  [NP: X+3 light years]
 // Distances computed as sqrt((dx*672)^2 + (dy*1560)^2)
-const FOG_SCAN_BASE   = 200;
-const FOG_SCAN_PER_LV = 60;
-const FOG_CMD_BASE    = 30;
-const FOG_CMD_PER_LV  = 30;
-const MAP_NATIVE_W    = 672;
-const MAP_NATIVE_H    = 1560;
+const FOG_SCAN_PER_LV  = 60;
+const FOG_CMD_BASE     = 30;
+const FOG_CMD_PER_LV   = 30;
+const MAP_NATIVE_W     = 672;
+const MAP_NATIVE_H     = 1560;
+const HORSES_MARCH_UNIT = 80; // px per range unit [NP: X+4 light years]
 
 function computeVisibleSlugs() {
   if (state.mode !== 'game' || !state.currentPlayer) return null;
@@ -5246,7 +5245,7 @@ function computeVisibleSlugs() {
   if (!state.activeGame?.fog_of_war) return null;
 
   const whispLv = (state.councilSeats.find(s => s.seat === 'whisperers')?.level) || 0;
-  const castleScanPx = FOG_SCAN_BASE + whispLv * FOG_SCAN_PER_LV;
+  const castleScanPx = (whispLv + 3) * FOG_SCAN_PER_LV;
 
   const visible = new Set();
   const myCastles = state.gameCastles.filter(gc => gc.owner_player_id === state.currentPlayer.id);
@@ -5891,13 +5890,18 @@ el.generateRecruit.addEventListener('click', () => {
 // =====================================================
 const MAP_NATIVE_WIDTH = 672;   // source dimensions used by send_commander to compute distance
 const MAP_NATIVE_HEIGHT = 1560;
-const COMMANDER_SPEED_PX_PER_TICK = 17.5 * (state.activeGame?.commander_speed_mult ?? 1.0);
+function getMarchSpeedPxPerTick() {
+  const horsesLv  = state.councilSeats.find(s => s.seat === 'horses')?.level || 0;
+  const speedMult = state.activeGame?.commander_speed_mult ?? 1.0;
+  // NP Range: carrier speed × sqrt(level+3); normalised so level 0 = base speed
+  return 17.5 * Math.sqrt((horsesLv + 3) / 3) * speedMult;
+}
 
 function estimateTravelTicks(fromCastle, toCastle) {
   const dx = (toCastle.map_x - fromCastle.map_x) * MAP_NATIVE_WIDTH;
   const dy = (toCastle.map_y - fromCastle.map_y) * MAP_NATIVE_HEIGHT;
   const dist = Math.hypot(dx, dy);
-  return Math.max(1, Math.ceil(dist / COMMANDER_SPEED_PX_PER_TICK));
+  return Math.max(1, Math.ceil(dist / getMarchSpeedPxPerTick()));
 }
 
 function tickIntervalHours(speed) {
@@ -6166,8 +6170,8 @@ function applyDestinationHighlights() {
     ? _routeWaypoints[_routeWaypoints.length - 1].slug
     : commander.current_castle_slug;
   const srcCastle  = state.castles.find(c => c.slug === srcSlug);
-  const whispLv    = state.councilSeats.find(s => s.seat === 'whisperers')?.level || 0;
-  const radiusPx   = FOG_SCAN_BASE + whispLv * FOG_SCAN_PER_LV;
+  const horsesLv   = state.councilSeats.find(s => s.seat === 'horses')?.level || 0;
+  const radiusPx   = (horsesLv + 4) * HORSES_MARCH_UNIT;
   const queuedSlugs = new Set(_routeWaypoints.map(w => w.slug));
 
   el.markerLayer.querySelectorAll('.marker').forEach(marker => {
@@ -8015,7 +8019,7 @@ async function renderPlayerDetailAsync(targetPlayerId) {
 
   const cmp = (tv, mv) => tv > mv ? ['var(--success)','var(--error)'] : tv < mv ? ['var(--error)','var(--success)'] : ['var(--text)','var(--text)'];
 
-  const seatOrder = ['hand','coin','lord_commander','whisperers','grand_maester','laws'];
+  const seatOrder = ['hand','coin','lord_commander','whisperers','grand_maester','laws','horses'];
   const seatRow = (seat) => {
     const meta = COUNCIL_META[seat];
     const tv = targetSeats?.find(s => s.seat === seat)?.level || 0;
@@ -8291,8 +8295,8 @@ function buildHousesProductionTab() {
 }
 
 function buildHousesCouncilTab() {
-  const seats = ['hand','coin','lord_commander','whisperers','grand_maester','laws'];
-  const abbr  = { hand:'Hand', coin:'Coin', lord_commander:'LCmd', whisperers:'Whsp', grand_maester:'GMst', laws:'Laws' };
+  const seats = ['hand','coin','lord_commander','whisperers','grand_maester','laws','horses'];
+  const abbr  = { hand:'Hand', coin:'Coin', lord_commander:'LCmd', whisperers:'Whsp', grand_maester:'GMst', laws:'Laws', horses:'Hrs' };
 
   // Find max level per seat for highlighting
   const maxPerSeat = {};
@@ -8376,12 +8380,13 @@ const HOUSE_TRAITS = {
 };
 
 const COUNCIL_DESC = {
-  hand:           "Your Hand commands the realm's military might. Each level adds +10% to the attack strength of all your forces in battle.",
-  coin:           "The Master of Coin ensures wealth flows into your treasury. Each level multiplies your gold income per production cycle by +25%.",
-  lord_commander: "The Lord Commander oversees training and recruitment across your domain. Each level increases troop production speed by +10%.",
-  whisperers:     "Your network of informants extends your eyes across the realm. Each level adds +60 map units to the scanning radius of every castle you own.",
-  grand_maester:  "The Grand Maester elevates learning throughout your domain. Each level multiplies prestige generation by +25%, directly accelerating future council training.",
-  laws:           "The Master of Laws improves governance across your castles. Each level adds +5 effective influence per owned castle, reducing all infrastructure upgrade costs.",
+  hand:           "Your Hand of the King sharpens the realm's armies. In combat, each troop deals Hand_level+1 damage per round. At level 0 each troop deals 1 damage; at level 5 they deal 6. Higher levels let outnumbered forces defeat larger ones.",
+  coin:           "The Master of Coin manages your treasury. Each production cycle you earn Total_Economy × (10 + Coin_level × 2) gold, where Total Economy is the sum of gold_level across all your castles. Every point of Coin multiplies across your entire domain.",
+  lord_commander: "The Lord Commander drives recruitment across your domain. Each production cycle every castle produces Industry × (LordCommander + 4) troops, where Industry is that castle's industry_level. A higher level multiplies output across your entire domain.",
+  whisperers:     "Your network of informants extends your eyes across the realm. Your castles scan a radius of (Whisperers + 3) range units. At level 0 your castles have a base radius of 3; at level 5 they reach 8.",
+  grand_maester:  "The Grand Maester runs experiments each production cycle. Every cycle, 72 × GrandMaester prestige is invested toward a random council seat — not your chosen focus. This accelerates progress across the board unpredictably.",
+  laws:           "The Master of Laws improves governance across your castles. Every castle's effective influence equals (Laws_level × 5) + its natural influence. This reduces all infrastructure construction costs across your domain.",
+  horses:         "The Master of Horses commands your riders and supply lines. Your armies may march to any castle within (Horses + 4) range units. March speed scales as sqrt(Horses + 3) — at level 0 speed is unchanged; at level 5 armies march 63% faster.",
 };
 
 function buildCouncilSidebarHtml() {
@@ -8390,14 +8395,15 @@ function buildCouncilSidebarHtml() {
 
   const cycleLen         = state.activeGame?.production_cycle_ticks ?? 20;
   const myCastles        = state.gameCastles.filter(gc => gc.owner_player_id === me.id);
-  const maesterLv        = state.councilSeats.find(s => s.seat === 'grand_maester')?.level || 0;
-  const rawPerCycle      = myCastles.reduce((s, c) => s + c.prestige_level, 0) * cycleLen;
-  const prestigePerCycle = Math.round(rawPerCycle * (1 + maesterLv * 0.25));
-  const ptRaw            = cycleLen > 0 ? prestigePerCycle / cycleLen : 0;
-  const prestigePerTick  = Number.isInteger(ptRaw) ? String(ptRaw) : ptRaw.toFixed(2);
-  const currentSeat      = me.research_seat;
-  const nextSeat         = me.next_research_seat;
-  const seatOrder        = ['hand','coin','lord_commander','whisperers','grand_maester','laws'];
+  const maesterLv          = state.councilSeats.find(s => s.seat === 'grand_maester')?.level || 0;
+  const rawPerCycle        = myCastles.reduce((s, c) => s + c.prestige_level, 0) * cycleLen;
+  const prestigePerCycle   = rawPerCycle; // NP: science from facilities only; Grand Maester is separate random bonus
+  const grandMaesterBonus  = 72 * maesterLv; // random prestige per cycle to a random seat
+  const ptRaw              = cycleLen > 0 ? prestigePerCycle / cycleLen : 0;
+  const prestigePerTick    = Number.isInteger(ptRaw) ? String(ptRaw) : ptRaw.toFixed(2);
+  const currentSeat        = me.research_seat;
+  const nextSeat           = me.next_research_seat;
+  const seatOrder          = ['hand','coin','lord_commander','whisperers','grand_maester','laws','horses'];
   const houseSlug        = state.houses.find(h => h.slug === me.house_slug)?.slug || '';
   const traits           = HOUSE_TRAITS[houseSlug] || null;
 
@@ -8490,6 +8496,7 @@ function buildCouncilSidebarHtml() {
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:3px;">Prestige Income</div>
         <div style="font-size:20px;font-weight:700;color:var(--accent);line-height:1;">${prestigePerCycle}<span style="font-size:11px;font-weight:400;color:var(--text-muted);"> / cycle</span></div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${prestigePerTick} per tick</div>
+        ${grandMaesterBonus > 0 ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">+${grandMaesterBonus} random / cycle</div>` : ''}
       </div>
       <div style="text-align:right;max-width:55%;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:3px;">ETA</div>
@@ -9158,31 +9165,35 @@ function getPlayerStats(pid) {
   const castles = state.gameCastles.filter(gc => gc.owner_player_id === pid);
   const cmds    = state.commanders.filter(c => c.owner_player_id === pid && c.status !== 'dead');
   const seats   = (state.allCouncilSeats || []).filter(s => s.player_id === pid);
-  const seat    = k => seats.find(s => s.seat === k)?.level || 0;
-  const maesterBonus = 1 + seat('grand_maester') * 0.25;
-  const coinBonus    = 1 + seat('coin') * 0.25;
-  const lcBonus      = 1 + seat('lord_commander') * 0.10;
+  const seat      = k => seats.find(s => s.seat === k)?.level || 0;
+  const cycleLen  = state.activeGame?.production_cycle_ticks ?? 20;
+  const lc        = seat('lord_commander');
+  const coin      = seat('coin');
+  const gm        = seat('grand_maester');
   const rawGold   = castles.reduce((s, c) => s + c.gold_level, 0);
   const rawTroops = castles.reduce((s, c) => s + c.industry_level, 0);
   const rawPres   = castles.reduce((s, c) => s + c.prestige_level, 0);
   return {
     player,
-    house: player ? state.houses.find(h => h.slug === player.house_slug) : null,
-    castles:       castles.length,
-    troops:        castles.reduce((s, c) => s + c.troops, 0),
-    commanders:    cmds.length,
-    troopsPerTick: parseFloat((rawTroops * 0.1 * lcBonus).toFixed(2)),
-    nextCyclePay:  Math.round(rawGold * 12 * coinBonus),
-    treasury:      rawGold,
-    recruitment:   rawTroops,
-    prestige:      rawPres,
-    prestPerCycle: Math.round(rawPres * 12 * maesterBonus),
-    hand:          seat('hand'),
-    coin:          seat('coin'),
-    lord_commander: seat('lord_commander'),
-    whisperers:    seat('whisperers'),
-    grand_maester: seat('grand_maester'),
-    laws:          seat('laws'),
+    house:             player ? state.houses.find(h => h.slug === player.house_slug) : null,
+    castles:           castles.length,
+    troops:            castles.reduce((s, c) => s + c.troops, 0),
+    commanders:        cmds.length,
+    troopsPerCycle:    rawTroops * (lc + 4),
+    troopsPerTick:     parseFloat((rawTroops * (lc + 4) / cycleLen).toFixed(2)),
+    nextCyclePay:      rawGold * (10 + coin * 2),
+    treasury:          rawGold,
+    recruitment:       rawTroops,
+    prestige:          rawPres,
+    prestPerCycle:     rawPres * cycleLen,
+    grandMaesterBonus: 72 * gm,
+    hand:              seat('hand'),
+    coin:              seat('coin'),
+    lord_commander:    seat('lord_commander'),
+    whisperers:        seat('whisperers'),
+    grand_maester:     seat('grand_maester'),
+    laws:              seat('laws'),
+    horses:            seat('horses'),
   };
 }
 
@@ -9833,30 +9844,38 @@ el.confirmBulkUpgrade.addEventListener('click', async () => {
 // TOOLBAR: WAR CALCULATOR
 // =====================================================
 function runWarCalcNow() {
-  const atkTroops = parseInt(document.getElementById('wc-atk-troops').value) || 0;
-  const atkLevel  = parseInt(document.getElementById('wc-atk-lvl').value)   || 0;
-  const atkHand   = parseInt(document.getElementById('wc-atk-hand').value)  || 0;
-  const defTroops = parseInt(document.getElementById('wc-def-troops').value)|| 0;
-  const defLevel  = parseInt(document.getElementById('wc-def-lvl').value)   || 0;
-  const defBonus  = parseFloat(document.getElementById('wc-def-bonus').value)|| 1.2;
+  const atkTroops  = parseInt(document.getElementById('wc-atk-troops').value)  || 0;
+  const atkCmdLv   = parseInt(document.getElementById('wc-atk-lvl').value)     || 0;
+  const atkHand    = parseInt(document.getElementById('wc-atk-hand').value)    || 0;
+  const defTroops  = parseInt(document.getElementById('wc-def-troops').value)  || 0;
+  const defCmdLv   = parseInt(document.getElementById('wc-def-lvl').value)     || 0;
+  const defHand    = parseInt(document.getElementById('wc-def-hand').value)    || 0;
+  const terrain    = parseFloat(document.getElementById('wc-def-bonus').value) || 1.0;
 
-  const atkStr = atkTroops * (1 + atkLevel * 0.1) * (1 + atkHand * 0.1);
-  const defStr = defTroops * (1 + defLevel * 0.1) * defBonus;
+  // NP Weapons: each troop deals (hand_level + 1) damage per combat round
+  // Commander level is a separate multiplier on top
+  const atkDmg = atkHand + 1;
+  const defDmg = defHand + 1;
+  const atkCmdMult = 1 + atkCmdLv * 0.1;
+  const defCmdMult = 1 + defCmdLv * 0.1;
+
+  const atkStr = atkTroops * atkDmg * atkCmdMult;
+  const defStr = defTroops * defDmg * defCmdMult * terrain;
 
   let result = '';
   if (atkStr > defStr) {
-    const remain = Math.max(1, Math.ceil((atkStr - defStr) / ((1 + atkLevel * 0.1) * (1 + atkHand * 0.1))));
+    const remain = Math.max(1, Math.ceil((atkStr - defStr) / (atkDmg * atkCmdMult)));
     result = `<div class="wc-win">⚔ ATTACKER WINS — ${remain} troop${remain!==1?'s':''} survive</div>`;
   } else if (defStr > atkStr) {
-    const remain = Math.max(1, Math.ceil((defStr - atkStr) / (defBonus * (1 + defLevel * 0.1))));
+    const remain = Math.max(1, Math.ceil((defStr - atkStr) / (defDmg * defCmdMult * terrain)));
     result = `<div class="wc-lose">🛡 DEFENDER WINS — ${remain} defender${remain!==1?'s':''} survive</div>`;
   } else {
     result = `<div class="wc-lose">DRAW — defender wins ties</div>`;
   }
 
   el.warCalcResult.innerHTML = result + `<div class="wc-math">
-    Attacker: ${atkTroops} × (1 + ${atkLevel}×0.10)${atkHand>0?` × (1 + ${atkHand}×0.10)`:''} = <strong>${atkStr.toFixed(1)}</strong><br>
-    Defender: ${defTroops} × (1 + ${defLevel}×0.10) × ${defBonus} = <strong>${defStr.toFixed(1)}</strong>
+    Attacker: ${atkTroops} × (Hand ${atkHand}+1) × (1+${atkCmdLv}×0.10 cmd) = <strong>${atkStr.toFixed(1)}</strong><br>
+    Defender: ${defTroops} × (Hand ${defHand}+1) × (1+${defCmdLv}×0.10 cmd) × ${terrain} terrain = <strong>${defStr.toFixed(1)}</strong>
   </div>`;
 }
 
@@ -9867,7 +9886,7 @@ el.toolWarCalc.addEventListener('click', () => {
 el.closeWarCalc.addEventListener('click', () => el.warCalcModal.classList.remove('open'));
 el.runWarCalc.addEventListener('click', runWarCalcNow);
 // Auto-calc on input change
-['wc-atk-troops','wc-atk-lvl','wc-atk-hand','wc-def-troops','wc-def-lvl','wc-def-bonus'].forEach(id => {
+['wc-atk-troops','wc-atk-lvl','wc-atk-hand','wc-def-troops','wc-def-lvl','wc-def-hand','wc-def-bonus'].forEach(id => {
   document.getElementById(id)?.addEventListener('input', runWarCalcNow);
 });
 
