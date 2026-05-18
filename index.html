@@ -4639,26 +4639,36 @@ async function loadGames() {
   }
 }
 
-let _lobbyNavMode = 'my'; // 'my' | 'join'
+let _lobbyNavMode = 'mp-my'; // 'sp-my' | 'mp-my' | 'join'
 
 function renderGamesList() {
   const visibleGames = state.games.filter(game => {
-    const players = game.game_players || [];
-    const userIn = players.some(p => p.user_id === state.user?.id);
+    const players     = game.game_players || [];
+    const humans      = players.filter(p => !p.is_ai);
+    const userIn      = humans.some(p => p.user_id === state.user?.id);
+    const soloHuman   = humans.length === 1 && userIn;   // only me, rest AI
+    const multiHuman  = humans.length >= 2 && userIn;    // me + others
+
     if (_lobbyNavMode === 'join') {
       return game.status === 'lobby' && !userIn;
     }
-    // 'my' mode: lobby games + user's active/ended games
-    if (game.status === 'lobby') return true;
-    if (game.status === 'active') return userIn;
-    if (game.status === 'cancelled' || game.status === 'finished') return game.created_by === state.user?.id;
+    if (_lobbyNavMode === 'sp-my') {
+      if (game.status === 'lobby')    return userIn && soloHuman;
+      if (game.status === 'active')   return soloHuman;
+      if (game.status === 'cancelled' || game.status === 'finished') return game.created_by === state.user?.id && soloHuman;
+      return false;
+    }
+    // 'mp-my': me + at least one other human
+    if (game.status === 'lobby')    return userIn && multiHuman;
+    if (game.status === 'active')   return multiHuman;
+    if (game.status === 'cancelled' || game.status === 'finished') return game.created_by === state.user?.id && multiHuman;
     return false;
   });
 
   if (visibleGames.length === 0) {
-    const msg = _lobbyNavMode === 'join'
-      ? 'No open games to join right now.'
-      : 'No games yet. Create one to get started.';
+    const msg = _lobbyNavMode === 'join'   ? 'No open games to join right now.'
+              : _lobbyNavMode === 'sp-my'  ? 'No single player games yet. Create one to get started.'
+              : 'No multiplayer games yet. Create or join one to get started.';
     el.gamesList.innerHTML = `<div class="empty-state">${msg}</div>`;
     return;
   }
@@ -4783,11 +4793,10 @@ function initLobbyNav() {
     });
   });
 
-  // Default: open MP, show my games
+  // Default: open MP group but select nothing — content area stays blank
   const mpGroup = document.getElementById('lnav-mp');
   mpGroup.classList.add('open');
   mpGroup.querySelector('.lnav-hdr').classList.add('lnav-group-open');
-  setLobbyView('mp-mygames');
 }
 
 function setLobbyView(view) {
@@ -4814,10 +4823,10 @@ function setLobbyView(view) {
   if (view.endsWith('-mygames')) {
     hideStatic();
     gamesHeader.style.display = 'flex';
-    gamesTitle.textContent = 'My Games';
+    gamesTitle.textContent = view.startsWith('sp-') ? 'Single Player — My Games' : 'Multiplayer — My Games';
     createBtn.style.display = '';
     gamesList.style.display = '';
-    _lobbyNavMode = 'my';
+    _lobbyNavMode = view.startsWith('sp-') ? 'sp-my' : 'mp-my';
     renderGamesList();
 
   } else if (view.endsWith('-join')) {
@@ -4984,46 +4993,48 @@ function renderLobbyAccount(container) {
   });
 }
 
+let _lobbyHelpPage = null;
+
 function renderLobbyHelp(container) {
-  const sections = [
-    {
-      q: 'How do I start a game?',
-      a: 'Click <strong>Create Game</strong> under Online Multiplayer, fill in the name and settings, then share your invite link with up to 8 other players. Once all seats are filled, the host starts the game.'
-    },
-    {
-      q: 'How does the tick system work?',
-      a: 'The game runs on ticks — real-time intervals set when the game is created. Everything happens on ticks: movement, production, combat resolution. You do not need to be online when ticks fire.'
-    },
-    {
-      q: 'How do armies move?',
-      a: 'Select a castle and assign a commander to lead a march. Armies travel along castle connections. Travel time depends on distance and your Master of Horses council level.'
-    },
-    {
-      q: 'What is the Small Council?',
-      a: 'The Small Council has 7 seats, each held by a named commander. Each seat level provides passive bonuses: gold, troops, scan range, march speed, influence, combat strength, and prestige.'
-    },
-    {
-      q: 'How does fog of war work?',
-      a: 'You can always see the full map, but enemy castle ownership and army strength are hidden unless they fall within your scan radius. Scan range is set by your Master of Whisperers level.'
-    },
-    {
-      q: 'How is combat resolved?',
-      a: 'When an army arrives at an enemy castle, combat resolves automatically. Your Hand of the King level sets the flat damage your troops deal per round. Commander skill adds a percentage bonus.'
-    },
-    {
-      q: 'What are the win conditions?',
-      a: 'Control a majority of castles on the map or eliminate all rival houses. Prestige rankings determine the winner if the game ends by time limit.'
-    },
-    {
-      q: 'What is Co-Op Mode?',
-      a: 'Co-Op Mode pits all human players as allies against an AI-controlled White Walker invasion from beyond the Wall. This mode is currently in development.'
-    },
-  ];
-  container.innerHTML = sections.map(s => `
-    <div class="lview-help-section">
-      <div class="lview-help-q">${s.q}</div>
-      <div class="lview-help-a">${s.a}</div>
-    </div>`).join('<div class="lnav-divider" style="margin:10px 0;"></div>');
+  // Strip in-game cross-links (hl() calls produce anchor tags not useful here)
+  const stripLinks = html => html.replace(/<a[^>]*>(.*?)<\/a>/gs, '$1');
+
+  if (_lobbyHelpPage && HELP_ARTICLES[_lobbyHelpPage]) {
+    const art = HELP_ARTICLES[_lobbyHelpPage];
+    container.innerHTML = `
+      <button class="lview-filter-tab active" id="lobbyHelpBack" style="margin-bottom:12px;font-size:12px;">← Back</button>
+      <div class="help-article">
+        <div class="help-article-title">${art.title}</div>
+        ${stripLinks(art.html)}
+      </div>`;
+    container.querySelector('#lobbyHelpBack').addEventListener('click', () => {
+      _lobbyHelpPage = null;
+      renderLobbyHelp(container);
+    });
+    return;
+  }
+
+  _lobbyHelpPage = null;
+  container.innerHTML = `
+    <div style="text-align:center;font-family:'Cinzel',Georgia,serif;font-size:16px;color:var(--accent);font-weight:700;margin-bottom:4px;letter-spacing:0.06em;">Westeros Codex</div>
+    <div style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:14px;">Select a topic to read the full article.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;">
+      ${HELP_TOC.map(t => `
+        <button class="lview-mode-card lobby-help-toc" data-article="${t.id}"
+          style="text-align:left;padding:10px 10px;">
+          <div class="lview-mode-name" style="font-size:10px;">${t.label}</div>
+        </button>`).join('')}
+    </div>
+    <div style="border:1px solid var(--border);border-radius:5px;padding:12px;font-size:12px;color:var(--text-muted);text-align:center;line-height:1.6;font-style:italic;">
+      "A ruler who hides behind paid executioners soon forgets what death is."
+    </div>`;
+
+  container.querySelectorAll('.lobby-help-toc').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _lobbyHelpPage = btn.dataset.article;
+      renderLobbyHelp(container);
+    });
+  });
 }
 
 // =====================================================
