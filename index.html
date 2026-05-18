@@ -207,11 +207,14 @@
   .main-screen {
     display: grid;
     grid-template-rows: 52px 1fr;
-    grid-template-columns: minmax(0, 30%) minmax(0, 1fr) minmax(0, 300px);
-    grid-template-areas: "header header header" "sidebar map info";
+    grid-template-columns: minmax(0, 30%) minmax(0, 70%);
+    grid-template-areas: "header header" "sidebar map";
     height: 100vh;
     position: relative;
   }
+  .main-screen:not(.game-mode) .info-panel { display: none; }
+  .main-screen:not(.game-mode) .map-controls { display: none; }
+  .main-screen:not(.game-mode) .map-area { pointer-events: none; }
   /* Game mode: sidebar always open as permanent left column */
   .main-screen.game-mode {
     grid-template-rows: 48px 1fr;
@@ -3492,6 +3495,7 @@ function showAuthScreen() {
 function showMainScreen() {
   el.authScreen.classList.add('hidden');
   el.mainScreen.classList.remove('hidden');
+  if (el.mapImage.naturalWidth > 0) startHomePanAnimation();
 }
 
 // =====================================================
@@ -3625,6 +3629,47 @@ async function loadReferenceData() {
   } catch (err) {
     console.error('Failed to load reference data:', err);
     toast(`Failed to load: ${err.message}`, true);
+  }
+}
+
+// =====================================================
+// HOME SCREEN PAN ANIMATION
+// =====================================================
+let _homePanAnim = null;
+let _homePanStartTime = null;
+
+function startHomePanAnimation() {
+  stopHomePanAnimation();
+  const rect = el.mapContainer.getBoundingClientRect();
+  const iw = el.mapImage.naturalWidth;
+  const ih = el.mapImage.naturalHeight;
+  if (!iw || !ih) return;
+
+  state.zoom = 1.0;
+  state.panX = (rect.width - iw) / 2;
+  state.panY = 0;
+  applyTransform();
+
+  const panYEnd = rect.height - ih;
+  const duration = 90000;
+
+  function step(timestamp) {
+    if (_homePanStartTime === null) _homePanStartTime = timestamp;
+    const elapsed = (timestamp - _homePanStartTime) % duration;
+    const t = elapsed / duration;
+    state.panY = panYEnd * t;
+    applyTransform();
+    _homePanAnim = requestAnimationFrame(step);
+  }
+
+  _homePanAnim = requestAnimationFrame(step);
+}
+
+function stopHomePanAnimation() {
+  if (_homePanAnim) {
+    cancelAnimationFrame(_homePanAnim);
+    _homePanAnim = null;
+    _homePanStartTime = null;
   }
 }
 
@@ -3968,6 +4013,7 @@ el.inboxBtn?.addEventListener('click', () => {
 });
 
 function enterGamePanelMode() {
+  stopHomePanAnimation();
   // Switch main-screen to game-mode CSS class
   document.getElementById('mainScreen').classList.add('game-mode');
   // menuBtn (hamburger) stays hidden — panel is always visible
@@ -3987,6 +4033,7 @@ function exitGamePanelMode() {
   el.npPanelHeader?.classList.add('hidden');
   el.tbHouseDot?.classList.add('hidden');
   closePanel();
+  startHomePanAnimation();
 }
 
 function renderCastleInfo() {
@@ -4251,7 +4298,11 @@ document.getElementById('zoomFit').addEventListener('click', fitToScreen);
 el.mapImage.onload = () => {
   el.mapInner.style.width = el.mapImage.naturalWidth + 'px';
   el.mapInner.style.height = el.mapImage.naturalHeight + 'px';
-  fitToScreen();
+  if (document.getElementById('mainScreen').classList.contains('game-mode')) {
+    fitToScreen();
+  } else {
+    startHomePanAnimation();
+  }
   if (state.castles.length > 0) renderMarkers();
 };
 el.mapImage.src = MAP_IMAGE_DATA;
