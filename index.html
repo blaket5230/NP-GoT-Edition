@@ -3495,7 +3495,9 @@ function showAuthScreen() {
 function showMainScreen() {
   el.authScreen.classList.add('hidden');
   el.mainScreen.classList.remove('hidden');
-  if (el.mapImage.naturalWidth > 0) startHomePanAnimation();
+  requestAnimationFrame(() => {
+    if (el.mapImage.naturalWidth > 0) startHomePanAnimation();
+  });
 }
 
 // =====================================================
@@ -3643,21 +3645,22 @@ function startHomePanAnimation() {
   const rect = el.mapContainer.getBoundingClientRect();
   const iw = el.mapImage.naturalWidth;
   const ih = el.mapImage.naturalHeight;
-  if (!iw || !ih) return;
+  if (!iw || !ih || !rect.width) return;
 
   state.zoom = 1.0;
   state.panX = (rect.width - iw) / 2;
-  state.panY = 0;
-  applyTransform();
 
-  const panYEnd = rect.height - ih;
-  const duration = 90000;
+  const panYTop = 0;
+  const panYBottom = rect.height - ih; // negative — map is taller than container
+  const duration = 90000; // ms per one-way pass
 
   function step(timestamp) {
     if (_homePanStartTime === null) _homePanStartTime = timestamp;
-    const elapsed = (timestamp - _homePanStartTime) % duration;
-    const t = elapsed / duration;
-    state.panY = panYEnd * t;
+    const elapsed = timestamp - _homePanStartTime;
+    const cycle = elapsed / duration;
+    // Triangle wave: 0→1→0→1 (ping-pong, no jump at endpoints)
+    const t = 1 - Math.abs((cycle % 2) - 1);
+    state.panY = panYTop + (panYBottom - panYTop) * t;
     applyTransform();
     _homePanAnim = requestAnimationFrame(step);
   }
