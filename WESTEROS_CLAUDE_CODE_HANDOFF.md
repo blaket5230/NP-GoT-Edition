@@ -182,6 +182,16 @@ All of these are explicitly out of scope for V1 but logged for future developmen
 | Castle experience | Veteran garrison units, named garrison commanders |
 | Head of house death consequences | Power transition events when named heads die |
 | Sub-tick army animation | Army markers currently jump position each game tick. Use requestAnimationFrame + wall-clock interpolation so markers move smoothly every second between ticks. Pair with live progress % update in the movement info panel. |
+| Character personalities for AI Whispers | Each named character (Tywin, Cersei, Robb, Oberyn, etc.) gets a personality blurb injected into the AI Whisper system prompt. Makes AI messages feel like distinct political actors rather than a generic lord. Requires per-character voice writing. |
+| Realm News tab in Rookery | Public broadcast board showing major game events: war declarations, houses eliminated, Maester seasonal announcements, Night's Watch alerts. Note: alliance proposals and acceptances are private — only war declarations go public. |
+| Named council member characters | Each Small Council seat is filled by a named character who can be stationed at a castle like a commander. If that character is killed in battle or assassinated, the seat goes vacant and its bonus is lost until a replacement is appointed. Introduces strategic decisions around whether to risk a councilor in the field, which castle they defend from, and prioritizing assassination as a war aim. |
+| Non-Aggression Pact (NAP) | Formal diplomatic status between Neutral and Allied. Breaking a NAP costs Prestige and sends a public notice. Adds a meaningful middle-ground agreement beyond the current Neutral/Allied/War trinary. |
+| War declaration from neutral | Formal war declaration against a house you have no agreement with. Currently you can only go to war by breaking an alliance. |
+| Marriage Alliance | Locked diplomatic agreement for a fixed number of ticks (e.g. 20). Cannot be broken early. May include shared bonuses. More binding than a standard Alliance. |
+| Peace terms / tribute offers | Formal proposals to end a war, optionally with gold or prestige tribute attached. Requires a negotiation flow. |
+| Mediation | A third-party house mediates peace between two houses at war. Complex multi-party state machine. |
+| Formal trade agreements | Recurring trade routes with set gold flows per cycle, beyond ad-hoc gold gifts. Separate from the existing Ledger system. |
+| Diplomatic reputation score | A prestige-derived trust rating visible to other players — reflects history of broken agreements, honored debts, and diplomatic consistency. |
 | Shadow Paths | Retired entirely. Not planned for any version. |
 
 ---
