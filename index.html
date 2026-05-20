@@ -6209,6 +6209,13 @@ function buildSystemBody(body) {
     if (body.new_status === 'war') return `<div style="font-size:13px;color:var(--error);">⚔ War declared by ${hLink}.</div>`;
     return `<div style="font-size:13px;">${hLink} changed standing to Neutral.</div>`;
   }
+  if (body.winner_house) {
+    const wHouse = state.houses.find(h => h.slug === body.winner_house);
+    const wName  = wHouse?.name || body.winner_house;
+    return `<div style="font-size:13px;line-height:1.6;">
+      <strong>${escapeHtml(wName)}</strong> holds <strong>${body.castles}</strong> of ${body.total} castles — the Iron Throne is theirs.
+    </div>`;
+  }
   return `<div style="font-size:12px;color:var(--text-muted);">${escapeHtml(JSON.stringify(body))}</div>`;
 }
 
@@ -12989,18 +12996,6 @@ function showGameOver(data) {
   el.gameOverOverlay.classList.remove('hidden');
 }
 
-// Handle game_over messages arriving via Rookery
-function handleGameOverMessage(msg) {
-  if (msg.body?.gift_type === 'game_over') {
-    showGameOver({
-      winner:    msg.body.winner_house,
-      winner_id: msg.body.winner_player_id,
-      castles:   msg.body.castle_count,
-      total:     msg.body.total_castles,
-      win_at:    Math.floor(msg.body.total_castles / 2) + 1,
-    });
-  }
-}
 
 el.gameOverCloseBtn?.addEventListener('click', () => {
   el.gameOverOverlay.classList.add('hidden');
@@ -13030,7 +13025,7 @@ function subscribeRealtime(gameId) {
       if (!state.currentPlayer || msg.player_id !== state.currentPlayer.id) return;
       state.inbox.unshift(msg);
       renderInboxBadge();
-      if (msg.body?.gift_type === 'game_over') handleGameOverMessage(msg);
+      if (msg.type === 'system' && (msg.title === 'Victory!' || msg.title === 'Defeat')) showGameOver(msg.body);
     })
     // game_castles changes → refresh state (movements resolved, castles captured)
     .on('postgres_changes', {
