@@ -140,25 +140,55 @@ Supplementary lore data for Maesters, Iron Bank, and Night's Watch. Flavor/refer
 
 ---
 
-## 7. Current Open Tasks (as of handoff)
+## 7. Current State (as of last session)
 
-### Code bugs (highest priority -- these are why we moved to Claude Code)
+### What was completed in the most recent session
 
-**Bug 1: ETA shows ticks, should show time**
-When an army marches, the ETA tooltip/box displays "X ticks" but it should convert to real time (hours:minutes or similar based on the tick duration setting).
-- Look for: `ETA`, `travel_ticks`, `TICK_DURATION`, `msPerTick`, `formatDuration`
+**Siege system (fully implemented)**
+- `march_type = 'siege'` on `commander_movements` drives all siege logic
+- Siege arrival: commander sets `is_under_siege=TRUE`, `siege_started_at_tick` on `game_castles`, status='sieging' on commander
+- Siege bleed: 3%/tick to both siege army and garrison; either side hitting 0 ends the siege automatically
+- Infrastructure damage: one infra level lost per production cycle (50% Treasury, 35% Recruitment, 15% Prestige)
+- Siege reinforcement: arriving allied army merges into siege commander (inbox: "Siege Reinforced")
+- Relief army: arriving friendly army fights siege commander outside (no castle bonus); winner determined, then castle faces victor
+- Enemy army arriving at a besieged castle: fights siege commander first, then faces castle if siege is broken
+- Break Siege & Assault button: player-triggered assault via `break_siege_and_assault` RPC, requires ≥1 full production cycle elapsed
+- Fog of war: `computeVisibleSlugs()` now includes `status='sieging'` commanders alongside `'idle'` for scan contribution
 
-**Bug 2: Shield icon disappears when army marches**
-The shield icon correctly shows on garrisoned commanders at castles. But when a commander leads a marching army, the map marker reverts to a plain yellow box showing only troop count. The shield should be the primary visual indicator at all times.
-- If multiple commanders in one army: stack the shields visually
-- Troop count should be secondary (small label)
-- Look for: `army-marker`, `cmdChip`, `shield`, `commander.*icon`
+**Open-field combat (fully implemented)**
+- Proximity check: armies within 20.2 map units fight each other mid-march each tick
+- Initiative: higher Whisperers wins; tie = coin flip
+- Round-based deterministic combat (no dice): `CEIL(troops / dmg_per_round)` rounds to kill
 
-### Data tasks (in progress, paused)
+**Kings Road speed (fully implemented)**
+- Both endpoints must have `has_kings_road=TRUE` on `game_castles`
+- Speed formula: `commander_speed_mult × 17.5 × SQRT(horses_level + 3)` leagues/tick
+- Applied in `send_commander`, `send_on_route` (first leg), and `process_ticks` route advancement
 
-**Influence audit + supporting roster output** -- Was mid-execution when we hit context limits. The decisions are made (T1 = 45, supporting = 25, 4 castles per house by proximity) but the final output to the spreadsheet may not be complete.
+**Left-nav work-through progress**
+The main left nav panels have been iterated on. Status by panel:
+| Panel | Status |
+|---|---|
+| Map | Complete — scrollable/zoomable, army markers, siege indicators |
+| Commanders | Complete — shield markers, siege status, route editing |
+| Castles / Realms | Complete — sub-line gold/troops per cycle, 3-tab layout |
+| Intel | Complete — KPI row, category tabs, fog-gated standings, SVG chart |
+| Ledger | Complete — active/history tabs, partial pay, send gold to anyone, expandable rows |
+| Rookery | Complete — ravens, global chat, whispers tab |
+| Help | Complete — Siege and Kings Road articles added; Combat/Commanders/Council updated |
 
-**Commander pool sheet** -- Was queued to be added to the data workbook alongside the influence work.
+**Supabase migrations saved**
+Key migrations from this session are now tracked in `supabase/migrations/`:
+- `20260520024918_siege_arrivals_and_break_siege.sql` — full `process_ticks` + `break_siege_and_assault` RPC
+- `20260520030744_send_on_route_kings_road_speed.sql` — Kings Road speed on patrol routes
+- `20260520032435_send_commander_march_type.sql` — `p_march_type` parameter on `send_commander`
+
+### Known gaps / next areas to work
+
+- **War Calculator** — referenced in README, needs verification that it correctly models siege vs. open-field vs. assault combat with current round-based formula
+- **Production cycle inbox** — Castellan Report message exists; consider whether the UI renders it well
+- **Win condition** — "first to hold >50% of 188 castles" needs a check in `process_ticks` or a separate cron trigger
+- **V2 backlog** — see Section 8 for the full list
 
 ---
 
@@ -228,7 +258,7 @@ Paste this at the start of any new Claude Code session:
 
 ---
 
-*"This is a Neptune's Pride-style GOT strategy game called Westeros. The main game file is westeros.html. Read WESTEROS_CLAUDE_CODE_HANDOFF.md for full project context before doing anything. The current open code bugs are: (1) ETA on marching armies shows ticks, should show real time; (2) shield icon disappears from army map marker when army starts marching -- shield should be primary indicator always, stack shields for multiple commanders, troop count secondary."*
+*"This is a Neptune's Pride-style GOT strategy game called Westeros. The main game file is index.html (in the repo root). Read WESTEROS_CLAUDE_CODE_HANDOFF.md for full project context before doing anything. Core systems (map, combat, siege, Kings Road, commanders, council, fog of war, diplomacy, ledger, intel dashboard, rookery, help docs) are all complete. Check Section 7 for current state and open gaps before starting new work."*
 
 ---
 
