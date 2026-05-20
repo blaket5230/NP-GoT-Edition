@@ -827,7 +827,7 @@
     pointer-events: none;
     z-index: 3;
     color: rgba(220,212,190,0.88);
-    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.8));
+    filter: var(--kr-glow,) drop-shadow(0 1px 3px rgba(0,0,0,0.8));
     transition: filter .15s;
   }
   .castle-icon.t1 { width: 18px; height: 20px; }
@@ -836,22 +836,25 @@
   .marker.owned .castle-icon {
     color: var(--owner-color, #c9a84c);
     filter:
+      var(--kr-glow,)
       drop-shadow(0 0 2px var(--owner-color2, var(--owner-color, #c9a84c))88)
       drop-shadow(0 1px 3px rgba(0,0,0,0.85));
   }
   .marker.you-own .castle-icon {
     color: var(--owner-color, #c9a84c);
     filter:
+      var(--kr-glow,)
       drop-shadow(0 0 3px var(--owner-color, #c9a84c)aa)
       drop-shadow(0 0 7px var(--owner-color2, var(--owner-color, #c9a84c))55)
       drop-shadow(0 1px 3px rgba(0,0,0,0.9));
   }
   .marker.selected .castle-icon {
     filter:
+      var(--kr-glow,)
       drop-shadow(0 0 4px #ffffffcc)
       drop-shadow(0 0 8px var(--owner-color, #c9a84c)88);
   }
-  .marker:hover .castle-icon { filter: drop-shadow(0 0 6px rgba(255,255,255,0.6)) drop-shadow(0 1px 3px rgba(0,0,0,0.9)); }
+  .marker:hover .castle-icon { filter: var(--kr-glow,) drop-shadow(0 0 6px rgba(255,255,255,0.6)) drop-shadow(0 1px 3px rgba(0,0,0,0.9)); }
   /* Troop count: positioned below the castle icon */
   .marker .troops {
     top: calc(50% + 7px);
@@ -1496,9 +1499,8 @@
     0%,100% { border-color: rgba(201,168,76,0.45); }
     50%      { border-color: rgba(201,168,76,0.85); box-shadow: 0 0 14px rgba(201,168,76,0.08) inset; }
   }
-  .marker.has-kings-road .castle-icon {
-    box-shadow: 0 0 8px 3px color-mix(in srgb, var(--owner-color, #C9A84C) 70%, transparent),
-                0 0 18px 6px color-mix(in srgb, var(--owner-color, #C9A84C) 28%, transparent);
+  .marker.has-kings-road {
+    --kr-glow: drop-shadow(0 0 5px var(--owner-color, #C9A84C)) drop-shadow(0 0 10px color-mix(in srgb, var(--owner-color, #C9A84C) 35%, transparent));
   }
   .kings-road-badge {
     position: absolute;
@@ -4426,6 +4428,7 @@ function positionMarkers() {
   const iw = el.mapImage.naturalWidth;
   const ih = el.mapImage.naturalHeight;
   if (!iw || !ih) return;
+  const positions = [];
   el.markerLayer.querySelectorAll('.marker').forEach(marker => {
     const mx = parseFloat(marker.dataset.mapx);
     const my = parseFloat(marker.dataset.mapy);
@@ -4434,15 +4437,34 @@ function positionMarkers() {
     const y = my * ih * state.zoom + state.panY;
     marker.style.left = x + 'px';
     marker.style.top = y + 'px';
-    // Scale marker with zoom so castles grow as you zoom in
     const mScale = Math.max(0.45, Math.min(2.6, Math.pow(state.zoom, 0.68)));
     marker.style.transform = `translate(-50%, -50%) scale(${mScale})`;
-    if (y < 60) {
+    positions.push({ marker, x, y });
+  });
+
+  // Smart label placement: flip label below when above is crowded.
+  // The label is centered ~22px above the marker. If another marker's center
+  // is within ±56px horizontally and 8-48px above this one, its body sits in
+  // the same space our above-label occupies → switch to label-below.
+  // Keep label-above when below is also crowded (above is the lesser evil).
+  positions.forEach(({ marker, x, y }) => {
+    const aboveCount = positions.reduce((n, o) => {
+      if (o.marker === marker) return n;
+      const dx = Math.abs(o.x - x);
+      const dy = y - o.y;
+      return n + (dx < 56 && dy > 8 && dy < 48 ? 1 : 0);
+    }, 0);
+    const belowCount = positions.reduce((n, o) => {
+      if (o.marker === marker) return n;
+      const dx = Math.abs(o.x - x);
+      const dy = o.y - y;
+      return n + (dx < 56 && dy > 8 && dy < 48 ? 1 : 0);
+    }, 0);
+    if (y < 60 || (aboveCount > 0 && belowCount === 0)) {
       marker.classList.add('label-below');
     } else {
       marker.classList.remove('label-below');
     }
-    // Labels show on hover/select only (no auto-show)
   });
 
   // Position scan and march rings (if visible) — native map px radius → screen px
