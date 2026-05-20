@@ -3362,18 +3362,6 @@
   </div>
 </div>
 
-<!-- =================== COUNCIL PANEL =================== -->
-<div class="inbox-panel" id="councilPanel">
-  <div class="inbox-header">
-    <div class="inbox-title">⚜ The Small Council</div>
-    <button class="inbox-close" id="councilClose">✕</button>
-  </div>
-  <div style="padding: 12px 14px; font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); line-height: 1.5;">
-    Spend Prestige to advance your council seats. Cost: 144 × current level. Bonuses apply immediately.
-    <strong id="councilPrestigeDisplay" style="color: var(--accent); display: block; margin-top: 4px;"></strong>
-  </div>
-  <div class="inbox-list" id="councilList"></div>
-</div>
 
 <!-- =================== ROOKERY PANEL =================== -->
 <div class="inbox-panel" id="inboxPanel">
@@ -4079,7 +4067,6 @@ const el = {
   composeBody:    document.getElementById('composeBody'),
   composeSendBtn: document.getElementById('composeSendBtn'),
   // Council panel (still accessible via sidebar section)
-  councilPanel:   document.getElementById('councilPanel'),
   councilClose:   document.getElementById('councilClose'),
   councilList:    document.getElementById('councilList'),
   councilPrestigeDisplay: document.getElementById('councilPrestigeDisplay'),
@@ -7248,68 +7235,14 @@ const COUNCIL_META = {
   whisperers:     { title: 'Master of Whisperers', icon: '👁', bonus: 'Castle scan: 90 leagues base + 60 per level' },
   grand_maester:  { title: 'Grand Maester',        icon: '📜', bonus: '72 × GrandMaester prestige per cycle to a random seat' },
   laws:           { title: 'Master of Laws',       icon: '⚖',  bonus: 'Castle influence = base + (Laws×5), reducing upgrade costs' },
-  horses:         { title: 'Master of Horses',     icon: '🐎', bonus: 'March range: 90 + Horses×60 leagues. King\'s Road speed: 17.5 × √(Horses+3) leagues/tick' },
+  horses:         { title: 'Master of Horses',     icon: '🐎', bonus: 'March range: 90 + Horses×60 leagues. Kings Road: flat 3× speed when both castles have the road.' },
 };
 
 function councilUpgradeCost(currentLevel) {
   return 144 * Math.max(1, currentLevel);  // 144, 288, 432, 576, …
 }
 
-function renderCouncil() {
-  const myPrestige = state.currentPlayer?.prestige || 0;
-  if (el.councilPrestigeDisplay) {
-    el.councilPrestigeDisplay.textContent = `Available Prestige: ${myPrestige}`;
-  }
-  const order = ['hand', 'coin', 'lord_commander', 'whisperers', 'grand_maester', 'laws', 'horses'];
-  el.councilList.innerHTML = order.map(seat => {
-    const meta = COUNCIL_META[seat];
-    const row = state.councilSeats.find(s => s.seat === seat);
-    const lvl = row?.level ?? 1;
-    const cost = councilUpgradeCost(lvl);
-    const canAfford = myPrestige >= cost;
-    return `
-      <div class="inbox-msg" style="border-left: 3px solid var(--accent); margin-bottom: 6px; cursor: default;">
-        <div class="inbox-msg-header" style="align-items: flex-start;">
-          <div style="font-size: 20px; margin-right: 6px; line-height:1;">${meta.icon}</div>
-          <div style="flex:1;">
-            <div style="font-size:13px; font-weight:600;">${meta.title}</div>
-            <div style="font-size:11px; color: var(--text-muted); margin-top:2px;">${meta.bonus}</div>
-            <div style="margin-top: 5px;"><span style="font-size:10px;color:var(--text-muted);">Level ${lvl}</span></div>
-          </div>
-          <div>
-            <button class="send-forces-btn council-upgrade-btn"
-              data-seat="${seat}"
-              style="font-size:11px;padding:5px 10px;${!canAfford ? 'opacity:0.45;cursor:not-allowed;' : ''}"
-              ${!canAfford ? 'disabled' : ''}>
-              Upgrade<br><span style="font-size:10px;font-weight:400;">${cost} prestige</span>
-            </button>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
-
-  el.councilList.querySelectorAll('.council-upgrade-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const seat = btn.dataset.seat;
-      btn.disabled = true;
-      try {
-        const { data, error } = await supabase.rpc('upgrade_council_seat', {
-          p_game_id: state.activeGame.id,
-          p_seat: seat,
-        });
-        if (error) throw error;
-        toast(`${COUNCIL_META[seat].title} upgraded to level ${data.new_level} (${data.cost} prestige)`);
-        await refreshGameState(state.activeGame.id);
-        renderCouncil();
-      } catch (err) {
-        toast(`Upgrade failed: ${err.message}`, true);
-        btn.disabled = false;
-      }
-    });
-  });
-}
-
-// Council accessible via sidebar nav "Small Council" section
+// Council managed via sidebar nav "Small Council" section (buildCouncilSidebarHtml)
 
 // =====================================================
 // FOG OF WAR
@@ -7680,7 +7613,7 @@ function exitGameMode() {
   el.gameRight?.classList.add('hidden');
   el.lobbyRight?.classList.remove('hidden');
   el.inboxPanel.classList.remove('open');
-  el.councilPanel.classList.remove('open');
+  el.councilPanel?.classList.remove('open');
   el.gameOverOverlay?.classList.add('hidden');
   unsubscribeRealtime();
   document.querySelector('.map-area').classList.remove('game-mode');
@@ -8070,14 +8003,13 @@ el.generateRecruit.addEventListener('click', () => {
 const MAP_NATIVE_WIDTH = 672;   // source dimensions used by send_commander to compute distance
 const MAP_NATIVE_HEIGHT = 1560;
 function getMarchSpeedPxPerTick(fromCastleSlug, toCastleSlug) {
-  const speedMult  = state.activeGame?.commander_speed_mult ?? 1.0;
-  const base       = 17.5 * speedMult;
+  const speedMult = state.activeGame?.commander_speed_mult ?? 1.0;
+  const base      = 17.5 * speedMult;
   if (!fromCastleSlug || !toCastleSlug) return base;
-  const horsesLv   = state.councilSeats.find(s => s.seat === 'horses')?.level ?? 1;
-  const fromGc     = state.gameCastles?.find(gc => gc.castle_slug === fromCastleSlug);
-  const toGc       = state.gameCastles?.find(gc => gc.castle_slug === toCastleSlug);
+  const fromGc    = state.gameCastles?.find(gc => gc.castle_slug === fromCastleSlug);
+  const toGc      = state.gameCastles?.find(gc => gc.castle_slug === toCastleSlug);
   if (fromGc?.has_kings_road && toGc?.has_kings_road) {
-    return base * Math.sqrt(horsesLv + 3);
+    return base * 3;
   }
   return base;
 }
@@ -10288,7 +10220,7 @@ function wireDiplomacySection() {
       if (error) return toast('Failed: ' + error.message, true);
       toast(`${amt} gold sent`);
       hideModal();
-      await reloadGameState();
+      await refreshGameState(state.activeGame.id);
     });
   }));
 
@@ -10322,7 +10254,7 @@ function wireDiplomacySection() {
       if (error) return toast('Failed: ' + error.message, true);
       toast(`${data.levels_sent} level(s) of ${seat} knowledge sent for ${data.cost} gold`);
       hideModal();
-      await reloadGameState();
+      await refreshGameState(state.activeGame.id);
     });
   }));
 
@@ -10377,7 +10309,7 @@ function buildLeaderboardHtml() {
   const rankMap = new Map(rankOrder.map((r, i) => [r.player.id, i + 1]));
 
   const totalCastles = state.castles.filter(c => c.map_x != null).length;
-  const winAt = Math.ceil(totalCastles / 2);
+  const winAt = Math.ceil(totalCastles * (state.activeGame?.victory_pct || 0.5));
 
   const rowHtml = ({ player, house, castleCount }) => {
     const isYou = player.user_id === state.user.id;
@@ -11210,6 +11142,7 @@ const INTEL_CATEGORIES = [
     { id: 'whisperers_level',     label: 'Whisperers' },
     { id: 'grand_maester_level',  label: 'Gr. Maester'},
     { id: 'laws_level',           label: 'Laws'       },
+    { id: 'horses_level',         label: 'Horses'     },
   ]},
 ];
 let _realmsTab    = 'castles'; // 'castles' | 'commanders' | 'troops'
@@ -11390,7 +11323,7 @@ function buildRealmsCommandersTab() {
           ? `⚔ Besieging ${escapeHtml(locCastle?.name || locSlug || '?')}`
           : escapeHtml(locCastle?.name || locSlug || '?');
 
-      const atk = Math.round((cmd.troops || 0) * (1 + cmd.level * 0.1) * (1 + handLv * 0.1));
+      const atk = Math.max(1, Math.round(handLv * (1 + cmd.level * 0.1)));
 
       let routeTag = '';
       if (route && move)  routeTag = route.is_loop ? '↺' : '→';
@@ -11434,7 +11367,7 @@ function buildRealmsCommandersTab() {
     <thead><tr>
       <th>Commander</th>
       <th style="text-align:right;" title="Troops carried">Trp</th>
-      <th style="text-align:right;" title="Attack strength">Atk</th>
+      <th style="text-align:right;" title="Damage per round (Hand × (1 + level×0.1))">Dmg</th>
       <th style="text-align:right;" title="Level">Lv</th>
       <th style="text-align:right;" title="XP / XP to next level">XP</th>
       <th title="Current location or march destination">Location</th>
@@ -11520,7 +11453,7 @@ function buildRealmsTroopsTab() {
         locName = escapeHtml(curCastle?.name || cmd.current_castle_slug || '—');
       }
 
-      const atk = Math.round((cmd.troops || 0) * (1 + cmd.level * 0.1) * (1 + handLv * 0.1));
+      const atk = Math.max(1, Math.round(handLv * (1 + cmd.level * 0.1)));
 
       commanderEntries.push({
         sortKey: -(cmd.troops || 0),
@@ -12539,7 +12472,7 @@ const HELP_ARTICLES = {
       <div class="help-hdr">Recruiting</div>
       <p>Open any castle you own and tap Recruit. Commanders cost gold (higher levels cost more) and are drawn from a pool of named characters. Each commander has a level from 1 to 5.</p>
       <div class="help-hdr">Moving</div>
-      <p>Tap a commander, then tap a destination castle. A gold ring shows valid march targets. The commander takes troops from their current castle's garrison and marches — base travel speed is 17.5 leagues per tick, scaled by the game's speed setting. If both origin and destination have a ${hl('kings_road','Kings Road')}, speed is multiplied by <code>√(Horses + 3)</code> — at level 1 Master of Horses that is ×2. The ${hl('council','Master of Horses')} seat also controls maximum march range.</p>
+      <p>Tap a commander, then tap a destination castle. A gold ring shows valid march targets. The commander takes troops from their current castle's garrison and marches — base travel speed is 17.5 leagues per tick, scaled by the game's speed setting. If both origin and destination have a ${hl('kings_road','Kings Road')}, march speed is tripled (×3). The ${hl('council','Master of Horses')} seat controls maximum march range.</p>
       <div class="help-hdr">March Type</div>
       <p>When marching to an enemy castle you can choose <strong>Assault</strong> (default — fights the garrison immediately on arrival) or <strong>Siege</strong> (takes up position outside the walls and begins a siege). Set this in the Send Forces dialog or via the waypoint action in a route.</p>
       <div class="help-hdr">Commander Level</div>
@@ -12601,7 +12534,7 @@ const HELP_ARTICLES = {
       <strong>Master of Whisperers</strong> — castle scan radius = <code>90 + Whisperers×60</code> leagues. Whisper reports fire on an interval of <code>max(2, 8 − level)</code> ticks; combat catch rate = <code>min(90%, 5% + level×15%)</code>.<br>
       <strong>Grand Maester</strong> — each production cycle invests <code>72 × level</code> prestige toward a random non-focus seat. There is no per-tick equivalent. Accelerates your whole council unpredictably.<br>
       <strong>Master of Laws</strong> — effective influence per castle = <code>(Laws×5) + base_influence</code>. Refreshed each production cycle. Higher influence directly reduces all infrastructure upgrade costs.<br>
-      <strong>Master of Horses</strong> — march range = <code>90 + Horses×60</code> leagues (matches scan radius). Also amplifies the ${hl('kings_road','Kings Road')} speed bonus: both-road marches travel at <code>17.5 × √(Horses + 3)</code> leagues per tick — ×2 at level 1, ×2.65 at level 4. Passive — applies to every movement.</p>
+      <strong>Master of Horses</strong> — march range = <code>90 + Horses×60</code> leagues (matches scan radius). Passive — applies to every movement. For ${hl('kings_road','Kings Road')} speed, see that article.</p>
       <div class="help-hdr">Training</div>
       <p>Prestige generated by your castles flows automatically toward your <em>Current Focus</em> seat every tick — not just on production cycles. Training cost to advance from level N to N+1 is <strong>144 × N prestige</strong> (×council cost multiplier for the game). All seats start at level 1. There is no level cap — long games and Grand Maester compounding push seats far beyond what short games can reach. Progress resets to zero on each level-up.</p>
       <div class="help-hdr">Next Focus</div>
@@ -12705,12 +12638,11 @@ const HELP_ARTICLES = {
       <div class="help-hdr">Building</div>
       <p>Open any castle you own and tap <strong>Build Kings Road</strong> in the castle inspector. The cost is fixed gold based on the castle's influence rating. You can also <strong>Demolish</strong> a road you already built from the same panel. Castles with an active Kings Road show a gold glow and a small gold badge on the map marker.</p>
       <div class="help-hdr">Speed Bonus</div>
-      <p>When a march departs a castle <em>with</em> Kings Road and the destination <em>also</em> has Kings Road, march speed is multiplied by <code>√(Horses + 3)</code> — where Horses is your ${hl('council','Master of Horses')} level.</p>
-      <p>At level 1 that is ×2 (35 leagues/tick). At level 4 it is ×2.65. At level 7 it is ×3.16. The bonus applies to every leg of a route — both the initial dispatch and every waypoint continuation.</p>
+      <p>When a march departs a castle <em>with</em> Kings Road and the destination <em>also</em> has Kings Road, march speed is exactly <strong>3×</strong> the base rate — 52.5 leagues per tick at normal game speed. The bonus applies to every leg of a route: both the initial dispatch and every waypoint continuation.</p>
       <div class="help-hdr">Both Ends Required</div>
       <p>The speed bonus only activates when <strong>both</strong> the origin and destination castle have Kings Road. A road at one end does nothing on its own. Build roads along your key corridors — seat castle to front-line castles — to create rapid reinforcement lanes.</p>
       <div class="help-hdr">Strategic Use</div>
-      <p>Kings Road pays off most on high-traffic corridors that you use for repeated reinforcement or rapid strikes. Pair it with a high Master of Horses for forces that can cross most of Westeros in a fraction of normal travel time. The War Calculator and Ruler tool both account for Kings Road speed automatically.</p>
+      <p>Kings Road pays off most on high-traffic corridors that you use for repeated reinforcement or rapid strikes. The Ruler tool accounts for Kings Road speed automatically when measuring distances between two road-connected castles.</p>
       <div class="help-callout">Tip — build Kings Road on your seat castle first, then extend it outward along your main expansion axis. One well-placed road corridor can let a relief army arrive before a siege is even established.</div>
       <div class="help-also">See also: ${hl('commanders','Commanders')} · ${hl('council','Master of Horses')} · ${hl('map','The Map')}</div>`,
   },

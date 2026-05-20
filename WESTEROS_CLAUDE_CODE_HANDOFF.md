@@ -162,11 +162,24 @@ Supplementary lore data for Maesters, Iron Bank, and Night's Watch. Flavor/refer
 
 **Kings Road speed (fully implemented)**
 - Both endpoints must have `has_kings_road=TRUE` on `game_castles`
-- Speed formula: `commander_speed_mult × 17.5 × SQRT(horses_level + 3)` leagues/tick
+- Speed formula: flat `commander_speed_mult × 17.5 × 3` leagues/tick (52.5 at normal speed)
+- 1 Kings Road castle (only one endpoint) gives no bonus
 - Applied in `send_commander`, `send_on_route` (first leg), and `process_ticks` route advancement
 
-**Left-nav work-through progress**
-The main left nav panels have been iterated on. Status by panel:
+**Full-game audit completed (all V1 systems)**
+Critical bugs fixed, dead code removed, formulas aligned between frontend and backend:
+- Removed dead floating `councilPanel` HTML, `renderCouncil()` function, and `el.councilPanel` cache entry
+- Fixed `reloadGameState` → `refreshGameState()` in two diplomacy actions (send gold, send knowledge)
+- Fixed realtime `gift_type === 'game_over'` check → `type === 'system' && title === 'Victory!'/'Defeat'`
+- Removed `handleGameOverMessage()` dead function
+- Realms commander atk column formula now matches server (`handLv × (1 + cmdLv×0.1)`); renamed "Dmg" with tooltip
+- Added `horses_level` to `INTEL_CATEGORIES` council vars
+- Win threshold in leaderboard uses `victory_pct` from game settings (not hardcoded 50%)
+- `buildSystemBody()` renders Victory/Defeat inbox messages with winner name, castle count, and total
+- `check_win_condition` RPC: threshold fixed to `FLOOR(total×pct)+1`; fields renamed to match frontend (`castles`, `win_at`, `winner_id`)
+- Kings Road multiplier simplified from `SQRT(horses+3)` to flat `3×` across all SQL functions and frontend
+
+**Left-nav panel status**
 | Panel | Status |
 |---|---|
 | Map | Complete — scrollable/zoomable, army markers, siege indicators |
@@ -178,16 +191,17 @@ The main left nav panels have been iterated on. Status by panel:
 | Help | Complete — Siege and Kings Road articles added; Combat/Commanders/Council updated |
 
 **Supabase migrations saved**
-Key migrations from this session are now tracked in `supabase/migrations/`:
+All migrations tracked in `supabase/migrations/`:
 - `20260520024918_siege_arrivals_and_break_siege.sql` — full `process_ticks` + `break_siege_and_assault` RPC
-- `20260520030744_send_on_route_kings_road_speed.sql` — Kings Road speed on patrol routes
-- `20260520032435_send_commander_march_type.sql` — `p_march_type` parameter on `send_commander`
+- `20260520030744_send_on_route_kings_road_speed.sql` — Kings Road speed on patrol routes (superseded by flat-3x)
+- `20260520032435_send_commander_march_type.sql` — `p_march_type` parameter on `send_commander` (superseded by flat-3x)
+- `20260520_fix_check_win_condition_fields_and_threshold.sql` — win condition threshold and field name fixes
+- `20260520_simplify_kings_road_to_flat_3x.sql` — Kings Road simplified to flat 3× in all SQL functions
 
 ### Known gaps / next areas to work
 
-- **War Calculator** — referenced in README, needs verification that it correctly models siege vs. open-field vs. assault combat with current round-based formula
-- **Production cycle inbox** — Castellan Report message exists; consider whether the UI renders it well
-- **Win condition** — "first to hold >50% of 188 castles" needs a check in `process_ticks` or a separate cron trigger
+- **Castle connections on map** — V2 feature; deferred until choke points and strategic routes can be properly designed
+- **Scenarios mode** — planned but not yet built; V2
 - **V2 backlog** — see Section 8 for the full list
 
 ---

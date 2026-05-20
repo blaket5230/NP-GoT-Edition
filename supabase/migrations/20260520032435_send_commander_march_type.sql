@@ -1,6 +1,7 @@
 -- Migration: send_commander_march_type
 -- Adds p_march_type parameter so siege marches are recorded in commander_movements.march_type
 -- Without this, send_commander always wrote 'assault' regardless of the frontend value
+-- Note: Kings Road speed was later simplified to flat 3× in simplify_kings_road_to_flat_3x
 
 CREATE OR REPLACE FUNCTION public.send_commander(
   p_commander_id bigint,
