@@ -906,6 +906,10 @@
   /* When a castle is selected, hide the on-map troop number so the right info panel
      is the single source of truth. */
   .marker.selected .troops { display: none; }
+  /* Zoom-threshold visibility — toggled by applyZoomVisibility() */
+  #markerLayer.hide-troops  .marker .troops { display: none !important; }
+  #markerLayer.hide-names   .marker-label   { display: none !important; }
+  #markerLayer.hide-shields .shield-fan     { display: none !important; }
   /* Castle name label — no box, just shadowed text */
   .marker-label {
     position: absolute;
@@ -4011,7 +4015,10 @@ const state = {
     showInfraLevels:   false,  // show T/R/P levels below castle name
     showHouseColors:   true,   // color-code markers by house (vs. monochrome)
     defaultTroopPct:   50,     // default % of garrison to send with commander (10–100)
-    mapLabelZoom:      0.4,    // min zoom to show troop count labels
+    mapLabelZoom:      0.4,    // legacy — superseded by zoomNames/zoomTroops/zoomShields
+    zoomNames:         0.3,    // min zoom to show castle name labels
+    zoomTroops:        0.5,    // min zoom to show troop counts
+    zoomShields:       0.5,    // min zoom to show commander shields on castle markers
   },
 };
 
@@ -4394,9 +4401,20 @@ function stopHomePanAnimation() {
 // =====================================================
 // MAP RENDERING (loaded from DB now)
 // =====================================================
+function applyZoomVisibility() {
+  const ml = el.markerLayer;
+  if (!ml) return;
+  const z = state.zoom;
+  const p = state.prefs;
+  ml.classList.toggle('hide-names',   z < (p.zoomNames   ?? 0));
+  ml.classList.toggle('hide-troops',  z < (p.zoomTroops  ?? 0));
+  ml.classList.toggle('hide-shields', z < (p.zoomShields ?? 0));
+}
+
 function applyTransform() {
   el.mapInner.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
   el.zoomReadout.textContent = Math.round(state.zoom * 100) + '%';
+  applyZoomVisibility();
   positionMarkers();
   renderMovements();
 }
@@ -4684,6 +4702,7 @@ function renderMarkers() {
   });
 
   positionMarkers();
+  applyZoomVisibility();
   if (state.isPickingDestination) {
     applyDestinationHighlights();
   }
@@ -12438,13 +12457,29 @@ function buildOptionsHtml() {
         <div><strong style="color:var(--text);">Fog of War:</strong> ${state.activeGame.fog_of_war ? '🌫 Enabled' : 'Disabled'}</div>
       </div>`)}
 
-    ${optSect('Map Display', `
-      ${toggle('showTroopCounts', 'Troop counts', p.showTroopCounts, 'Show garrison numbers on castle markers')}
-      ${toggle('showCastleNames', 'Castle names', p.showCastleNames, 'Show name labels on the map')}
-      ${toggle('showInfraLevels', 'Infrastructure levels', p.showInfraLevels, 'Show T/R/P levels below name')}
-      ${slider('mapLabelZoom', 'Label visibility threshold', p.mapLabelZoom, 0.1, 1.5, 0.1,
-        v => `zoom ≥ ${parseFloat(v).toFixed(1)}×`)}
-    `)}
+    ${optSect('Map Display', (() => {
+      const ZOOM_OPTS = [
+        { label: 'Always',        value: 0    },
+        { label: 'Low zoom',      value: 0.3  },
+        { label: 'Medium zoom',   value: 0.5  },
+        { label: 'High zoom',     value: 0.7  },
+        { label: 'Very zoomed in',value: 1.0  },
+        { label: 'Never',         value: 9999 },
+      ];
+      const zoomSel = (id, label, current) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <span style="font-size:14px;color:var(--text);">${label}</span>
+          <select id="pref_zoom_${id}" style="background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-family:inherit;font-size:13px;cursor:pointer;">
+            ${ZOOM_OPTS.map(o => `<option value="${o.value}"${parseFloat(current) === o.value ? ' selected' : ''}>${o.label}</option>`).join('')}
+          </select>
+        </div>`;
+      return `
+        <div style="font-size:12px;color:var(--text-muted);padding:6px 0 10px;">Show element when zoomed in at least this far.</div>
+        ${zoomSel('names',   'Castle names',        p.zoomNames   ?? 0.3)}
+        ${zoomSel('troops',  'Troop counts',        p.zoomTroops  ?? 0.5)}
+        ${zoomSel('shields', 'Commander shields',   p.zoomShields ?? 0.5)}
+      `;
+    })())}
 
     ${optSect('Commander Defaults', `
       ${slider('defaultTroopPct', 'Default troops to send', p.defaultTroopPct, 10, 100, 5,
@@ -12545,23 +12580,15 @@ function wireOptionsSidebar() {
       setTimeout(() => exitGameMode(), 1500);
     } catch (err) { toast(`Failed: ${err.message}`, true); btn.disabled = false; }
   });
-  const prefToggles = ['showTroopCounts', 'showCastleNames', 'showInfraLevels'];
-  prefToggles.forEach(key => {
-    document.getElementById(`pref_${key}`)?.addEventListener('change', e => {
-      state.prefs[key] = e.target.checked;
+  // Zoom threshold dropdowns
+  ['names', 'troops', 'shields'].forEach(id => {
+    document.getElementById(`pref_zoom_${id}`)?.addEventListener('change', e => {
+      const key = id === 'names' ? 'zoomNames' : id === 'troops' ? 'zoomTroops' : 'zoomShields';
+      state.prefs[key] = parseFloat(e.target.value);
       savePrefs();
-      renderMarkers();   // immediately re-render map markers
+      applyZoomVisibility();
     });
   });
-
-  // Sliders
-  const mapZoomSlider = document.getElementById('pref_mapLabelZoom');
-  mapZoomSlider?.addEventListener('input', e => {
-    const v = parseFloat(e.target.value);
-    state.prefs.mapLabelZoom = v;
-    document.getElementById('pref_mapLabelZoom_val').textContent = `zoom ≥ ${v.toFixed(1)}×`;
-  });
-  mapZoomSlider?.addEventListener('change', () => { savePrefs(); renderMarkers(); });
 
   const troopSlider = document.getElementById('pref_defaultTroopPct');
   troopSlider?.addEventListener('input', e => {
