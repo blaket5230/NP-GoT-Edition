@@ -6280,6 +6280,13 @@ function buildSystemBody(body) {
       <strong>${escapeHtml(wName)}</strong> holds <strong>${body.castles}</strong> of ${body.total} castles — the Iron Throne is theirs.
     </div>`;
   }
+  if (body.house && body.player_id != null) {
+    const cHouse = state.houses.find(h => h.slug === body.house);
+    const cName  = cHouse?.name || body.house;
+    return `<div style="font-size:13px;color:var(--text-muted);line-height:1.6;">
+      <strong style="color:var(--text);">${escapeHtml(cName)}</strong> has conceded defeat. Their castles are now unclaimed.
+    </div>`;
+  }
   return `<div style="font-size:12px;color:var(--text-muted);">${escapeHtml(JSON.stringify(body))}</div>`;
 }
 
@@ -10423,6 +10430,24 @@ function buildLeaderboardHtml() {
     </div>
     ${elimRows.map(rowHtml).join('')}`;
 
+  const me = state.currentPlayer;
+  const canConcede = me && me.eliminated_at_tick == null && state.activeGame?.status === 'active';
+  const concedeHtml = canConcede ? `
+    <div id="concedeWrap" style="padding:16px 0 4px;">
+      <button id="concedeBtn" style="width:100%;padding:8px;background:none;border:1px solid var(--error);border-radius:5px;color:var(--error);font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.05em;cursor:pointer;transition:background .15s,color .15s;"
+        onmouseover="this.style.background='var(--error)';this.style.color='#000';"
+        onmouseout="this.style.background='none';this.style.color='var(--error)';">
+        Concede Defeat
+      </button>
+      <div id="concedeConfirm" style="display:none;margin-top:8px;padding:10px;background:var(--bg-elevated);border:1px solid var(--error);border-radius:5px;">
+        <div style="font-size:12px;color:var(--text);margin-bottom:8px;">All your castles will be released and your commanders disbanded. This cannot be undone.</div>
+        <div style="display:flex;gap:8px;">
+          <button id="concedeConfirmBtn" style="flex:1;padding:6px;background:var(--error);border:none;border-radius:4px;color:#000;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Confirm Defeat</button>
+          <button id="concedeCancelBtn" style="flex:1;padding:6px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;color:var(--text-muted);font-family:inherit;font-size:12px;cursor:pointer;">Cancel</button>
+        </div>
+      </div>
+    </div>` : '';
+
   return `
     <div style="font-size:14px;color:var(--text-muted);text-align:center;padding:14px 0 10px;">
       First to <strong style="color:var(--accent)">${winAt}</strong> of ${totalCastles} castles wins
@@ -10433,7 +10458,8 @@ function buildLeaderboardHtml() {
       <button class="lb-sort-tab${_leaderboardSort === 'prestige' ? ' active' : ''}" data-sort="prestige">Prestige</button>
     </div>
     ${activeRows.map(rowHtml).join('')}
-    ${elimSection}`;
+    ${elimSection}
+    ${concedeHtml}`;
 }
 
 function wireLeaderboardButtons() {
@@ -10449,6 +10475,34 @@ function wireLeaderboardButtons() {
       _leaderboardSort = tab.dataset.sort;
       renderSidebarSection('leaderboard');
     });
+  });
+
+  const concedeBtn = el.sidebarContent.querySelector('#concedeBtn');
+  const concedeConfirm = el.sidebarContent.querySelector('#concedeConfirm');
+  const concedeConfirmBtn = el.sidebarContent.querySelector('#concedeConfirmBtn');
+  const concedeCancelBtn = el.sidebarContent.querySelector('#concedeCancelBtn');
+
+  concedeBtn?.addEventListener('click', () => {
+    concedeConfirm.style.display = 'block';
+    concedeBtn.style.display = 'none';
+  });
+  concedeCancelBtn?.addEventListener('click', () => {
+    concedeConfirm.style.display = 'none';
+    concedeBtn.style.display = '';
+  });
+  concedeConfirmBtn?.addEventListener('click', async () => {
+    concedeConfirmBtn.textContent = 'Conceding…';
+    concedeConfirmBtn.disabled = true;
+    try {
+      const { error } = await supabase.rpc('concede_defeat', { p_game_id: state.activeGame.id });
+      if (error) throw error;
+      await refreshGameState();
+      renderSidebarSection('leaderboard');
+    } catch (err) {
+      concedeConfirmBtn.textContent = 'Error — try again';
+      concedeConfirmBtn.disabled = false;
+      console.error('concede_defeat error:', err);
+    }
   });
 }
 
