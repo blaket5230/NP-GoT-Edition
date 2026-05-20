@@ -281,6 +281,11 @@
     100% { transform: translateX(-50%); }
   }
   .main-screen.game-mode .ticker-bar { display: none !important; }
+  .main-screen.game-mode .tb-brand-wrap { display: none !important; }
+  .main-screen.game-mode .tb-game-info  { display: none !important; }
+  .main-screen.game-mode .tb-vsep:first-of-type { display: none !important; }
+  .main-screen.game-mode .user-email    { display: none !important; }
+  .main-screen.game-mode .connection-badge { display: none !important; }
 
   /* Home screen: dim the map and show the centered logo */
   .main-screen:not(.game-mode) .map-container::after {
@@ -478,7 +483,7 @@
     letter-spacing: .04em; white-space: nowrap; overflow: hidden;
     text-overflow: ellipsis; max-width: clamp(80px, 10vw, 150px);
   }
-  .tb-year-tick { font-size: clamp(9px, 0.7vw, 10px); color: var(--text-muted); letter-spacing: .05em; white-space: nowrap; }
+  .tb-year-tick { font-size: clamp(11px, 0.85vw, 12px); color: var(--text-muted); letter-spacing: .05em; white-space: nowrap; }
   .tb-stat-block { display: flex; align-items: center; gap: clamp(4px, 0.5vw, 7px); flex-shrink: 0; }
   .tb-stat-block i { font-size: clamp(14px, 1.2vw, 18px); color: var(--accent); flex-shrink: 0; }
   .tb-stat-vals { display: flex; flex-direction: column; justify-content: center; gap: 1px; }
@@ -486,15 +491,15 @@
     font-family: 'Cinzel', Georgia, serif;
     font-size: clamp(13px, 1.2vw, 17px); font-weight: 700; color: var(--accent); line-height: 1;
   }
-  .tb-stat-vals span { font-size: clamp(9px, 0.7vw, 10px); color: var(--text-muted); line-height: 1; }
+  .tb-stat-vals span { font-size: clamp(11px, 0.85vw, 12px); color: var(--text-muted); line-height: 1; }
   .tb-cycle-block {
     display: flex; align-items: center; gap: clamp(5px, 0.6vw, 8px);
     background: var(--bg-elevated); border: 1px solid var(--border);
     border-radius: 5px; padding: 5px clamp(6px, 0.8vw, 10px); flex-shrink: 0;
   }
   .tb-cycle-block i { font-size: clamp(12px, 1vw, 14px); color: var(--text-muted); }
-  .tb-cycle-block span { font-size: clamp(11px, 0.9vw, 12px); color: var(--text); letter-spacing: .03em; }
-  .tb-cycle-label { font-size: clamp(8px, 0.6vw, 9px); color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; line-height: 1; display: block; }
+  .tb-cycle-block span { font-size: clamp(12px, 1vw, 14px); color: var(--text); letter-spacing: .03em; }
+  .tb-cycle-label { font-size: clamp(10px, 0.75vw, 11px); color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; line-height: 1; display: block; }
   #cycleCountdown { font-family: 'Cinzel', Georgia, serif; font-size: clamp(12px, 1vw, 14px); color: var(--accent); font-weight: 700; line-height: 1.2; display: block; }
   .tb-moon-svg {
     width: clamp(16px, 1.5vw, 22px); height: clamp(16px, 1.5vw, 22px); flex-shrink: 0;
@@ -545,7 +550,7 @@
   }
   .header .stage {
     color: var(--text-muted);
-    font-size: 10px;
+    font-size: 11px;
     background: var(--bg-elevated);
     padding: 2px 7px;
     border-radius: 10px;
@@ -554,7 +559,7 @@
   .header .spacer { flex: 1; }
   .header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .lobby-right, .game-right { display: flex; align-items: center; gap: 10px; }
-  .user-email { font-size: 12px; color: var(--text-muted); }
+  .user-email { font-size: 13px; color: var(--text-muted); }
   /* Game resource center */
   .game-context {
     display: flex; align-items: center; gap: 6px; margin-bottom: 1px;
@@ -572,9 +577,9 @@
     font-weight: 600;
   }
   .gold-pill { border-color: rgba(201,168,76,0.35); }
-  .cycle-pill { font-size: 11px; color: var(--text-muted); font-weight: 400; }
-  .rp-icon { font-size: 11px; }
-  .rp-rate { font-size: 12px; color: var(--text-muted); font-weight: 400; margin-left: 1px; }
+  .cycle-pill { font-size: 12px; color: var(--text-muted); font-weight: 400; }
+  .rp-icon { font-size: 12px; }
+  .rp-rate { font-size: 13px; color: var(--text-muted); font-weight: 400; margin-left: 1px; }
   /* Rookery — prominent button that glows amber when unread */
   .rookery-btn {
     position: relative;
@@ -598,7 +603,7 @@
     box-shadow: 0 0 10px rgba(201,168,76,0.25);
   }
   .rookery-icon { font-size: 15px; }
-  .rookery-text { font-size: 12px; }
+  .rookery-text { font-size: 13px; }
 .connection-badge {
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 11px; color: var(--success);
@@ -790,7 +795,7 @@
     top: calc(50% + 12px);
     left: 50%;
     transform: translateX(-50%);
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 800;
     color: #fff;
     background: rgba(0,0,0,0.72);
@@ -911,7 +916,7 @@
     border: none;
     color: #fff;
     padding: 2px 0;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     font-family: 'Cinzel', Georgia, serif;
     letter-spacing: .02em;
@@ -923,9 +928,8 @@
       1px -1px 3px rgba(0,0,0,0.95),
       -1px -1px 3px rgba(0,0,0,0.95),
       0 0 8px rgba(0,0,0,0.8);
-    opacity: 0;
+    opacity: 1;
     pointer-events: none;
-    transition: opacity 0.2s;
     z-index: 6;
   }
   .marker.label-below .marker-label { bottom: auto; top: calc(50% + 20px); }
@@ -2346,7 +2350,7 @@
     border-radius:3px !important;
     background:rgba(201,168,76,.06) !important;
     color:var(--accent) !important;
-    font-size:10px !important;
+    font-size:12px !important;
     font-weight:600 !important;
     letter-spacing:.05em !important;
   }
@@ -2699,6 +2703,59 @@
   .ig-stat { display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
   .ig-level { font-family:'Cinzel',Georgia,serif; font-size:16px; font-weight:700; color:var(--text); }
   .ig-rate  { font-size:12px; color:var(--text-muted); font-family:'EB Garamond',Georgia,serif; white-space:nowrap; }
+  .infra-3col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    margin: 8px 0 10px;
+  }
+  .infra-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 6px 8px;
+    gap: 2px;
+    text-align: center;
+  }
+  .infra-col.treasury  { border-top: 2px solid var(--accent); }
+  .infra-col.recruitment { border-top: 2px solid #e07070; }
+  .infra-col.prestige  { border-top: 2px solid #a090e0; }
+  .infra-col-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-muted);
+  }
+  .infra-col-level {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .infra-col-yield {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .infra-col-btn {
+    width: 100%;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 11px;
+    padding: 4px 0;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    margin-top: auto;
+  }
+  .infra-col-btn:hover:not(:disabled) { background: var(--accent); color: var(--bg-deep); }
+  .infra-col-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .infra-col-btn .infra-col-cost { display: block; font-size: 10px; color: var(--text-muted); }
+  .infra-col-btn:hover:not(:disabled) .infra-col-cost { color: var(--bg-deep); }
 
   /* ── COMMANDER PORTRAITS ─────────────────────────── */
   .commander-portrait-card {
@@ -4795,39 +4852,42 @@ function renderCastleInfo() {
         </div>
       </div>
 
-      ${youOwnThis ? `
+      ${youOwnThis ? (() => {
+        const coinLv = state.councilSeats?.find(s => s.seat === 'coin')?.level || 1;
+        const lcLv   = state.councilSeats?.find(s => s.seat === 'lord_commander')?.level || 1;
+        const cycleLen = state.activeGame?.production_cycle_ticks ?? 12;
+        const goldYield    = gc.gold_level * (10 + coinLv * 2);
+        const troopYield   = ((gc.industry_level * (lcLv + 4)) / cycleLen).toFixed(1);
+        const prestigeYield = gc.prestige_level;
+        return `
         <div class="section-title" style="margin-top:12px;font-size:14px;letter-spacing:.1em;">Infrastructure</div>
+        <div class="infra-3col">
+          <div class="infra-col treasury">
+            <div class="infra-col-label">Treasury</div>
+            <div class="infra-col-level">${gc.gold_level}</div>
+            <div class="infra-col-yield">${goldYield}g/cycle</div>
+            <button class="infra-col-btn upgrade-btn" data-action="upgrade" data-type="gold" data-castle="${castle.slug}" ${myGold < goldCost ? 'disabled' : ''}>
+              Upgrade<span class="infra-col-cost">${goldCost}g</span>
+            </button>
+          </div>
+          <div class="infra-col recruitment">
+            <div class="infra-col-label">Recruitment</div>
+            <div class="infra-col-level">${gc.industry_level}</div>
+            <div class="infra-col-yield">${troopYield}t/tick</div>
+            <button class="infra-col-btn upgrade-btn" data-action="upgrade" data-type="industry" data-castle="${castle.slug}" ${myGold < industryCost ? 'disabled' : ''}>
+              Upgrade<span class="infra-col-cost">${industryCost}g</span>
+            </button>
+          </div>
+          <div class="infra-col prestige">
+            <div class="infra-col-label">Prestige</div>
+            <div class="infra-col-level">${gc.prestige_level}</div>
+            <div class="infra-col-yield">+${prestigeYield}/cycle</div>
+            <button class="infra-col-btn upgrade-btn" data-action="upgrade" data-type="prestige" data-castle="${castle.slug}" ${myGold < prestigeCost ? 'disabled' : ''}>
+              Upgrade<span class="infra-col-cost">${prestigeCost}g</span>
+            </button>
+          </div>
+        </div>
         <div class="infra-grid">
-          <div class="ig-row treasury">
-            <div class="ig-icon"><i class="ti ti-coin"></i></div>
-            <div class="ig-name">Treasury</div>
-            <div class="ig-stat">
-              <span class="ig-level">Level ${gc.gold_level}</span>
-            </div>
-            <button class="upgrade-btn" data-action="upgrade" data-type="gold" data-castle="${castle.slug}" ${myGold < goldCost ? 'disabled' : ''}>
-              Upgrade<span class="cost">${goldCost}g</span>
-            </button>
-          </div>
-          <div class="ig-row recruitment">
-            <div class="ig-icon"><i class="ti ti-sword"></i></div>
-            <div class="ig-name">Recruitment</div>
-            <div class="ig-stat">
-              <span class="ig-level">Level ${gc.industry_level}</span>
-            </div>
-            <button class="upgrade-btn" data-action="upgrade" data-type="industry" data-castle="${castle.slug}" ${myGold < industryCost ? 'disabled' : ''}>
-              Upgrade<span class="cost">${industryCost}g</span>
-            </button>
-          </div>
-          <div class="ig-row prestige">
-            <div class="ig-icon"><i class="ti ti-crown"></i></div>
-            <div class="ig-name">Prestige</div>
-            <div class="ig-stat">
-              <span class="ig-level">Level ${gc.prestige_level}</span>
-            </div>
-            <button class="upgrade-btn" data-action="upgrade" data-type="prestige" data-castle="${castle.slug}" ${myGold < prestigeCost ? 'disabled' : ''}>
-              Upgrade<span class="cost">${prestigeCost}g</span>
-            </button>
-          </div>
           <div class="ig-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px;">
             <div class="ig-icon"><i class="ti ti-route"></i></div>
             <div class="ig-name">King's Road</div>
@@ -4840,7 +4900,8 @@ function renderCastleInfo() {
             }
           </div>
         </div>
-      ` : gc ? `
+      `;
+      })() : gc ? `
         <div class="section-title" style="margin-top:12px;font-size:14px;letter-spacing:.1em;">Infrastructure</div>
         <div class="stat-grid">
           <div class="stat-cell gold">
@@ -5030,19 +5091,25 @@ el.mapImage.src = MAP_IMAGE_DATA;
 // TICKER
 // =====================================================
 const TICKER_ITEMS = [
-  { type: 'tnew',    text: 'House Traits — Each great house now has a unique strength and weakness on the Small Council' },
-  { type: 'tnew',    text: 'Westeros Codex — Full in-game help system covering every mechanic, available under Help' },
-  { type: 'tnew',    text: 'Small Council — All 7 advisor seats are fully wired: combat, economy, recruitment, fog, research, influence, and march speed' },
-  { type: 'tnew',    text: 'Master of Horses — Replaces Master of Ships; governs march range (speed is fixed at 17.5 leagues/tick)' },
-  { type: 'tnew',    text: 'Cinematic Lobby — The map now auto-pans across Westeros while you browse games' },
-  { type: 'tnew',    text: 'Online Multiplayer Lobby — Find, join, and create games with other players now live' },
-  { type: 'tcoming', text: 'Scenarios — Historical moments and alternate timelines across the history of Westeros' },
-  { type: 'tcoming', text: 'Co-Op Mode — Defend the realm together against the White Walker invasion beyond the Wall' },
-  { type: 'tcoming', text: 'Achievements — Track your victories, conquests, and council milestones across all games' },
-  { type: 'tcoming', text: 'Seasons — Summer, Autumn, and Winter cycles with regional penalties driven by Maesters' },
-  { type: 'tcoming', text: 'Iron Bank of Braavos — Active loans with interest rates, repayment schedules, and default penalties' },
-  { type: 'tcoming', text: 'Naval Warfare — Fleet building, sea lanes, and the Master of Ships returns to active command' },
-  { type: 'tcoming', text: 'Commander Capture — Post-battle outcomes including ransom, escape, and execution' },
+  { type: 'tnew',    text: 'Siege Warfare — Starve out your enemies, crumble their walls, and storm the gates at the moment of your choosing' },
+  { type: 'tnew',    text: 'Open-Field Combat — Two armies on a collision course will meet on the march — no castle walls to hide behind' },
+  { type: 'tnew',    text: 'Kings Road — Control the great road and your armies fly across Westeros; lose it and your enemies arrive first' },
+  { type: 'tnew',    text: 'The Iron Throne — Seize more than half the castles of Westeros and the Seven Kingdoms are yours' },
+  { type: 'tnew',    text: 'Diplomacy — Forge alliances, pledge gold, and share secrets — or shatter trust and march to war' },
+  { type: 'tnew',    text: 'Rookery — Send ravens, read the realm\'s whispers, and receive counsel from lords across the Seven Kingdoms' },
+  { type: 'tnew',    text: 'War Room — See the balance of power across every house — but only as far as your spies can reach' },
+  { type: 'tnew',    text: 'Nine Great Houses — Each house enters the game with a unique edge; play to your strengths or be consumed by your rivals' },
+  { type: 'tnew',    text: 'Small Council — Fill the seats of power and unlock abilities that no army alone can match' },
+  { type: 'tnew',    text: 'Westeros Codex — Every rule of war, council, and diplomacy explained in one place, inside the game' },
+  { type: 'tnew',    text: 'Cinematic Lobby — Gaze across the whole of Westeros as you choose your next conquest' },
+  { type: 'tnew',    text: 'Nine Players, One Throne — Challenge lords from across the realm in multiplayer built for a world that never stops' },
+  { type: 'tcoming', text: 'Scenarios — What if Ned Stark survived? What if the Targaryens never fell? Play history differently' },
+  { type: 'tcoming', text: 'Seasons — Winter is coming, and it will change everything; plan for the cold or watch your realm collapse' },
+  { type: 'tcoming', text: 'Iron Bank of Braavos — Take a loan to win a war, then pray you can repay it before the Bank comes to collect' },
+  { type: 'tcoming', text: 'Naval Warfare — Build your fleet, control the straits, and strike where no land army can follow' },
+  { type: 'tcoming', text: 'Commander Capture — Ransom a prisoner, execute a rival lord, or watch your own bannerman rot in a dungeon' },
+  { type: 'tcoming', text: 'Non-Aggression Pacts — Buy time with a formal truce, but break it and the realm will remember' },
+  { type: 'tcoming', text: 'Castle Connections — Roads and sea routes on the map; the path to the throne runs through the right passes' },
 ];
 
 (function initTicker() {
@@ -11242,9 +11309,15 @@ function buildRealmsCastlesTab() {
           <td style="text-align:right;">${gc.industry_level}</td>
           <td style="text-align:right;">${gc.prestige_level}</td>
           <td style="text-align:right;">${infl}</td>
-          <td style="text-align:right;color:${canG?'var(--accent)':'var(--text-muted)'};">${gCost}</td>
-          <td style="text-align:right;color:${canI?'var(--accent)':'var(--text-muted)'};">${iCost}</td>
-          <td style="text-align:right;color:${canP?'var(--accent)':'var(--text-muted)'};">${pCost}</td>
+          <td style="text-align:right;padding:2px 4px;">
+            <button class="realm-upg-btn" data-slug="${gc.castle_slug}" data-type="gold" ${!canG ? 'disabled' : ''} style="font-size:11px;padding:2px 8px;min-width:44px;">${gCost}g</button>
+          </td>
+          <td style="text-align:right;padding:2px 4px;">
+            <button class="realm-upg-btn" data-slug="${gc.castle_slug}" data-type="industry" ${!canI ? 'disabled' : ''} style="font-size:11px;padding:2px 8px;min-width:44px;">${iCost}g</button>
+          </td>
+          <td style="text-align:right;padding:2px 4px;">
+            <button class="realm-upg-btn" data-slug="${gc.castle_slug}" data-type="prestige" ${!canP ? 'disabled' : ''} style="font-size:11px;padding:2px 8px;min-width:44px;">${pCost}g</button>
+          </td>
         </tr>`;
       } else {
         return `<tr>
@@ -11526,6 +11599,13 @@ function wireRealmsLocate() {
     btn.addEventListener('click', () => {
       const castle = state.castles.find(c => c.slug === btn.dataset.slug);
       if (castle) panToCastle(castle);
+    });
+  });
+  el.sidebarContent.querySelectorAll('.realm-upg-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const slug = btn.dataset.slug;
+      const type = btn.dataset.type;
+      await upgradeInfrastructure(slug, type);
     });
   });
 }
