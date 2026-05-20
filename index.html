@@ -418,17 +418,17 @@
 
   /* NP-style panel header */
   .np-panel-header {
-    height: 48px;
+    height: 40px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    padding: 0 12px;
+    padding: 0 10px;
     gap: 8px;
     border-bottom: 1px solid var(--border-gold);
     background: var(--bg-deep);
   }
   .np-panel-back, .np-panel-close {
-    width: 28px; height: 28px;
+    width: 26px; height: 26px;
     border-radius: 6px;
     border: 1px solid var(--border);
     background: transparent;
@@ -444,7 +444,7 @@
   .np-panel-title {
     flex: 1;
     font-family: 'Cinzel', Georgia, serif;
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--text);
     letter-spacing: .04em;
@@ -1448,7 +1448,7 @@
     background: var(--bg-deep);
   }
   .section-back:hover { color: var(--text); }
-  .section-content { padding: clamp(12px, 1.2vw, 16px); overflow-y: auto; font-size: clamp(12px, 1vw, 14px); line-height: 1.6; }
+  .section-content { padding: clamp(8px, 0.8vw, 10px); overflow-y: auto; font-size: clamp(12px, 1vw, 14px); line-height: 1.6; }
 
   .section-back { 
     display: flex; align-items: center; justify-content: space-between;
@@ -1646,7 +1646,7 @@
   .houses-table th.sort-active { color: var(--accent); }
   .sort-arrow { font-size: 8px; margin-left: 2px; }
   .houses-table td {
-    padding: 11px 6px;
+    padding: 6px 6px;
     text-align: center;
     border-bottom: 1px solid rgba(255,255,255,0.04);
     vertical-align: middle;
@@ -11297,7 +11297,7 @@ function buildRealmsCastlesTab() {
         const canP  = myGold >= pCost;
         const goldPerCycle  = gc.gold_level * (10 + coinLv * 2);
         const troopsPerTick = (gc.industry_level * (lcLv + 4) / cycleLen).toFixed(2);
-        return `<tr>
+        return `<tr class="realm-castle-row" data-slug="${gc.castle_slug}">
           <td class="house-bar" style="--row-house-color:${color};">
             <div class="ht-name">${escapeHtml(castle?.name||gc.castle_slug)}
               <button class="ht-eye" data-slug="${gc.castle_slug}" title="Locate">📍</button>
@@ -11320,7 +11320,7 @@ function buildRealmsCastlesTab() {
           </td>
         </tr>`;
       } else {
-        return `<tr>
+        return `<tr class="realm-castle-row" data-slug="${gc.castle_slug}">
           <td class="house-bar" style="--row-house-color:${color};">
             <div class="ht-name">${escapeHtml(castle?.name||gc.castle_slug)}
               <button class="ht-eye" data-slug="${gc.castle_slug}" title="Locate">📍</button>
@@ -11406,7 +11406,7 @@ function buildRealmsCommandersTab() {
 
       if (isMe) {
         const xpStr = `${cmd.experience || 0}/${cmd.level * 100}`;
-        return `<tr class="is-me">
+        return `<tr class="is-me realm-cmd-row" data-cmdid="${cmd.id}" data-locslug="${locSlugForPin||''}">
           <td class="house-bar" style="--row-house-color:${color};">
             <div class="ht-name">${escapeHtml(cmd.name||'Commander')}
               ${locSlugForPin ? `<button class="ht-eye" data-slug="${locSlugForPin}" title="Locate">📍</button>` : ''}
@@ -11596,16 +11596,38 @@ function reRenderRealmsContent() {
 
 function wireRealmsLocate() {
   el.sidebarContent.querySelectorAll('.ht-eye[data-slug]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
       const castle = state.castles.find(c => c.slug === btn.dataset.slug);
       if (castle) panToCastle(castle);
     });
   });
   el.sidebarContent.querySelectorAll('.realm-upg-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
       const slug = btn.dataset.slug;
       const type = btn.dataset.type;
       await upgradeInfrastructure(slug, type);
+    });
+  });
+  el.sidebarContent.querySelectorAll('.realm-castle-row[data-slug]').forEach(row => {
+    row.addEventListener('click', () => {
+      const slug = row.dataset.slug;
+      const castle = state.castles.find(c => c.slug === slug);
+      if (castle) panToCastle(castle);
+      openCastlePage(slug);
+    });
+  });
+  el.sidebarContent.querySelectorAll('.realm-cmd-row[data-cmdid]').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.closest('button')) return;
+      const cmdId = Number(row.dataset.cmdid);
+      const locSlug = row.dataset.locslug;
+      const castle = locSlug ? state.castles.find(c => c.slug === locSlug) : null;
+      if (castle) panToCastle(castle);
+      state.selectedCastle = null;
+      state.selectedCommanderId = cmdId;
+      renderCastleInfo();
     });
   });
 }
