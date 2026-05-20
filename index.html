@@ -4732,8 +4732,17 @@ el.npPanelClose?.addEventListener('click', () => {
 });
 
 el.npPanelBack?.addEventListener('click', () => {
-  openPanel('Menu', false);
-  renderSidebarNav();
+  state.selectedCastle = null;
+  state.selectedCommanderId = null;
+  state.selectedMovementId = null;
+  renderMarkers();
+  renderMovements();
+  if (_sidebarSection) {
+    renderSidebarSection(_sidebarSection);
+  } else {
+    openPanel('Menu', false);
+    renderSidebarNav();
+  }
 });
 
 el.panelOverlay?.addEventListener('click', () => {
@@ -4802,7 +4811,8 @@ function renderCastleInfo() {
     return;
   }
   // Open the left panel with the castle name as title
-  if (state.mode === 'game') openPanel(castle.name, false);
+  // Show back arrow if we're inside a section (user can return to it)
+  if (state.mode === 'game') openPanel(castle.name, _sidebarSection !== null);
   const tierClass = `tier-${castle.tier}`;
 
   // In game mode, show game-state info; in lobby mode, show reference info
@@ -8841,7 +8851,7 @@ function renderCommanderDetail(commanderId) {
   const lvl = cmd.level ?? 1;
   const xp = cmd.experience ?? 0;
 
-  if (state.mode === 'game') openPanel(cmd.name, false);
+  if (state.mode === 'game') openPanel(cmd.name, _sidebarSection !== null);
 
   const isMarching = cmd.status === 'moving';
   const mov = isMarching ? state.movements.find(m => m.commander_id === cmd.id) : null;
@@ -11616,6 +11626,8 @@ function wireRealmsLocate() {
       const castle = state.castles.find(c => c.slug === slug);
       if (castle) panToCastle(castle);
       openCastlePage(slug);
+      renderMarkers();
+      renderMovements();
     });
   });
   el.sidebarContent.querySelectorAll('.realm-cmd-row[data-cmdid]').forEach(row => {
@@ -11628,6 +11640,8 @@ function wireRealmsLocate() {
       state.selectedCastle = null;
       state.selectedCommanderId = cmdId;
       renderCastleInfo();
+      renderMarkers();
+      renderMovements();
     });
   });
 }
