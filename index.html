@@ -23,8 +23,8 @@
 
     /* ── Text ────────────────────────────────────── */
     --text:       #ddd6c8;
-    --text-muted: #7a7060;
-    --text-faint: #363028;
+    --text-muted: #9a9080;
+    --text-faint: #52504a;
 
     /* ── Accent (gold) ───────────────────────────── */
     --accent:       #C9A84C;
@@ -42,6 +42,12 @@
     --tier-3: #8a7060;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { scrollbar-width: thin; scrollbar-color: rgba(201,168,76,0.25) transparent; }
+  *::-webkit-scrollbar { width: 6px; height: 6px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.25); border-radius: 3px; }
+  *::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.45); }
+  *::-webkit-scrollbar-corner { background: transparent; }
   html, body { height: 100%; font-family: 'EB Garamond', Georgia, serif; background: var(--bg-deep); color: var(--text); overflow: hidden; }
 
   /* ── Gold divider utility ──────────────────────── */
@@ -560,8 +566,9 @@
 
   /* Map search */
   #mapSearchWrap {
-    position: absolute; top: 10px; right: 10px; z-index: 120;
+    position: absolute; top: 10px; left: 10px; z-index: 120;
     display: flex; align-items: center; gap: 0;
+    flex-direction: row-reverse;
   }
   #mapSearchInput {
     width: 0; opacity: 0; pointer-events: none;
@@ -578,10 +585,11 @@
     width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
     font-size: 15px; transition: background 0.15s;
   }
-  #mapSearchInput.open + #mapSearchToggle { border-radius: 0 4px 4px 0; border-left: none; }
+  #mapSearchInput.open { border-radius: 0 4px 4px 0; border-left: none; border-right: 1px solid var(--border-gold); }
+  #mapSearchToggle:has(+ #mapSearchInput.open) { border-radius: 4px 0 0 4px; border-right: none; }
   #mapSearchToggle:hover { background: rgba(30,28,50,0.95); }
   #mapSearchResults {
-    position: absolute; top: 38px; right: 0; min-width: 200px;
+    position: absolute; top: 38px; left: 0; min-width: 200px;
     background: rgba(10,11,22,0.96); border: 1px solid var(--border-gold);
     border-radius: 4px; max-height: 200px; overflow-y: auto; display: none; z-index: 130;
   }
@@ -617,6 +625,45 @@
   /* Sparkline bars */
   .lb-sparkline { display:inline-flex; align-items:flex-end; gap:1px; height:18px; margin-left:6px; vertical-align:middle; }
   .lb-spark-bar { width:3px; background:var(--accent); border-radius:1px 1px 0 0; opacity:0.7; min-height:1px; }
+
+  /* Production forecast popover */
+  .prod-popover {
+    position: fixed; z-index: 1500;
+    background: linear-gradient(160deg, #12111e, #0d0c18);
+    border: 1px solid var(--border-gold);
+    border-radius: 6px; padding: 10px 0;
+    min-width: 240px; max-width: 300px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    font-size: 12px;
+  }
+  .prod-popover-title {
+    font-family: 'Cinzel', Georgia, serif; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--text-muted); padding: 2px 14px 8px;
+    border-bottom: 1px solid var(--border); margin-bottom: 4px;
+  }
+  .prod-popover-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 14px; gap: 8px;
+  }
+  .prod-popover-row .ppr-castle { color: var(--text-muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .prod-popover-row .ppr-val { color: var(--accent); font-weight: 600; font-family: 'Cinzel', Georgia, serif; white-space: nowrap; }
+  .prod-popover-total {
+    border-top: 1px solid var(--border); margin-top: 4px; padding: 6px 14px 2px;
+    display: flex; justify-content: space-between;
+    font-family: 'Cinzel', Georgia, serif; font-weight: 700; color: var(--accent);
+  }
+
+  /* Region labels */
+  .region-label {
+    position: absolute; pointer-events: none; user-select: none; z-index: 5;
+    font-family: 'Cinzel', Georgia, serif;
+    text-transform: uppercase; letter-spacing: .18em;
+    color: rgba(201,168,76,0.28); white-space: nowrap;
+    transform: translate(-50%, -50%);
+    text-shadow: 0 0 12px rgba(0,0,0,0.8);
+    transition: font-size 0.1s;
+  }
 
   /* Analysis chart */
   .analysis-chart { width:100%; height:70px; margin-bottom:12px; }
@@ -1817,7 +1864,7 @@
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    padding: 8px 6px;
+    padding: 8px 10px;
     text-align: center;
     border-bottom: 1px solid var(--border);
     position: sticky; top: 0;
@@ -1831,7 +1878,7 @@
   .houses-table th.sort-active { color: var(--accent); }
   .sort-arrow { font-size: 8px; margin-left: 2px; }
   .houses-table td {
-    padding: 6px 6px;
+    padding: 6px 10px;
     text-align: center;
     border-bottom: 1px solid rgba(255,255,255,0.04);
     vertical-align: middle;
@@ -1842,7 +1889,7 @@
   .houses-table tr:hover td { background: rgba(255,255,255,.025); }
   .ht-name { display: flex; align-items: center; gap: 8px; white-space: nowrap; padding: 0 8px; }
   .ht-lead { color: var(--success); font-weight: 700; }
-  .spark-cell { display:flex;flex-direction:column;align-items:center;gap:4px; }
+  .spark-cell { display:inline-flex;flex-direction:column;align-items:center;gap:4px; }
   .spark-val { font-size:12px;font-weight:600;line-height:1;font-family:'Cinzel',Georgia,serif; }
   .spark-bar-track { width:32px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden; }
   .spark-bar-fill { height:100%;border-radius:2px;background:var(--row-color,var(--accent));opacity:.8; }
@@ -2855,6 +2902,42 @@
   .dip-btn.send-know  { border-color: #4a3a6a; color: #9080d0; }
   .dip-btn.send-raven { border-color: #3a4a5a; color: #8090a0; }
 
+  /* ── Diplomacy token grid ─────────────────────────────────────────── */
+  .dip-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px; }
+  .dip-token {
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    padding:14px 10px 12px; border-radius:8px;
+    background:var(--bg-elevated); border:1px solid var(--border);
+  }
+  .dip-token-proposal {
+    grid-column:span 2;
+    background:rgba(201,168,76,.05);
+    border-color:rgba(201,168,76,.3);
+    border-left:3px solid var(--accent);
+  }
+  .dip-token-proposal-inner { display:flex; align-items:center; gap:14px; width:100%; }
+  .dip-token-proposal-body  { flex:1; text-align:left; }
+  .dip-token-sigil-wrap {
+    border-radius:50%;
+    box-shadow:0 0 0 2px var(--ring,var(--border-strong)), 0 0 16px 3px var(--glow,transparent);
+    transition:box-shadow .4s;
+    margin-bottom:10px; flex-shrink:0;
+  }
+  .dip-token-proposal .dip-token-sigil-wrap { margin-bottom:0; }
+  .dip-token-name {
+    font-family:'Cinzel',Georgia,serif; font-size:12px; font-weight:700;
+    margin-bottom:2px; line-height:1.3;
+  }
+  .dip-token-player { font-size:10px; color:var(--text-muted); margin-bottom:5px; }
+  .dip-token-stats  { display:flex; gap:10px; font-size:11px; color:var(--text-muted); margin-bottom:8px; }
+  .dip-token-stats i { margin-right:2px; font-size:10px; }
+  .dip-token-primary { width:100%; padding:5px 8px; font-size:11px; margin-bottom:6px; }
+  .dip-token-actions { display:flex; gap:4px; justify-content:center; flex-wrap:wrap; margin-top:auto; }
+  .dip-icon-btn {
+    width:28px; height:28px; padding:0;
+    display:inline-flex; align-items:center; justify-content:center; font-size:13px;
+  }
+
   /* ── Infrastructure 4-column grid ───────────────────────────── */
   .infra-grid { display:flex; flex-direction:column; gap:6px; margin:8px 0; }
   .ig-row {
@@ -3531,7 +3614,7 @@
         <button class="sidebar-tool-btn" id="toolRuler" title="Distance Ruler — measure travel time between castles"><i class="ti ti-ruler-2" aria-hidden="true"></i></button>
         <button class="sidebar-tool-btn" id="toolBulkUpgrade" title="Bulk Upgrade — spend gold on cheapest available upgrades"><i class="ti ti-coins" aria-hidden="true"></i></button>
         <button class="sidebar-tool-btn" id="toolWarCalc" title="War Calculator — predict battle outcomes"><i class="ti ti-sword" aria-hidden="true"></i></button>
-        <button class="sidebar-tool-btn" id="toolRefresh" title="Refresh — process pending ticks"><i class="ti ti-refresh" aria-hidden="true"></i></button>
+        <button class="sidebar-tool-btn" id="toolArmyOverview" title="Army Overview — all your commanders at a glance"><i class="ti ti-shield-half" aria-hidden="true"></i></button>
       </div>
       <div id="sidebarContent">
         <!-- Rendered by JS: nav list or section content -->
@@ -3591,8 +3674,8 @@
     <div class="form-group">
       <label>Upgrade Type</label>
       <select id="bulkUpgradeType" style="width:100%;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px;font-family:inherit;">
-        <option value="treasury">Treasury (generates Gold)</option>
-        <option value="recruitment">Recruitment (generates Troops)</option>
+        <option value="gold">Treasury (generates Gold)</option>
+        <option value="industry">Recruitment (generates Troops)</option>
         <option value="prestige">Prestige (generates Prestige)</option>
       </select>
     </div>
@@ -3619,7 +3702,7 @@
         <div class="form-group"><label>Hand Council Level</label><input type="number" id="wc-atk-hand" value="0" min="0" max="5"></div>
       </div>
       <div>
-        <div style="font-weight:600;color:var(--error);margin-bottom:8px;">🛡 Defender</div>
+        <div style="font-weight:600;color:var(--error);margin-bottom:8px;"><i class="ti ti-shield"></i> Defender</div>
         <div class="form-group"><label>Garrison</label><input type="number" id="wc-def-troops" value="15" min="0"></div>
         <div class="form-group"><label>Commander Level</label><input type="number" id="wc-def-lvl" value="0" min="0" max="10"></div>
         <div class="form-group"><label>Hand Council Level</label><input type="number" id="wc-def-hand" value="0" min="0" max="5"></div>
@@ -3974,8 +4057,8 @@
     <div id="marchTypeToggle" style="display:none; margin-bottom:12px;">
       <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px;">March Type</label>
       <div style="display:flex;gap:8px;">
-        <button type="button" class="march-type-btn active" data-type="assault" style="flex:1;padding:7px;font-size:12px;border-radius:4px;border:1px solid var(--error);background:rgba(180,50,50,0.18);color:var(--error);cursor:pointer;transition:opacity .15s;">⚔ Assault</button>
-        <button type="button" class="march-type-btn" data-type="siege" style="flex:1;padding:7px;font-size:12px;border-radius:4px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-muted);cursor:pointer;transition:opacity .15s;">🏰 Siege</button>
+        <button type="button" class="march-type-btn active" data-type="assault" style="flex:1;padding:7px;font-size:12px;border-radius:4px;border:1px solid var(--error);background:rgba(180,50,50,0.18);color:var(--error);cursor:pointer;transition:opacity .15s;"><i class="ti ti-sword"></i> Assault</button>
+        <button type="button" class="march-type-btn" data-type="siege" style="flex:1;padding:7px;font-size:12px;border-radius:4px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-muted);cursor:pointer;transition:opacity .15s;"><i class="ti ti-building-castle"></i> Siege</button>
       </div>
       <div id="marchTypeDesc" style="font-size:11px;color:var(--text-muted);margin-top:5px;line-height:1.4;">Direct assault — fights the garrison immediately on arrival.</div>
     </div>
@@ -4517,7 +4600,7 @@ const el = {
   toolRuler:       document.getElementById('toolRuler'),
   toolBulkUpgrade: document.getElementById('toolBulkUpgrade'),
   toolWarCalc:     document.getElementById('toolWarCalc'),
-  toolRefresh:     document.getElementById('toolRefresh'),
+  toolArmyOverview: document.getElementById('toolArmyOverview'),
   rulerResult:     document.getElementById('rulerResult'),
   // Bulk Upgrade Modal
   bulkUpgradeModal:   document.getElementById('bulkUpgradeModal'),
@@ -4909,6 +4992,42 @@ function positionMarkers() {
     ring.style.width  = (screenR * 2) + 'px';
     ring.style.height = (screenR * 2) + 'px';
   });
+
+  // Reposition region labels
+  const fontSize = Math.max(9, Math.min(18, 11 * state.zoom));
+  el.markerLayer.querySelectorAll('.region-label').forEach(lbl => {
+    const cx = parseFloat(lbl.dataset.cx);
+    const cy = parseFloat(lbl.dataset.cy);
+    lbl.style.left     = (cx * iw * state.zoom + state.panX) + 'px';
+    lbl.style.top      = (cy * ih * state.zoom + state.panY) + 'px';
+    lbl.style.fontSize = fontSize + 'px';
+  });
+}
+
+const REGION_LABELS = [
+  { name: 'The North',     cx: 0.5699, cy: 0.3777 },
+  { name: 'The Vale',      cx: 0.7770, cy: 0.5927 },
+  { name: 'Iron Islands',  cx: 0.2544, cy: 0.6111 },
+  { name: 'Riverlands',    cx: 0.4946, cy: 0.6582 },
+  { name: 'Crownlands',    cx: 0.7467, cy: 0.7052 },
+  { name: 'Westerlands',   cx: 0.2581, cy: 0.7123 },
+  { name: 'Stormlands',    cx: 0.7497, cy: 0.8364 },
+  { name: 'The Reach',     cx: 0.3745, cy: 0.8388 },
+  { name: 'Dorne',         cx: 0.6235, cy: 0.9404 },
+];
+
+function renderRegionLabels() {
+  if (!el.markerLayer) return;
+  el.markerLayer.querySelectorAll('.region-label').forEach(l => l.remove());
+  REGION_LABELS.forEach(({ name, cx, cy }) => {
+    const div = document.createElement('div');
+    div.className = 'region-label';
+    div.dataset.cx = cx;
+    div.dataset.cy = cy;
+    div.textContent = name;
+    el.markerLayer.appendChild(div);
+  });
+  positionMarkers();
 }
 function setZoom(newZoom, focusX, focusY) {
   newZoom = Math.max(0.2, Math.min(5, newZoom));
@@ -5150,7 +5269,7 @@ function renderMarkers() {
     el.markerLayer.appendChild(marker);
   });
 
-  positionMarkers();
+  renderRegionLabels();
   applyZoomVisibility();
   if (state.isPickingDestination) {
     applyDestinationHighlights();
@@ -5303,8 +5422,11 @@ function renderCastleInfo() {
     const kingsRoadCost = gc ? Math.floor(10000 / Math.max(1, castle.base_influence || 10)) : 0;
     const hasKingsRoad  = gc?.has_kings_road ?? false;
     const myGold = state.currentPlayer ? state.currentPlayer.gold : 0;
+    const castleCmds = (state.commanders || []).filter(c => c.current_castle_slug === castle.slug && c.status !== 'dead' && c.status !== 'moving');
+    const incomingCmds = (state.movements || []).filter(m => m.to_castle_slug === castle.slug);
 
     el.infoPanelBody.innerHTML = `
+      ${ownerHouse ? `<div style="height:3px;background:${ownerHouse.color};border-radius:2px 2px 0 0;"></div>` : ''}
       <div class="castle-header" style="display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:12px;">
         <div class="castle-region" style="margin-top:0;flex:1;">${escapeHtml(castle.region)}</div>
         <span class="tier-badge ${tierClass}">Tier ${castle.tier}</span>
@@ -5320,10 +5442,14 @@ function renderCastleInfo() {
         </div>
       </div>
 
-      <div class="stat-grid" style="grid-template-columns: 1fr 1fr;">
+      <div class="stat-grid" style="grid-template-columns: 1fr 1fr 1fr;">
         <div class="stat-cell troops">
           <div class="stat-label">Garrison</div>
           <div class="stat-value">${gc ? gc.troops : 0}</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Commanders</div>
+          <div class="stat-value">${castleCmds.length}${incomingCmds.length > 0 ? `<span style="font-size:10px;color:var(--accent);margin-left:3px;">+${incomingCmds.length}</span>` : ''}</div>
         </div>
         <div class="stat-cell">
           <div class="stat-label">Influence</div>
@@ -5418,7 +5544,7 @@ function renderCastleInfo() {
         const siegeColor  = siegeHouse ? siegeHouse.color : 'var(--error)';
         const canSally    = youOwnThis;
         return `<div style="margin-top:10px;padding:10px;background:rgba(229,115,115,0.1);border:1px solid rgba(229,115,115,0.35);border-radius:4px;">
-          <div style="color:var(--error);font-weight:600;font-size:12px;margin-bottom:6px;">⚔ Under Siege</div>
+          <div style="color:var(--error);font-weight:600;font-size:12px;margin-bottom:6px;"><i class="ti ti-building-castle"></i> Under Siege</div>
           ${siegeCmd ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
             <span style="color:${siegeColor};font-weight:600;">${siegeName}</span> — ${siegeTroops} troops outside the walls
           </div>` : ''}
@@ -5657,12 +5783,19 @@ function renderGamesList() {
   }
 
   el.gamesList.innerHTML = visibleGames.map(game => {
-    const players   = game.game_players || [];
-    const userIn    = players.some(p => p.user_id === state.user.id);
-    const isCreator = game.created_by === state.user.id;
-    const isActive  = game.status === 'active';
-    const isDone    = game.status === 'cancelled' || game.status === 'finished';
-    const inviteUrl = `${location.origin}${location.pathname}?join=${game.id}`;
+    const players    = game.game_players || [];
+    const userIn     = players.some(p => p.user_id === state.user.id);
+    const isCreator  = game.created_by === state.user.id;
+    const isActive   = game.status === 'active';
+    const isDone     = game.status === 'cancelled' || game.status === 'finished';
+    const inviteUrl  = `${location.origin}${location.pathname}?join=${game.id}`;
+    const humanCount = players.filter(p => !p.is_ai).length;
+    const aiCount    = players.filter(p => p.is_ai).length;
+    const playerStr  = aiCount > 0
+      ? `${humanCount} human · ${aiCount} AI`
+      : `${humanCount}/${game.max_players} players`;
+    const tickStr    = isActive && game.current_tick ? `Tick ${game.current_tick}` : null;
+    const speedStr   = { slow: '2h/tick', normal: '1h/tick', fast: '30m/tick', quad: '15m/tick', turn_based: 'turn-based' }[game.tick_speed] || game.tick_speed;
 
     return `<div class="game-card${userIn ? ' joined' : ''}${isDone ? ' done' : ''}" data-game-id="${game.id}">
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -5670,7 +5803,7 @@ function renderGamesList() {
         <span class="status-pill ${game.status}">${game.status}</span>
         ${isCreator ? '<span class="status-pill" style="background:var(--accent);color:var(--bg-deep);">host</span>' : ''}
       </div>
-      <div class="meta">${players.length}/${game.max_players} players · ${escapeHtml(game.tick_speed)}${userIn && isActive ? ' · click to play' : ''}</div>
+      <div class="meta">${playerStr} · ${speedStr}${tickStr ? ` · ${tickStr}` : ''}${userIn && isActive ? ' · click to play' : ''}</div>
       <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
         ${!isDone ? `<button class="action-link invite-btn" data-invite="${inviteUrl}" data-game-name="${escapeHtml(game.name)}" title="Copy invite link">📋 Copy Invite</button>` : ''}
         ${isCreator && isActive ? `<button class="action-link cancel-game-btn" data-game-id="${game.id}" style="color:var(--error);">⏹ Cancel</button>` : ''}
@@ -6648,7 +6781,7 @@ async function processTicks(gameId, { quiet = false } = {}) {
     if (error) throw error;
     if (data.pending_ticks > 0 && !quiet) {
       const baseMsg = `${data.pending_ticks} tick${data.pending_ticks > 1 ? 's' : ''} processed: +${data.gold_added} gold, +${data.troops_added} troops`;
-      toast(data.combats > 0 ? `${baseMsg} · ⚔ ${data.combats} combat${data.combats > 1 ? 's' : ''}` : baseMsg);
+      toast(data.combats > 0 ? `${baseMsg} · ${data.combats} combat${data.combats > 1 ? 's' : ''}` : baseMsg);
     }
     if (data.combat_events && data.combat_events.length > 0) {
       const myId = state.currentPlayer?.id;
@@ -6876,7 +7009,7 @@ function buildSystemBody(body) {
         <button class="diplo-action-btn decline" onclick="event.stopPropagation();declineAllianceNotif('${body.from_house}',this)">Decline</button>
       </div>`;
     }
-    if (body.new_status === 'war') return `<div style="font-size:13px;color:var(--error);">⚔ War declared by ${hLink}.</div>`;
+    if (body.new_status === 'war') return `<div style="font-size:13px;color:var(--error);"><i class="ti ti-sword"></i> War declared by ${hLink}.</div>`;
     return `<div style="font-size:13px;">${hLink} changed standing to Neutral.</div>`;
   }
   if (body.winner_house) {
@@ -6965,7 +7098,7 @@ function buildProductionBody(body) {
       <thead><tr><th>Resource</th><th>Total Infra</th><th>This Cycle</th></tr></thead>
       <tbody>
         <tr>
-          <td>⚜ Gold</td>
+          <td><i class="ti ti-coin"></i> Gold</td>
           <td>${goldLv} treasury${coinNote}</td>
           <td style="color:var(--accent);font-weight:600;">+${body.gold_earned ?? 0}</td>
         </tr>
@@ -6979,7 +7112,7 @@ function buildProductionBody(body) {
     ${body.gm_rand_seat ? (() => {
       const gmMeta = COUNCIL_META[body.gm_rand_seat];
       return `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">
-        📜 Grand Maester bonus applied to <strong style="color:var(--text);">${gmMeta?.title || body.gm_rand_seat}</strong> this cycle.
+        <i class="ti ti-book"></i> Grand Maester bonus applied to <strong style="color:var(--text);">${gmMeta?.title || body.gm_rand_seat}</strong> this cycle.
       </div>`;
     })() : ''}
   `;
@@ -7057,7 +7190,7 @@ function buildCombatBody(body) {
       </thead>
       <tbody>
         <tr style="border-bottom:1px solid var(--border);">
-          <td style="font-size:13px;">⚔</td>
+          <td style="font-size:13px;"><i class="ti ti-sword"></i></td>
           <td>
             <div style="display:flex;align-items:center;">
               ${miniPortrait(body.attacker_name, atkColor)}
@@ -7072,7 +7205,7 @@ function buildCombatBody(body) {
           <td style="text-align:right;">${atkAfter}</td>
         </tr>
         <tr>
-          <td style="font-size:13px;">🛡</td>
+          <td style="font-size:13px;"><i class="ti ti-shield"></i></td>
           <td>
             <div style="display:flex;align-items:center;">
               ${defCmdName ? miniPortrait(defCmdName, defColor) : ''}
@@ -7124,14 +7257,14 @@ function buildOpenFieldBody(body) {
       <thead><tr><th style="width:20px;"></th><th>Commander</th><th style="text-align:right;">Before</th><th style="text-align:right;${ls}">Lost</th><th style="text-align:right;">After</th></tr></thead>
       <tbody>
         <tr style="border-bottom:1px solid var(--border);">
-          <td>⚔</td>
+          <td><i class="ti ti-sword"></i></td>
           <td><span style="color:${myColor};font-weight:600;">${escapeHtml(myName||'You')}</span><div style="font-size:10px;color:var(--text-muted);">Hand ${myHand} · dmg ${myDmg}/round</div></td>
           <td style="text-align:right;">${myBefore}</td>
           <td style="text-align:right;${ls}">${Math.max(0,(myBefore||0)-(myAfter||0))}</td>
           <td style="text-align:right;">${myAfter}</td>
         </tr>
         <tr>
-          <td>⚔</td>
+          <td><i class="ti ti-sword"></i></td>
           <td><span style="color:${opColor};font-weight:600;">${escapeHtml(opName||'Opponent')}</span><div style="font-size:10px;color:var(--text-muted);">Hand ${opHand} · dmg ${opDmg}/round</div></td>
           <td style="text-align:right;">${opBefore}</td>
           <td style="text-align:right;${ls}">${Math.max(0,(opBefore||0)-(opAfter||0))}</td>
@@ -7167,8 +7300,8 @@ function buildSiegeFieldBody(body) {
         <table class="combat-table" style="margin:6px 0;">
           <thead><tr><th></th><th>Force</th><th style="text-align:right;">Before</th><th style="text-align:right;${ls}">Lost</th><th style="text-align:right;">After</th></tr></thead>
           <tbody>
-            <tr><td>⚔</td><td>Relief Army<div style="font-size:10px;color:var(--text-muted);">dmg ${body.relief_dmg||'?'}/round</div></td><td style="text-align:right;">${body.relief_troops_before||0}</td><td style="text-align:right;${ls}">${Math.max(0,(body.relief_troops_before||0)-(body.relief_survivors||0))}</td><td style="text-align:right;">${body.relief_survivors||0}</td></tr>
-            <tr><td>⚔</td><td>Siege Force<div style="font-size:10px;color:var(--text-muted);">dmg ${body.siege_dmg||'?'}/round</div></td><td style="text-align:right;">${body.siege_troops_before||0}</td><td style="text-align:right;${ls}">${Math.max(0,(body.siege_troops_before||0)-(body.siege_survivors||0))}</td><td style="text-align:right;">${body.siege_survivors||0}</td></tr>
+            <tr><td><i class="ti ti-shield"></i></td><td>Relief Army<div style="font-size:10px;color:var(--text-muted);">dmg ${body.relief_dmg||'?'}/round</div></td><td style="text-align:right;">${body.relief_troops_before||0}</td><td style="text-align:right;${ls}">${Math.max(0,(body.relief_troops_before||0)-(body.relief_survivors||0))}</td><td style="text-align:right;">${body.relief_survivors||0}</td></tr>
+            <tr><td><i class="ti ti-building-castle"></i></td><td>Siege Force<div style="font-size:10px;color:var(--text-muted);">dmg ${body.siege_dmg||'?'}/round</div></td><td style="text-align:right;">${body.siege_troops_before||0}</td><td style="text-align:right;${ls}">${Math.max(0,(body.siege_troops_before||0)-(body.siege_survivors||0))}</td><td style="text-align:right;">${body.siege_survivors||0}</td></tr>
           </tbody>
         </table>
       </div>`;
@@ -7182,8 +7315,8 @@ function buildSiegeFieldBody(body) {
         <table class="combat-table" style="margin:6px 0;">
           <thead><tr><th></th><th>Force</th><th style="text-align:right;">Before</th><th style="text-align:right;${ls}">Lost</th><th style="text-align:right;">After</th></tr></thead>
           <tbody>
-            <tr><td>⚔</td><td>Siege Force<div style="font-size:10px;color:var(--text-muted);">dmg ${body.siege_dmg||'?'}/round</div></td><td style="text-align:right;">${body.siege_troops_before||0}</td><td style="text-align:right;${ls}">${Math.max(0,(body.siege_troops_before||0)-(body.siege_survivors||0))}</td><td style="text-align:right;">${body.siege_survivors||0}</td></tr>
-            <tr><td>⚔</td><td>Relief Army<div style="font-size:10px;color:var(--text-muted);">dmg ${body.relief_dmg||'?'}/round</div></td><td style="text-align:right;">${body.relief_troops_before||0}</td><td style="text-align:right;${ls}">${Math.max(0,(body.relief_troops_before||0)-(body.relief_survivors||0))}</td><td style="text-align:right;">${body.relief_survivors||0}</td></tr>
+            <tr><td><i class="ti ti-building-castle"></i></td><td>Siege Force<div style="font-size:10px;color:var(--text-muted);">dmg ${body.siege_dmg||'?'}/round</div></td><td style="text-align:right;">${body.siege_troops_before||0}</td><td style="text-align:right;${ls}">${Math.max(0,(body.siege_troops_before||0)-(body.siege_survivors||0))}</td><td style="text-align:right;">${body.siege_survivors||0}</td></tr>
+            <tr><td><i class="ti ti-shield"></i></td><td>Relief Army<div style="font-size:10px;color:var(--text-muted);">dmg ${body.relief_dmg||'?'}/round</div></td><td style="text-align:right;">${body.relief_troops_before||0}</td><td style="text-align:right;${ls}">${Math.max(0,(body.relief_troops_before||0)-(body.relief_survivors||0))}</td><td style="text-align:right;">${body.relief_survivors||0}</td></tr>
           </tbody>
         </table>
       </div>`;
@@ -7267,14 +7400,14 @@ function buildSallyBody(body) {
       <thead><tr><th style="width:20px;"></th><th>Commander</th><th style="text-align:right;">Before</th><th style="text-align:right;${ls}">Lost</th><th style="text-align:right;">After</th></tr></thead>
       <tbody>
         <tr style="border-bottom:1px solid var(--border);">
-          <td>🛡</td>
+          <td><i class="ti ti-building-castle"></i></td>
           <td><span style="font-weight:600;">${escapeHtml(body.def_name||'Garrison')}</span><div style="font-size:10px;color:var(--text-muted);">Sally (+0.5 Hand) · dmg ${body.def_dmg}/round</div></td>
           <td style="text-align:right;">${body.def_troops_before}</td>
           <td style="text-align:right;${ls}">${Math.max(0,(body.def_troops_before||0)-(body.def_troops_after||0))}</td>
           <td style="text-align:right;">${body.def_troops_after}</td>
         </tr>
         <tr>
-          <td>⚔</td>
+          <td><i class="ti ti-sword"></i></td>
           <td><span style="font-weight:600;">${escapeHtml(body.atk_name||'Besieger')}</span><div style="font-size:10px;color:var(--text-muted);">Besieging · dmg ${body.atk_dmg}/round</div></td>
           <td style="text-align:right;">${body.atk_troops_before}</td>
           <td style="text-align:right;${ls}">${Math.max(0,(body.atk_troops_before||0)-(body.atk_troops_after||0))}</td>
@@ -8378,6 +8511,65 @@ function renderGameResources() {
   startProductionCountdown();
 }
 
+// Production forecast popover
+let _prodPopover = null;
+function _closeProdPopover() {
+  if (_prodPopover) { _prodPopover.remove(); _prodPopover = null; }
+  document.removeEventListener('click', _closeProdPopover);
+}
+function _showProdPopover(anchorEl, mode) {
+  _closeProdPopover();
+  const me = state.currentPlayer;
+  if (!me) return;
+  const myCastles = state.gameCastles.filter(gc => gc.owner_player_id === me.id);
+  const cycleLen  = state.activeGame?.production_cycle_ticks ?? 24;
+  const lcLv      = state.councilSeats?.find(s => s.seat === 'lord_commander')?.level ?? 0;
+
+  let rows = '', total = 0;
+  if (mode === 'gold') {
+    const sorted = [...myCastles].sort((a, b) => b.gold_level - a.gold_level);
+    for (const gc of sorted) {
+      if (!gc.gold_level) continue;
+      const castle = state.castles.find(c => c.slug === gc.castle_slug);
+      const yield_ = gc.gold_level * cycleLen;
+      total += yield_;
+      rows += `<div class="prod-popover-row"><span class="ppr-castle">${escapeHtml(castle?.name || gc.castle_slug)}</span><span class="ppr-val">+${yield_}g</span></div>`;
+    }
+    rows = rows || `<div class="prod-popover-row"><span class="ppr-castle" style="color:var(--text-muted)">No treasury income yet</span></div>`;
+    const p = document.createElement('div');
+    p.className = 'prod-popover';
+    p.innerHTML = `<div class="prod-popover-title">Gold per Cycle</div>${rows}<div class="prod-popover-total"><span>Total</span><span>+${total}g</span></div>`;
+    _prodPopover = p;
+  } else {
+    const sorted = [...myCastles].sort((a, b) => b.industry_level - a.industry_level);
+    for (const gc of sorted) {
+      if (!gc.industry_level) continue;
+      const castle = state.castles.find(c => c.slug === gc.castle_slug);
+      const yield_ = gc.industry_level * (lcLv + 4);
+      total += yield_;
+      rows += `<div class="prod-popover-row"><span class="ppr-castle">${escapeHtml(castle?.name || gc.castle_slug)}</span><span class="ppr-val">+${yield_}</span></div>`;
+    }
+    rows = rows || `<div class="prod-popover-row"><span class="ppr-castle" style="color:var(--text-muted)">No recruitment income yet</span></div>`;
+    const p = document.createElement('div');
+    p.className = 'prod-popover';
+    p.innerHTML = `<div class="prod-popover-title">Troops per Cycle</div>${rows}<div class="prod-popover-total"><span>Total</span><span>+${total}</span></div>`;
+    _prodPopover = p;
+  }
+  document.body.appendChild(_prodPopover);
+  const rect = anchorEl.getBoundingClientRect();
+  _prodPopover.style.top  = (rect.bottom + 6) + 'px';
+  _prodPopover.style.left = Math.max(8, rect.left - 60) + 'px';
+  setTimeout(() => document.addEventListener('click', _closeProdPopover), 10);
+}
+
+// Wire up gold + troops topbar clicks
+document.querySelector('.tb-cycle-block:has(#resourceGold)')?.addEventListener('click', function(e) {
+  e.stopPropagation(); _showProdPopover(this, 'gold');
+});
+document.querySelector('.tb-cycle-block:has(#resourceTroops)')?.addEventListener('click', function(e) {
+  e.stopPropagation(); _showProdPopover(this, 'troops');
+});
+
 function startProductionCountdown() {
   if (window._productionTimer) clearInterval(window._productionTimer);
 
@@ -8907,7 +9099,7 @@ function updateTransferDisplay(panel, cmdTroops, garrTroops) {
   if (marchBtn) {
     const marchable = cmdTroops > 0 ? cmdTroops : garrTroops;
     marchBtn.disabled = marchable <= 0;
-    marchBtn.innerHTML = `<i class="ti ti-sword"></i> ${marchable > 0 ? `March with ${marchable} troops` : 'No troops available'}`;
+    marchBtn.innerHTML = `<i class="ti ti-route"></i> ${marchable > 0 ? `March with ${marchable} troops` : 'No troops available'}`;
     marchBtn.dataset.preloadedTroops = cmdTroops;
   }
 }
@@ -9238,7 +9430,7 @@ function openSendForcesModal(commander, destCastle) {
     const defTroops = destGc.troops || 0;
     missionContext = `
       <div style="background:rgba(180,50,50,0.15);border:1px solid var(--error);border-radius:4px;padding:8px 10px;margin-bottom:10px;font-size:12px;line-height:1.5;">
-        ⚔ <strong style="color:var(--error)">Assault</strong> — ${escapeHtml(defHouse ? defHouse.name : 'Unknown')} holds this castle with <strong>${defTroops}</strong> garrison troops.
+        <i class="ti ti-sword"></i> <strong style="color:var(--error)">Assault</strong> — ${escapeHtml(defHouse ? defHouse.name : 'Unknown')} holds this castle with <strong>${defTroops}</strong> garrison troops.
       </div>`;
   } else if (isNeutral) {
     missionContext = `<div style="background:rgba(120,120,120,0.15);border:1px solid var(--border);border-radius:4px;padding:8px 10px;margin-bottom:10px;font-size:12px;">Neutral castle — take it unopposed.</div>`;
@@ -9681,7 +9873,7 @@ function renderEntityPicker(entities) {
       const troops = gc ? gc.troops : 0;
       const shieldHtml = house
         ? `<img src="${shieldSrc(house.slug)}" style="width:100%;height:100%;object-fit:contain;" onerror="shieldFallback(this,'${house.slug}',0)">`
-        : `<span style="font-size:14px;color:${color};">⌂</span>`;
+        : `<i class="ti ti-tower" style="font-size:14px;color:${color};"></i>`;
       return `
         <div class="entity-pick-row" data-idx="${idx}">
           <div class="ep-shield" style="--ep-house-color:${color};">${shieldHtml}</div>
@@ -9988,6 +10180,7 @@ function renderCommanderDetail(commanderId) {
     </div>` : '';
 
   el.infoPanelBody.innerHTML = `
+    <div style="height:3px;background:${color};border-radius:2px 2px 0 0;"></div>
     <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg-elevated);">
       <div class="cmd-detail-portrait" style="--portrait-color:${color};width:56px;height:56px;font-size:20px;flex-shrink:0;">
         <div class="cmd-detail-initial">${initial}</div>
@@ -10476,7 +10669,7 @@ function showStackPicker(entities, selected) {
       const ownerColor = house ? house.color : '#444';
       return `
         <div class="row${isSel ? ' selected' : ''}" data-idx="${idx}">
-          <div class="icon castle" style="background:${ownerColor}">⌂</div>
+          <div class="icon castle" style="background:${ownerColor}"><i class="ti ti-tower"></i></div>
           <div class="count">${troops}</div>
           <div class="name">${escapeHtml(ent.castle.name)}</div>
         </div>
@@ -10487,7 +10680,7 @@ function showStackPicker(entities, selected) {
       const remaining = ent.movement.arrives_at_tick - state.activeGame.current_tick;
       return `
         <div class="row${isSel ? ' selected' : ''}" data-idx="${idx}">
-          <div class="icon movement">⚔</div>
+          <div class="icon movement"><i class="ti ti-route"></i></div>
           <div class="count">${ent.movement.troops}</div>
           <div>
             <div class="name">${escapeHtml(cname)}</div>
@@ -10650,7 +10843,7 @@ function getDiplomacyStatus(targetPlayerId) {
 
 function getDiplomacyLabel(status, graceTick) {
   if (status === 'ally')         return 'Allied';
-  if (status === 'enemy')        return 'Enemy';
+  if (status === 'enemy')        return 'At War';
   if (status === 'proposed')     return 'Proposal Pending';
   if (status === 'grace_period') {
     const rem = graceTick - (state.activeGame?.current_tick || 0);
@@ -10999,17 +11192,17 @@ function buildDipHistory(targetPlayer) {
     const body = msg.body;
     if (!body || body.from_house !== targetSlug) return;
     if (body.gift_type === 'gold') {
-      events.push({ tick: msg.tick, icon: '⚜', label: `+${body.amount} gold received`, color: 'var(--accent)' });
+      events.push({ tick: msg.tick, icon: '<i class="ti ti-coins"></i>', label: `+${body.amount} gold received`, color: 'var(--accent)' });
     } else if (body.gift_type === 'council_tech') {
       const meta = COUNCIL_META[body.seat];
-      events.push({ tick: msg.tick, icon: meta?.icon || '📜', label: `${meta?.title || body.seat} raised to Lv ${body.new_level}`, color: '#7b6dd9' });
+      events.push({ tick: msg.tick, icon: meta?.icon || '<i class="ti ti-scroll"></i>', label: `${meta?.title || body.seat} raised to Lv ${body.new_level}`, color: '#7b6dd9' });
     } else if (body.gift_type === 'diplomacy') {
       if (body.new_status === 'allied')
-        events.push({ tick: msg.tick, icon: '🤝', label: 'Alliance proposed to you', color: 'var(--accent-warm)' });
+        events.push({ tick: msg.tick, icon: '<i class="ti ti-handshake"></i>', label: 'Alliance proposed to you', color: 'var(--accent-warm)' });
       else if (body.new_status === 'war')
-        events.push({ tick: msg.tick, icon: '⚔', label: 'War declared on you', color: 'var(--error)' });
+        events.push({ tick: msg.tick, icon: '<i class="ti ti-sword"></i>', label: 'War declared on you', color: 'var(--error)' });
       else if (body.new_status === 'accepted')
-        events.push({ tick: msg.tick, icon: '✓', label: 'Alliance accepted', color: '#62C030' });
+        events.push({ tick: msg.tick, icon: '<i class="ti ti-check"></i>', label: 'Alliance accepted', color: '#62C030' });
     }
   });
 
@@ -11017,7 +11210,7 @@ function buildDipHistory(targetPlayer) {
   (state.ledger || [])
     .filter(e => e.payer_player_id === me.id && e.receiver_player_id === targetPlayer.id)
     .forEach(e => {
-      events.push({ tick: e.tick, icon: '⚜', label: `${e.description || 'Gold sent'} · ${e.amount}g`, color: 'var(--text-muted)' });
+      events.push({ tick: e.tick, icon: '<i class="ti ti-coins"></i>', label: `${e.description || 'Gold sent'} · ${e.amount}g`, color: 'var(--text-muted)' });
     });
 
   if (!events.length) return `
@@ -11030,9 +11223,9 @@ function buildDipHistory(targetPlayer) {
     <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px;">
       <div style="font-size:10px;letter-spacing:.07em;color:var(--text-muted);text-transform:uppercase;margin-bottom:7px;">History</div>
       ${events.slice(0, 6).map(e => `
-        <div style="display:flex;align-items:baseline;gap:6px;padding:2px 0;font-size:12px;">
+        <div style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:12px;">
           <span style="color:var(--text-muted);opacity:.55;flex-shrink:0;min-width:38px;font-size:11px;">T${e.tick}</span>
-          <span style="flex-shrink:0;">${e.icon}</span>
+          <span style="flex-shrink:0;color:${e.color};font-size:13px;">${e.icon}</span>
           <span style="color:${e.color};">${e.label}</span>
         </div>`).join('')}
     </div>`;
@@ -11046,105 +11239,106 @@ function buildDiplomacyHtml() {
   const otherPlayers = state.gamePlayers.filter(p => p.id !== me.id && p.status !== 'eliminated');
   if (otherPlayers.length === 0) return '<div style="padding:20px;color:var(--text-muted)">No other players yet.</div>';
 
-  // Sort rank: incoming proposals first (need action), then allies, outgoing proposals,
-  // neutral, grace period, war last
   const sortRank = { theyProposed: 0, ally: 1, iProposed: 2, neutral: 3, grace_period: 4, enemy: 5 };
 
   const enriched = otherPlayers.map(p => {
-    const house  = state.houses.find(h => h.slug === p.house_slug);
-    const color  = house?.color || '#888';
-    const dipRow = state.diplomacy?.find(d =>
+    const house        = state.houses.find(h => h.slug === p.house_slug);
+    const color        = house?.color || '#888';
+    const dipRow       = state.diplomacy?.find(d =>
       (d.player_a_id === me.id && d.player_b_id === p.id) ||
       (d.player_b_id === me.id && d.player_a_id === p.id)
     );
-    const status     = dipRow?.status || 'neutral';
-    const isAlly     = status === 'ally';
-    const isGrace    = status === 'grace_period';
-    const isProposed = status === 'proposed';
-    const iProposed  = isProposed && dipRow?.proposed_by_player_id === me.id;
+    const status       = dipRow?.status || 'neutral';
+    const isAlly       = status === 'ally';
+    const isGrace      = status === 'grace_period';
+    const isProposed   = status === 'proposed';
+    const iProposed    = isProposed && dipRow?.proposed_by_player_id === me.id;
     const theyProposed = isProposed && dipRow?.proposed_by_player_id !== me.id;
-    const sortKey    = theyProposed ? 'theyProposed' : iProposed ? 'iProposed' : status;
-    return { p, house, color, dipRow, status, isAlly, isGrace, isProposed, iProposed, theyProposed, sortKey };
+    const sortKey      = theyProposed ? 'theyProposed' : iProposed ? 'iProposed' : status;
+    const castleCount  = (state.gameCastles || []).filter(c => c.owner_player_id === p.id).length;
+    const troopCount   = (state.commanders || [])
+      .filter(c => c.owner_player_id === p.id && c.status !== 'dead')
+      .reduce((sum, c) => sum + (c.troop_count || 0), 0);
+    return { p, house, color, dipRow, status, isAlly, isGrace, iProposed, theyProposed, sortKey, castleCount, troopCount };
   }).sort((a, b) => (sortRank[a.sortKey] ?? 3) - (sortRank[b.sortKey] ?? 3));
 
-  const cards = enriched.map(({ p, house, color, dipRow, status, isAlly, isGrace, isProposed, iProposed, theyProposed }) => {
+  const glowFor = ({ theyProposed, isAlly, iProposed, status }) => {
+    if (theyProposed)          return { ring: '#c9a84c', glow: 'rgba(201,168,76,.55)' };
+    if (isAlly)                return { ring: '#4aaa30', glow: 'rgba(62,192,48,.45)' };
+    if (iProposed)             return { ring: '#7a7020', glow: 'rgba(201,168,76,.2)' };
+    if (status === 'grace_period') return { ring: '#c87820', glow: 'rgba(200,120,32,.4)' };
+    if (status === 'enemy')    return { ring: '#9a2020', glow: 'rgba(180,40,40,.45)' };
+    return { ring: 'var(--border-strong)', glow: 'transparent' };
+  };
+
+  const tokens = enriched.map(e => {
+    const { p, house, color, dipRow, status, isAlly, isGrace, iProposed, theyProposed, castleCount, troopCount } = e;
+    const { ring, glow } = glowFor(e);
     const statusColor = getDiplomacyColor(status);
-    const statusLabel = getDiplomacyLabel(status, dipRow?.grace_ends_at_tick);
+    const badgeLabel  = theyProposed ? 'Proposal Received'
+      : iProposed     ? 'Awaiting Response'
+      : getDiplomacyLabel(status, dipRow?.grace_ends_at_tick);
 
-    // Left border accent and background tint by relationship
-    const accentBorder = theyProposed ? '#8a7010'
-      : isAlly        ? '#3a6a22'
-      : iProposed     ? '#3a4a2a'
-      : status === 'grace_period' ? '#7a4a10'
-      : status === 'enemy'        ? '#6a1818'
-      : 'var(--border-strong)';
-    const bgTint = theyProposed ? 'rgba(245,197,24,0.04)'
-      : isAlly        ? 'rgba(62,192,48,0.04)'
-      : status === 'grace_period' ? 'rgba(245,160,32,0.04)'
-      : status === 'enemy'        ? 'rgba(232,32,64,0.05)'
-      : 'var(--bg-elevated)';
-
-    // Status badge — differentiate proposal direction
-    const badgeLabel = theyProposed ? 'Proposal Received' : iProposed ? 'Proposal Sent' : statusLabel;
-    const badge = status !== 'neutral'
-      ? `<span class="dip-badge" style="color:${statusColor};border-color:${statusColor}44;background:${statusColor}14;">${badgeLabel}</span>`
-      : '';
-
-    // Primary action
-    let primaryRow = '';
+    // ── Incoming proposal — full-width priority card
     if (theyProposed) {
-      primaryRow = `<div style="display:flex;gap:8px;margin-bottom:8px;">
-        <button class="dip-btn dip-primary accept" data-target="${p.id}" style="flex:1;">✓ Accept Alliance</button>
-        <button class="dip-btn dip-primary decline" data-target="${p.id}">✗ Decline</button>
-      </div>`;
-    } else if (iProposed) {
-      primaryRow = `<div style="margin-bottom:8px;">
-        <button class="dip-btn dip-primary" disabled style="width:100%;">📜 Awaiting Their Response…</button>
-      </div>`;
-    } else if (isAlly) {
-      primaryRow = '';  // Declare War demoted to danger zone below secondary actions
-    } else if (!isGrace) {
-      primaryRow = `<div style="margin-bottom:8px;">
-        <button class="dip-btn dip-primary ally" data-target="${p.id}" style="width:100%;">🤝 Propose Alliance</button>
+      return `
+      <div class="dip-token dip-token-proposal" data-player-id="${p.id}">
+        <div class="dip-token-proposal-inner">
+          <div class="dip-token-sigil-wrap" style="--ring:${ring};--glow:${glow};">
+            ${shieldBadgeHtml(house?.slug||'', color, 52)}
+          </div>
+          <div class="dip-token-proposal-body">
+            <div style="font-family:'Cinzel',Georgia,serif;font-size:13px;font-weight:700;color:${color};margin-bottom:3px;">${escapeHtml(house?.name||p.display_name)}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">${escapeHtml(p.display_name)}</div>
+            <div style="font-size:11px;color:var(--accent);font-weight:600;letter-spacing:.03em;margin-bottom:10px;"><i class="ti ti-handshake" style="margin-right:4px;"></i>Alliance Proposed</div>
+            <div style="display:flex;gap:6px;">
+              <button class="dip-btn accept" data-target="${p.id}" style="flex:1;padding:6px 10px;"><i class="ti ti-check" style="margin-right:4px;"></i>Accept</button>
+              <button class="dip-btn decline" data-target="${p.id}" style="padding:6px 14px;"><i class="ti ti-x" style="margin-right:4px;"></i>Decline</button>
+            </div>
+          </div>
+        </div>
       </div>`;
     }
 
-    // Secondary actions
-    const secondaryRow = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
-      <button class="dip-btn send-gold" data-target="${p.id}">⚜ Send Gold</button>
-      <button class="dip-btn send-know" data-target="${p.id}">📜 Send Knowledge</button>
-      <button class="dip-btn send-raven" data-target="${p.id}">🐦 Send Raven</button>
-    </div>`;
+    // ── Primary action
+    let primaryBtn = '';
+    if (iProposed) {
+      primaryBtn = `<button class="dip-btn dip-token-primary" disabled><i class="ti ti-hourglass" style="margin-right:4px;"></i>Awaiting…</button>`;
+    } else if (!isAlly && !isGrace && status !== 'enemy') {
+      primaryBtn = `<button class="dip-btn ally dip-token-primary" data-target="${p.id}"><i class="ti ti-handshake" style="margin-right:4px;"></i>Propose Alliance</button>`;
+    } else if (isAlly) {
+      primaryBtn = `<button class="dip-btn break dip-token-primary" data-target="${p.id}"><i class="ti ti-sword" style="margin-right:4px;"></i>Declare War</button>`;
+    }
 
-    // Danger zone — Declare War only shown for allies, below a divider
-    const dangerRow = isAlly ? `
-      <div class="dip-divider"></div>
-      <button class="dip-btn break" data-target="${p.id}" style="font-size:8px;padding:4px 8px;">⚔ Declare War</button>` : '';
+    // ── Status badge
+    const badge = status !== 'neutral'
+      ? `<span class="dip-badge" style="font-size:10px;padding:2px 6px;color:${statusColor};border-color:${statusColor}44;background:${statusColor}14;margin-bottom:6px;">${badgeLabel}</span>`
+      : '';
 
     return `
-    <div class="dip-card" data-player-id="${p.id}" style="border-left-color:${accentBorder};background:${bgTint};">
-      <div class="dip-card-inner">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-          ${shieldBadgeHtml(house?.slug||'', color, 46)}
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;">
-              <span style="font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:${color};">${escapeHtml(house?.name || p.display_name)}</span>
-              ${badge}
-            </div>
-            <div style="font-size:11px;color:var(--text-muted);">${escapeHtml(p.display_name)}</div>
-          </div>
-        </div>
-        ${primaryRow}
-        ${secondaryRow}
-        ${dangerRow}
-        ${buildDipHistory(p)}
+    <div class="dip-token" data-player-id="${p.id}">
+      <div class="dip-token-sigil-wrap" style="--ring:${ring};--glow:${glow};">
+        ${shieldBadgeHtml(house?.slug||'', color, 60)}
+      </div>
+      <div class="dip-token-name" style="color:${color};">${escapeHtml(house?.name||p.display_name)}</div>
+      <div class="dip-token-player">${escapeHtml(p.display_name)}</div>
+      ${badge}
+      <div class="dip-token-stats">
+        <span><i class="ti ti-tower" aria-hidden="true"></i> ${castleCount}</span>
+        <span><i class="ti ti-shield-half" aria-hidden="true"></i> ${troopCount}</span>
+      </div>
+      ${primaryBtn ? `<div style="width:100%;">${primaryBtn}</div>` : ''}
+      <div class="dip-token-actions">
+        <button class="dip-btn send-gold dip-icon-btn" data-target="${p.id}" title="Send Gold"><i class="ti ti-coins"></i></button>
+        <button class="dip-btn send-know dip-icon-btn" data-target="${p.id}" title="Send Council Knowledge"><i class="ti ti-scroll"></i></button>
+        <button class="dip-btn send-raven dip-icon-btn" data-target="${p.id}" title="Send Raven"><i class="ti ti-feather"></i></button>
       </div>
     </div>`;
   }).join('');
 
-  return `<div style="padding-bottom:12px;">
-    ${cards}
-    <div id="dipModal" style="display:none;margin:0 12px;padding:16px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;"></div>
+  return `<div style="padding-bottom:16px;">
+    <div class="dip-grid">${tokens}</div>
+    <div id="dipModal" style="display:none;margin:0 12px 12px;padding:16px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;"></div>
   </div>`;
 }
 
@@ -11310,30 +11504,9 @@ function buildLeaderboardHtml() {
   const totalCastles = state.castles.filter(c => c.map_x != null).length;
   const winAt = Math.ceil(totalCastles * (state.activeGame?.victory_pct || 0.5));
 
-  // Sparklines from intel_snapshots
-  const snapsByPlayer = new Map();
-  const SPARK_N = 10;
-  if (state.intelSnapshots?.length) {
-    for (const snap of state.intelSnapshots) {
-      if (!snapsByPlayer.has(snap.player_id)) snapsByPlayer.set(snap.player_id, []);
-      snapsByPlayer.get(snap.player_id).push(snap.castles);
-    }
-  }
-  const sparkMaxCastles = Math.max(1, ...([...snapsByPlayer.values()].flat()));
-
-  const buildSparkline = (playerId, color) => {
-    const data = (snapsByPlayer.get(playerId) || []).slice(-SPARK_N);
-    if (data.length < 2) return '';
-    const bars = data.map(v => {
-      const h = Math.max(1, Math.round((v / sparkMaxCastles) * 18));
-      return `<div class="lb-spark-bar" style="height:${h}px;background:${color};"></div>`;
-    }).join('');
-    return `<span class="lb-sparkline" title="Castle count trend">${bars}</span>`;
-  };
-
   const me = state.currentPlayer;
 
-  const rowHtml = ({ player, house, castleCount }) => {
+  const rowHtml = ({ player, house, castleCount, troopCount }) => {
     const isYou = player.user_id === state.user.id;
     const elim  = player.eliminated_at_tick != null;
     const color = house?.color || 'var(--border)';
@@ -11375,11 +11548,10 @@ function buildLeaderboardHtml() {
           <div class="castle-bar-track"><div class="castle-bar-fill" style="width:${Math.round(pct * 100)}%"></div></div>
           <div class="lb-stats">
             <span class="lb-stat-val">${castleCount}</span><span class="lb-stat-label">castles</span>
-            ${buildSparkline(player.id, color)}
             <span class="lb-sep">·</span>
             <span class="lb-stat-val" style="color:var(--accent)">${fmtStat(player.gold)}</span><span class="lb-stat-label">gold</span>
             <span class="lb-sep">·</span>
-            <span class="lb-stat-val" style="color:#9d8fee">${fmtStat(player.prestige)}</span><span class="lb-stat-label">prestige</span>
+            <span class="lb-stat-val" style="color:var(--text-muted)">${fmtStat(troopCount)}</span><span class="lb-stat-label">troops</span>
           </div>
         </div>
         ${dipBtns ? `<div style="display:flex;align-items:center;padding-left:8px;">${dipBtns}</div>` : ''}
@@ -11417,8 +11589,8 @@ function buildLeaderboardHtml() {
     </div>
     <div class="lb-sort-tabs">
       <button class="lb-sort-tab${_leaderboardSort === 'castles' ? ' active' : ''}" data-sort="castles">Castles</button>
-      <button class="lb-sort-tab${_leaderboardSort === 'troops'  ? ' active' : ''}" data-sort="troops">Troops</button>
       <button class="lb-sort-tab${_leaderboardSort === 'gold'    ? ' active' : ''}" data-sort="gold">Gold</button>
+      <button class="lb-sort-tab${_leaderboardSort === 'troops'  ? ' active' : ''}" data-sort="troops">Troops</button>
     </div>
     ${activeRows.map(rowHtml).join('')}
     ${elimSection}
@@ -11604,7 +11776,7 @@ async function renderPlayerDetailAsync(targetPlayerId) {
         <div style="font-size:11px;color:var(--text-muted);">${target.is_ai?'AI':'Player'}${target.eliminated_at_tick!=null?' · ☠ Eliminated':''}</div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button class="sidebar-tool-btn" id="pdRavenBtn" title="Send a Raven" style="width:32px;height:32px;">📜</button>
+        <button class="sidebar-tool-btn" id="pdRavenBtn" title="Send a Raven" style="width:32px;height:32px;"><i class="ti ti-feather"></i></button>
         <button class="sidebar-tool-btn" id="pdLocateBtn" title="Locate on map" style="width:32px;height:32px;${!canLocate?'opacity:0.35;':''}" ${!canLocate?'disabled':''}>📍</button>
       </div>
     </div>
@@ -11619,7 +11791,6 @@ async function renderPlayerDetailAsync(targetPlayerId) {
         <tr><td>Next Cycle</td><td style="text-align:center;color:${cmp(tNextPay,mNextPay)[0]}">+${tNextPay}g</td><td style="text-align:center;color:${cmp(tNextPay,mNextPay)[1]}">+${mNextPay}g</td></tr>
         <tr><td>Treasury</td><td style="text-align:center">${tTotT}</td><td style="text-align:center">${mTotT}</td></tr>
         <tr><td>Recruitment</td><td style="text-align:center">${tTotR}</td><td style="text-align:center">${mTotR}</td></tr>
-        <tr><td>Prestige</td><td style="text-align:center">${tTotP}</td><td style="text-align:center">${mTotP}</td></tr>
       </tbody>
     </table>
 
@@ -11629,7 +11800,7 @@ async function renderPlayerDetailAsync(targetPlayerId) {
       <tbody>${seatOrder.map(seatRow).join('')}</tbody>
     </table>
 
-    <div style="font-weight:600;font-size:12px;color:var(--accent);margin-bottom:6px;">💰 Trade</div>
+    <div style="font-weight:600;font-size:12px;color:var(--accent);margin-bottom:6px;"><i class="ti ti-coins"></i> Trade</div>
     <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Council knowledge: 25 gold × seat level.</div>
     ${tradableSeats.length > 0 ? `
       <div style="display:flex;gap:6px;margin-bottom:8px;">
@@ -11648,9 +11819,10 @@ async function renderPlayerDetailAsync(targetPlayerId) {
       <button class="send-forces-btn" id="sendGoldBtn" style="flex:0;padding:6px 12px;font-size:11px;">Send</button>
     </div>
 
-    <div style="font-weight:600;font-size:12px;color:var(--accent);margin-bottom:6px;">🤝 Formal Alliance</div>
+    <div style="font-weight:600;font-size:12px;color:var(--accent);margin-bottom:6px;"><i class="ti ti-handshake"></i> Formal Alliance</div>
     ${allianceBtnHtml}
 
+    ${buildDipHistory(target)}
   `;
 
   // Wire all buttons
@@ -11927,7 +12099,7 @@ function buildHousesProductionTab() {
 
 function buildHousesCouncilTab() {
   const seats = ['hand','coin','lord_commander','whisperers','grand_maester','laws','horses'];
-  const abbr  = { hand:'Hand', coin:'Coin', lord_commander:'Guard', whisperers:'Whisp', grand_maester:'Maest', laws:'Laws', horses:'Horse' };
+  const abbr  = { hand:'Hand', coin:'Coin', lord_commander:'LC', whisperers:'MoW', grand_maester:'GM', laws:'MoL', horses:'MoH' };
 
   const maxPerSeat = {};
   seats.forEach(seat => {
@@ -11953,7 +12125,7 @@ function buildHousesCouncilTab() {
     return { vals, html };
   });
 
-  return `<table class="houses-table">
+  return `<table class="houses-table" style="min-width:480px;">
     <thead><tr>
       <th>House</th>
       ${seats.map(s => sortThHtml(abbr[s], s, COUNCIL_META[s].title)).join('')}
@@ -12102,9 +12274,9 @@ function buildCouncilSidebarHtml() {
     const remain = Math.max(0, cost - prog);
     const ticks  = Math.ceil(remain / prestigePerTick);
     const dur    = formatDuration(ticks, state.activeGame?.tick_speed || 'normal');
-    etaHtml = `<div style="font-size:14px;font-weight:600;color:var(--accent);margin-bottom:3px;">${COUNCIL_META[currentSeat].icon} ${COUNCIL_META[currentSeat].title}</div>
-      <div style="font-size:12px;color:var(--text);">Level ${lv + 1} in ~${dur}</div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${ticks} tick${ticks !== 1 ? 's' : ''}</div>`;
+    etaHtml = `<div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:4px;">${COUNCIL_META[currentSeat].title} → Lv ${lv + 1}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text);font-family:'Cinzel',Georgia,serif;">~${dur}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${ticks} tick${ticks !== 1 ? 's' : ''} · ${prog}/${cost} prestige</div>`;
   } else if (!currentSeat) {
     etaHtml = `<div style="font-size:13px;color:var(--error);">No focus set \u2014 prestige wasted each tick.</div>`;
   } else {
@@ -12191,43 +12363,46 @@ function buildCouncilSidebarHtml() {
       <div style="display:flex;gap:14px;align-items:flex-start;">
         ${ring}
         <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px;">
-            <span style="font-family:'Cinzel',Georgia,serif;font-size:15px;font-weight:700;color:var(--text);">${meta.icon} ${meta.title}</span>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+            <span style="font-family:'Cinzel',Georgia,serif;font-size:14px;font-weight:700;color:var(--text);">${meta.title}</span>
             ${badges.join('')}
           </div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">${prog} / ${cost} prestige${active && pct > 0 ? ` \u00b7 ${pct}%` : ''}</div>
-          <div style="font-size:13px;color:var(--text);line-height:1.65;border-top:1px solid var(--border);padding-top:10px;">${COUNCIL_DESC[seat]}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+            <div style="flex:1;height:4px;background:var(--border-strong);border-radius:2px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${active ? 'var(--accent)' : 'var(--border-gold)'};border-radius:2px;transition:width .4s;"></div>
+            </div>
+            <span style="font-size:12px;color:${active ? 'var(--accent)' : 'var(--text-muted)'};white-space:nowrap;flex-shrink:0;">${prog} / ${cost}${active && pct > 0 ? ` \u00b7 ${pct}%` : ''}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.6;border-top:1px solid var(--border);padding-top:8px;">${COUNCIL_DESC[seat]}</div>
         </div>
       </div>
     </div>`;
   }).join('');
 
   return `
-    <div style="display:flex;gap:12px;margin-bottom:14px;">
-      <div style="flex:1;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:14px;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:4px;">Prestige Income</div>
-        <div style="font-size:26px;font-weight:700;color:var(--accent);line-height:1;">${prestigePerTick}<span style="font-size:13px;font-weight:400;color:var(--text-muted);"> / tick</span></div>
-        ${grandMaesterBonus > 0 ? `<div style="font-size:12px;color:var(--text-muted);margin-top:3px;">+${grandMaesterBonus} random / cycle</div>` : ''}
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <div style="flex:1;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:12px 14px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:6px;">Prestige / Tick</div>
+        <div style="font-size:28px;font-weight:700;color:var(--accent);line-height:1;font-family:'Cinzel',Georgia,serif;">${prestigePerTick}</div>
+        ${grandMaesterBonus > 0 ? `<div style="font-size:12px;color:var(--text-muted);margin-top:5px;">+${grandMaesterBonus} random / cycle</div>` : ''}
       </div>
-      <div style="flex:1.6;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:14px;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:6px;">Progress</div>
+      <div style="flex:1.8;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:12px 14px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:6px;">Training Progress</div>
         ${etaHtml}
       </div>
     </div>
-    <div style="margin-bottom:18px;">
-      <div style="display:flex;gap:10px;">
-        <div style="flex:1;">
-          <label style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);display:block;margin-bottom:5px;">Current Focus</label>
-          <select id="councilFocusSelect" style="width:100%;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px 10px;font-family:inherit;font-size:13px;">${focusOpts}</select>
-        </div>
-        <div style="flex:1;">
-          <label style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);display:block;margin-bottom:5px;">Queue Next <span style="text-transform:none;letter-spacing:0;color:var(--text-faint);font-size:10px;">(on knowledge share)</span></label>
-          <select id="councilNextSelect" style="width:100%;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px 10px;font-family:inherit;font-size:13px;">${nextOpts}</select>
-        </div>
+    <div style="display:flex;gap:10px;margin-bottom:18px;">
+      <div style="flex:1;">
+        <label style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);display:block;margin-bottom:5px;">Current Focus</label>
+        <select id="councilFocusSelect" style="width:100%;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px 10px;font-family:inherit;font-size:13px;">${focusOpts}</select>
+      </div>
+      <div style="flex:1;">
+        <label style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);display:block;margin-bottom:5px;">Queue Next</label>
+        <select id="councilNextSelect" style="width:100%;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px 10px;font-family:inherit;font-size:13px;">${nextOpts}</select>
       </div>
     </div>
     ${traitsHtml}
-    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px;">Council Seats</div>
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:10px;">Council Seats</div>
     ${cards}
   `;
 }
@@ -12298,9 +12473,9 @@ let _realmsFilter = 'mine';   // 'mine' | 'all' | 'allied'
 
 function buildRealmsHtml() {
   const tabs = [
-    { id: 'castles',     label: '🏰 Castles'    },
-    { id: 'commanders',  label: '⚔ Commanders'  },
-    { id: 'troops',      label: '🛡 Troops'      },
+    { id: 'castles',     label: '<i class="ti ti-tower"></i> Castles'      },
+    { id: 'commanders',  label: '<i class="ti ti-sword"></i> Commanders'   },
+    { id: 'troops',      label: '<i class="ti ti-shield-half"></i> Troops' },
   ];
   const tabsHtml = tabs.map(t =>
     `<button class="houses-sub-tab ${_realmsTab === t.id ? 'active' : ''}" data-rtab="${t.id}">${t.label}</button>`
@@ -12420,12 +12595,12 @@ function buildRealmsCastlesTab() {
       <thead><tr>
         <th>Castle</th>
         <th style="text-align:right;" title="Garrison troops">Trp</th>
-        <th style="text-align:right;" title="Treasury level">💰</th>
-        <th style="text-align:right;" title="Recruitment level">🛡</th>
+        <th style="text-align:right;" title="Treasury level"><i class="ti ti-coin"></i></th>
+        <th style="text-align:right;" title="Recruitment level"><i class="ti ti-shield-half"></i></th>
         <th style="text-align:right;" title="Prestige level">★</th>
         <th style="text-align:right;" title="Effective influence">Infl</th>
-        <th style="text-align:right;" title="Cost to upgrade Treasury">+💰</th>
-        <th style="text-align:right;" title="Cost to upgrade Recruitment">+🛡</th>
+        <th style="text-align:right;" title="Cost to upgrade Treasury">+<i class="ti ti-coin"></i></th>
+        <th style="text-align:right;" title="Cost to upgrade Recruitment">+<i class="ti ti-shield-half"></i></th>
         <th style="text-align:right;" title="Cost to upgrade Prestige">+★</th>
       </tr></thead>
       <tbody>${castles}</tbody>
@@ -12435,8 +12610,8 @@ function buildRealmsCastlesTab() {
       <thead><tr>
         <th>Castle</th>
         <th style="text-align:right;" title="Garrison troops">Trp</th>
-        <th style="text-align:right;" title="Treasury level">💰</th>
-        <th style="text-align:right;" title="Recruitment level">🛡</th>
+        <th style="text-align:right;" title="Treasury level"><i class="ti ti-coin"></i></th>
+        <th style="text-align:right;" title="Recruitment level"><i class="ti ti-shield-half"></i></th>
         <th style="text-align:right;" title="Prestige level">★</th>
       </tr></thead>
       <tbody>${castles}</tbody>
@@ -12472,7 +12647,7 @@ function buildRealmsCommandersTab() {
       const locName   = move
         ? `→ ${escapeHtml(locCastle?.name || locSlug || '?')} (${Math.max(0, move.arrives_at_tick - curTick)}t)`
         : cmd.status === 'sieging'
-          ? `⚔ Besieging ${escapeHtml(locCastle?.name || locSlug || '?')}`
+          ? `<i class="ti ti-building-castle"></i> Besieging ${escapeHtml(locCastle?.name || locSlug || '?')}`
           : escapeHtml(locCastle?.name || locSlug || '?');
 
       const atk = Math.max(1, Math.round(handLv * (1 + cmd.level * 0.1)));
@@ -12822,7 +12997,7 @@ function buildLedgerHtml() {
         </div>
         <div style="display:flex;gap:6px;">
           ${owedToMe ? `<button class="ledger-forgive-btn" data-player-id="${item.id}" style="flex:1;padding:5px;font-size:12px;background:var(--bg-deep);color:var(--text-muted);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-family:inherit;">Forgive</button>` : ''}
-          <button class="ledger-raven-btn" data-player-id="${item.id}" style="${owedToMe?'flex:0;':'flex:1;'}padding:5px 10px;font-size:12px;background:var(--bg-deep);color:var(--text-muted);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-family:inherit;">✉ Raven</button>
+          <button class="ledger-raven-btn" data-player-id="${item.id}" style="${owedToMe?'flex:0;':'flex:1;'}padding:5px 10px;font-size:12px;background:var(--bg-deep);color:var(--text-muted);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-family:inherit;"><i class="ti ti-feather"></i> Raven</button>
         </div>
       </div>
     </div>`;
@@ -13035,9 +13210,9 @@ function renderIntelDashboard(snapshots, wrap) {
 
   // ── KPI cards ──────────────────────────────────────────────────────────────
   const kpiDefs = [
-    { key: 'castles',    icon: '🏰', label: 'Castles'  },
-    { key: 'troops',     icon: '⚔',  label: 'Troops'   },
-    { key: 'gold_level', icon: '💰', label: 'Treasury' },
+    { key: 'castles',    icon: '<i class="ti ti-tower"></i>',      label: 'Castles'  },
+    { key: 'troops',     icon: '<i class="ti ti-shield-half"></i>', label: 'Troops'   },
+    { key: 'gold_level', icon: '<i class="ti ti-coin"></i>',       label: 'Treasury' },
   ];
   const kpiHtml = kpiDefs.map(({ key, icon, label }) => {
     const sorted = allPlayerIds.filter(id => latestSnap[id])
@@ -13567,7 +13742,7 @@ function wireOptionsSidebar() {
       const { data, error } = await supabase.rpc('force_ticks', { p_game_id: state.activeGame.id, p_count: n });
       if (error) throw error;
       const base = `⚡ ${n} tick${n > 1 ? 's' : ''} forced: +${data.gold_added} gold, +${data.troops_added} troops`;
-      toast(data.combats > 0 ? `${base} · ⚔ ${data.combats} combat${data.combats > 1 ? 's' : ''}` : base);
+      toast(data.combats > 0 ? `${base} · ${data.combats} combat${data.combats > 1 ? 's' : ''}` : base);
       if (data.combat_events?.length) {
         const myId = state.currentPlayer?.id;
         data.combat_events.forEach((ev, i) => {
@@ -13662,13 +13837,15 @@ const HELP_ARTICLES = {
       <div class="help-hdr">Castle Markers</div>
       <p>Each castle is a circle on the map, colored by the house that controls it. Neutral castles are grey. Tap any marker to open its inspector panel on the right.</p>
       <div class="help-hdr">Fog of War</div>
-      <p>You can only see inside your scanner range. Each owned castle projects a scan radius of <strong>90 leagues</strong> at base, extended by +60 per level of ${hl('council','Master of Whisperers')}. Commanders scan independently at a shorter range. Enemy positions outside your range are hidden, though last-known state is remembered.</p>
-      <div class="help-hdr">Ruler Tool</div>
-      <p>Open the 📏 Ruler from the toolbar. Tap two castles to see the exact distance and the estimated travel time for a commander.</p>
+      <p>When fog of war is enabled, you can only see inside your scan range. Each owned castle projects a radius of <strong>150 leagues</strong> at starting level (90 base + 60 per ${hl('council','Master of Whisperers')} level). Allied castles extend your vision — any castle inside an ally's scan range is visible to you. Enemy positions outside your combined range are hidden, though last-known positions are remembered.</p>
+      <div class="help-hdr">Castle Search</div>
+      <p>Use the search bar in the top-left of the map to quickly locate any castle by name. The map pans and highlights the marker.</p>
+      <div class="help-hdr">Toolbar</div>
+      <p>The toolbar at the top of the left panel holds four tools: <strong>📏 Ruler</strong> — click two castles to measure travel time. <strong>💰 Bulk Upgrade</strong> — spend a gold budget on your cheapest available upgrades. <strong>⚔ War Calculator</strong> — model assault or open-field outcomes. <strong>🛡 Army Overview</strong> — see all your commanders, their status, destinations, and ETAs at a glance.</p>
       <div class="help-hdr">Movements</div>
       <p>Friendly commander movements render as gold dotted lines. Enemy movements inside your scan range render red.</p>
       <div class="help-callout">Tip — the stack picker in the right panel handles overlapping markers. When a castle and a moving commander share a position, you can select either.</div>
-      <div class="help-also">See also: ${hl('commanders','Commanders')} · ${hl('fog','Fog of War')}</div>`,
+      <div class="help-also">See also: ${hl('commanders','Commanders')} · ${hl('council','Master of Whisperers')}</div>`,
   },
 
   castles: {
@@ -13684,49 +13861,47 @@ const HELP_ARTICLES = {
       <div class="help-hdr">Garrison</div>
       <p>The troop count at a castle. Troops accumulate automatically from Recruitment infrastructure every tick. Garrison is the first line of defense — high garrisons repel attacks even without a commander present.</p>
       <div class="help-hdr">Effective Influence</div>
-      <p>Each castle has an influence rating that reduces ${hl('infrastructure','infrastructure upgrade costs')}. Higher influence means cheaper upgrades. The Master of Laws council seat increases effective influence.</p>
+      <p>Each castle has an influence rating that reduces ${hl('infrastructure','infrastructure upgrade costs')}. Higher influence means cheaper upgrades. The Master of Laws council seat raises effective influence across all your castles.</p>
       <div class="help-also">See also: ${hl('infrastructure','Infrastructure')} · ${hl('combat','Combat')} · ${hl('commanders','Commanders')}</div>`,
   },
 
   infrastructure: {
-    title: '💰 Infrastructure',
+    title: '🏗 Infrastructure',
     html: `
-      <p>Each castle has three infrastructure tracks. Upgrade them from the castle inspector panel or use the 💰 Bulk Upgrade tool in the toolbar.</p>
+      <p>Each castle has three infrastructure tracks. Upgrade them from the castle inspector panel or use the Bulk Upgrade tool in the toolbar.</p>
       <div class="help-hdr">💰 Treasury</div>
-      <p>Generates <strong>Gold</strong> every production cycle. Formula: <code>total_treasury × (10 + coin_level × 2)</code>. Total treasury is the sum of all your castles' gold levels. Master of Coin raises the multiplier by 2 per level — level 1 gives ×12, level 2 gives ×14, and so on.</p>
+      <p>Generates <strong>Gold</strong> every production cycle. Formula: <code>total_treasury × (10 + Coin×2)</code>. Total treasury is the sum of all your castles' treasury levels. Master of Coin raises the multiplier by 2 per level — level 1 gives ×12, level 2 gives ×14, and so on.</p>
       <div class="help-hdr">🛡 Recruitment</div>
-      <p>Generates <strong>Troops</strong> every tick via fractional accumulation. Each castle earns <code>recruitment × (Lord_Commander_level + 4) / cycle_length</code> troops per tick. Whole troops land as they accumulate; the fractional remainder carries to the next tick, so over a full cycle each castle produces exactly <code>recruitment × (Lord_Commander_level + 4)</code> troops total. Recruitment is processed at the start of each tick, before combat.</p>
+      <p>Generates <strong>Troops</strong> every tick via fractional accumulation. Each castle earns <code>recruitment × (Lord_Commander + 4) / cycle_length</code> troops per tick. Whole troops land as they accumulate; the fractional remainder carries forward, so over a full cycle each castle produces exactly <code>recruitment × (Lord_Commander + 4)</code> troops total. Recruitment is processed at the start of each tick, before combat.</p>
       <div class="help-hdr">★ Prestige</div>
-      <p>Generates <strong>Prestige</strong> every tick at a rate of <em>prestige_level</em> per castle per tick. Prestige flows automatically to your ${hl('council','Current Focus')} seat for training each tick. Grand Maester does <em>not</em> boost prestige income — instead it invests a fixed bonus into a random seat each production cycle (see Small Council).</p>
+      <p>Generates <strong>Prestige</strong> every tick at a rate of <em>prestige_level</em> per castle per tick. Prestige flows automatically toward your ${hl('council','Current Focus')} seat for training. Grand Maester does <em>not</em> boost prestige income — instead it invests a fixed bonus into a random seat each production cycle.</p>
       <div class="help-hdr">Upgrade Costs</div>
       <p>Cost to upgrade from level L to L+1:<br>
       Treasury: <code>500 × (L+1) / influence</code><br>
       Recruitment: <code>1000 × (L+1) / influence</code><br>
-      Prestige: <code>4000 × (L+1) / influence</code></p>
-      <p>Higher effective influence means cheaper upgrades. The ${hl('council','Master of Laws')} seat increases influence at every owned castle.</p>
-      <div class="help-callout">Tip — use the Realms → Castles tab to quickly see all your upgrade costs sorted by castle, and identify your best investments.</div>
+      Prestige: <code>4000 × (L+1) / influence</code><br>
+      Higher effective influence means cheaper upgrades. The ${hl('council','Master of Laws')} seat raises influence at every owned castle.</p>
+      <div class="help-callout">Tip — use the Realms → Castles tab to see all your upgrade costs sorted by castle and identify the best investments.</div>
       <div class="help-also">See also: ${hl('castles','Castles')} · ${hl('council','Small Council')} · ${hl('winning','Winning')}</div>`,
   },
 
   commanders: {
-    title: '⚔ Commanders',
+    title: '🗡 Commanders',
     html: `
       <p>Commanders are your field generals. They move troops between castles and lead armies in battle.</p>
       <div class="help-hdr">Recruiting</div>
-      <p>Open any castle you own and tap Recruit. Commanders cost gold (higher levels cost more) and are drawn from a pool of named characters. Each commander has a level from 1 to 5.</p>
+      <p>Open any castle you own and tap Recruit. Commanders are drawn from a pool of named characters and start at level 1. They gain experience through combat and can reach up to <strong>level 10</strong> — progressing from Sworn Sword through Ser, Knight, Champion, and Lord Commander, up to the rare rank of Legend.</p>
       <div class="help-hdr">Moving</div>
-      <p>Tap a commander, then tap a destination castle. A gold ring shows valid march targets. The commander takes troops from their current castle's garrison and marches — base travel speed is 17.5 leagues per tick, scaled by the game's speed setting. If both origin and destination have a ${hl('kings_road','Kings Road')}, march speed is tripled (×3). The ${hl('council','Master of Horses')} seat controls maximum march range.</p>
+      <p>Tap a commander, then tap a destination castle. A gold ring shows valid march targets within your range. The commander takes troops from their current castle's garrison and marches — base speed is <strong>17.5 leagues per tick</strong> at normal game speed (scaled by the game's speed multiplier). The ${hl('council','Master of Horses')} seat controls maximum march range. If both the origin and destination have a ${hl('kings_road','Kings Road')}, march speed is tripled (×3).</p>
       <div class="help-hdr">March Type</div>
-      <p>When marching to an enemy castle you can choose <strong>Assault</strong> (default — fights the garrison immediately on arrival) or <strong>Siege</strong> (takes up position outside the walls and begins a siege). Set this in the Send Forces dialog or via the waypoint action in a route.</p>
+      <p>When marching to an enemy castle you can choose <strong>Assault</strong> (fights the garrison immediately on arrival) or <strong>Siege</strong> (takes up position outside the walls). Set this in the Send Forces dialog or via the waypoint action in a route.</p>
       <div class="help-hdr">Commander Level</div>
-      <p>Each commander level adds a ×(1 + level×0.1) multiplier to attack strength. The ${hl('council','Hand of the King')} seat adds a second independent multiplier of ×(1 + Hand×0.1) — both multiply together, so the combined bonus compounds rather than adds.</p>
+      <p>Each commander level adds a ×(1 + level×0.1) multiplier to attack strength. The ${hl('council','Hand of the King')} seat adds a second independent multiplier of ×(1 + Hand×0.1) — both terms multiply together, so the bonus compounds.</p>
       <div class="help-hdr">Routes</div>
-      <p>Assign a commander a multi-stop patrol route — either a one-way trip or a repeating loop. Each waypoint has an action: collect gold, deposit troops, garrison, wait, and more. For enemy castle waypoints the available actions are <strong>Assault (default)</strong> and <strong>Siege</strong>.</p>
-      <div class="help-hdr">Siege Status</div>
-      <p>A commander who begins a siege enters <em>Sieging</em> status at the target castle. Their detail panel shows siege progress and, after one full production cycle, a <strong>Break Siege &amp; Assault</strong> button. See ${hl('siege','Siege')} for full mechanics.</p>
+      <p>Assign a commander a multi-stop patrol route — either a one-way trip or a repeating loop. Each waypoint has an action: collect gold, deposit troops, garrison, wait, and more. Enemy castle waypoints offer Assault or Siege.</p>
       <div class="help-hdr">Death</div>
       <p>A commander who loses a battle is permanently lost along with all their troops. There is no revival — recruit a replacement.</p>
-      <div class="help-callout">Tip — keep a high-level commander in your seat castle to boost its defense rating.</div>
+      <div class="help-callout">Tip — keep a high-level commander in your seat castle at all times. Their level bonus applies to defense as well as attack.</div>
       <div class="help-also">See also: ${hl('combat','Combat')} · ${hl('siege','Siege')} · ${hl('kings_road','Kings Road')} · ${hl('council','Hand of the King')}</div>`,
   },
 
@@ -13740,83 +13915,81 @@ const HELP_ARTICLES = {
       Defense strength: <code>garrison × (1 + def_cmd×0.1) × 1.20</code></p>
       <p>If the attacker wins, survivors capture the castle. If the defender wins, the attacking commander and all their troops are destroyed.</p>
       <div class="help-hdr">Open-Field Battle</div>
-      <p>Two armies meeting outside castle walls — during a sally, a relief mission, or when enemies clash over an active siege — fight in the open with no castle bonus for either side. Initiative (who fires first) goes to the side with the higher ${hl('council','Master of Whisperers')} level; ties favor the defender. The losing commander is destroyed; the winner continues with surviving troops.</p>
+      <p>Two armies meeting outside castle walls — during a sally, a relief mission, or when enemies clash over an active siege — fight in the open with no castle bonus. Initiative (who fires first) goes to the side with the higher ${hl('council','Master of Whisperers')} level; ties favor the defender. The losing commander is destroyed; the winner continues with surviving troops.</p>
       <div class="help-hdr">Sieges</div>
       <p>Instead of assaulting, a commander can ${hl('siege','besiege')} a castle — surrounding it to bleed troops and damage infrastructure each cycle, then assault when the garrison is weakened.</p>
       <div class="help-hdr">Reports</div>
-      <p>Every battle produces a dispatch in the ${hl('rookery','Rookery')} for both sides. Reports include exact troop counts, damage per round, and survivor counts.</p>
-      <div class="help-callout">Use the ⚔ War Calculator in the toolbar to model assault and open-field outcomes before committing.</div>
+      <p>Every battle produces a combat dispatch in the ${hl('rookery','Rookery')} for both sides, with exact troop counts, damage per round, and survivor counts.</p>
+      <div class="help-callout">Use the ⚔ War Calculator in the toolbar to model assault and open-field outcomes before committing troops.</div>
       <div class="help-also">See also: ${hl('siege','Siege')} · ${hl('commanders','Commanders')} · ${hl('council','Hand of the King')} · ${hl('rookery','The Rookery')}</div>`,
   },
 
   rookery: {
-    title: 'The Rookery',
+    title: '🪶 The Rookery',
     html: `
-      <p>The Rookery is your communication center. Open it with the 🪶 button in the header. The button glows gold when you have unread messages.</p>
-      <div class="help-hdr">Tabs</div>
-      <p><strong>Dispatches</strong> — automatic game notifications: combat reports, production cycle summaries, diplomacy events, gold received, council level-ups, and knowledge shared. These are generated by the game, not by other players.<br>
-      <strong>The Hall</strong> — global chat visible to all houses. Use it to make public declarations, broker open deals, or exchange intelligence with the realm.<br>
-      <strong>Ravens</strong> — private messages between houses. Only you and the recipient can read them. Send a raven from any Diplomacy card using the Send Raven button.<br>
-      <strong>Whispers</strong> — intelligence reports surfaced by your Master of Whisperers. The higher your MoW level, the more frequent and accurate the reports. Whispers beyond your scan range carry a confidence percentage — your advisor's best estimate of how reliable the information is.</p>
-      <div class="help-hdr">Sending Ravens</div>
-      <p>Open the ${hl('diplomacy','Diplomacy')} panel and tap <em>Send Raven</em> on any house card. Up to 1,000 characters. There is no automated enforcement — your word is your bond.</p>
-      <div class="help-hdr">Whispers Confidence</div>
-      <p>Intelligence within your scan range is always accurate. For targets beyond scan range, confidence is tied to your MoW level: higher levels produce more reliable reports. Keep a log of past whispers to judge whether your Master of Whisperers is worth their seat.</p>
-      <div class="help-callout">Ravens are how you negotiate deals, form coalitions, and coordinate attacks. The Hall is where you make threats and proclamations the whole realm will witness.</div>
+      <p>The Rookery is your communication center. Access it from the sidebar navigation. The nav icon glows gold when you have unread messages.</p>
+      <div class="help-hdr">Dispatches</div>
+      <p>Automatic game notifications: combat reports, production cycle summaries, diplomacy events, gold received, council level-ups, and knowledge shared. Generated by the game, not by players.</p>
+      <div class="help-hdr">The Hall</div>
+      <p>Global chat visible to all houses. Use it to make public declarations, broker open deals, or exchange intelligence. The Hall also shows the <strong>Realm News</strong> feed — a running log of castle captures and war declarations visible to everyone in the game. These events are recorded automatically.</p>
+      <div class="help-hdr">Ravens</div>
+      <p>Private messages between houses. Only you and the recipient can read them. Send a raven from any player's house card (Leaderboard → name → raven icon). Up to 1,000 characters. There is no automated enforcement — your word is your bond.</p>
+      <div class="help-hdr">Whispers</div>
+      <p>Intelligence reports surfaced by your Master of Whisperers. Reports fire on an interval based on your MoW level — higher levels produce more frequent and more accurate dispatches. Whispers beyond your scan range carry a <strong>confidence percentage</strong> reflecting how reliable the source is. Confidence varies: combat reports are tighter (±15%), general briefings noisier (±25%).</p>
+      <div class="help-callout">Ravens are how you negotiate deals and coordinate attacks. The Hall is where threats and proclamations are witnessed by the entire realm.</div>
       <div class="help-also">See also: ${hl('diplomacy','Diplomacy')} · ${hl('trade','Trade')} · ${hl('council','Master of Whisperers')}</div>`,
   },
 
   council: {
     title: '⚜ Small Council',
     html: `
-      <p>Your Small Council is a set of seven advisor seats, each providing a unique domain-wide bonus. Level them through council training, funded by your Prestige infrastructure.</p>
+      <p>Your Small Council is a set of seven advisor seats, each providing a unique domain-wide bonus. Level them through training, funded by your Prestige infrastructure.</p>
       <div class="help-hdr">The Seven Seats</div>
-      <p><strong>Hand of the King</strong> — passive combat multiplier. Attack strength = <code>troops × (1 + commander×0.1) × (1 + Hand×0.1)</code>. Both terms multiply independently — high levels make outnumbered armies decisive.<br>
-      <strong>Master of Coin</strong> — gold per cycle = <code>total_treasury × (10 + Coin×2)</code>, where total_treasury is the sum of all your castles' treasury levels. Fires once per production cycle.<br>
-      <strong>Lord Commander</strong> — troops per cycle per castle = <code>recruitment × (Lord_Commander_level + 4)</code>. Accrues fractionally each tick — whole troops land as they accumulate, remainder carries forward.<br>
-      <strong>Master of Whisperers</strong> — castle scan radius = <code>90 + Whisperers×60</code> leagues. Whisper reports fire on an interval of <code>max(2, 8 − level)</code> ticks; combat catch rate = <code>min(90%, 5% + level×15%)</code>.<br>
-      <strong>Grand Maester</strong> — each production cycle invests <code>72 × level</code> prestige toward a random non-focus seat. There is no per-tick equivalent. Accelerates your whole council unpredictably.<br>
-      <strong>Master of Laws</strong> — effective influence per castle = <code>(Laws×5) + base_influence</code>. Refreshed each production cycle. Higher influence directly reduces all infrastructure upgrade costs.<br>
-      <strong>Master of Horses</strong> — march range = <code>90 + Horses×60</code> leagues (matches scan radius). Passive — applies to every movement. For ${hl('kings_road','Kings Road')} speed, see that article.</p>
+      <p><strong>Hand of the King</strong> — attack strength = <code>troops × (1 + commander×0.1) × (1 + Hand×0.1)</code>. Both multipliers compound — high levels make outnumbered armies decisive.<br>
+      <strong>Master of Coin</strong> — gold per cycle = <code>total_treasury × (10 + Coin×2)</code>. Fires once per production cycle.<br>
+      <strong>Lord Commander</strong> — troops per cycle per castle = <code>recruitment × (LC_level + 4)</code>. Accrues fractionally each tick.<br>
+      <strong>Master of Whisperers</strong> — scan radius = <code>90 + Whisperers×60</code> leagues. Whisper interval: <code>max(2, 8 − level)</code> ticks. Combat catch rate: <code>min(90%, 5% + level×15%)</code>.<br>
+      <strong>Grand Maester</strong> — each production cycle invests <code>72 × level</code> prestige toward a random non-focus seat. Accelerates your whole council unpredictably.<br>
+      <strong>Master of Laws</strong> — effective influence per castle = <code>(Laws×5) + base_influence</code>. Refreshed each production cycle. Higher influence reduces all upgrade costs.<br>
+      <strong>Master of Horses</strong> — march range = <code>90 + Horses×60</code> leagues. For ${hl('kings_road','Kings Road')} speed, see that article.</p>
       <div class="help-hdr">Training</div>
-      <p>Prestige generated by your castles flows automatically toward your <em>Current Focus</em> seat every tick — not just on production cycles. Training cost to advance from level N to N+1 is <strong>144 × N prestige</strong> (×council cost multiplier for the game). All seats start at level 1. There is no level cap — long games and Grand Maester compounding push seats far beyond what short games can reach. Progress resets to zero on each level-up.</p>
+      <p>Prestige flows toward your <em>Current Focus</em> seat every tick. Cost to advance from level N to N+1: <strong>144 × N prestige</strong> (×the game's council cost multiplier). All seats start at level 1. There is no level cap. Progress resets to zero on each level-up.</p>
       <div class="help-hdr">Next Focus</div>
-      <p>Set a <em>Next Focus</em> seat to queue your next training priority. Switch your focus manually at any time from the Council sidebar.</p>
+      <p>Set a <em>Next Focus</em> seat to queue your next training priority. The focus switches automatically when your current seat levels up.</p>
       <div class="help-hdr">Sharing</div>
-      <p>You can share your seat level with another player for <strong>25 gold × seat level</strong>. Their seat immediately advances to match yours. See the ${hl('trade','Trade')} article for details.</p>
-      <div class="help-callout">Tip — focus Hand of the King early for a combat edge during the land-grab phase. Grand Maester is valuable mid-game once you have castles generating steady prestige — its random bonus accelerates every other seat passively.</div>
+      <p>Share your seat level with an ally for <strong>25 gold × seat level</strong>. Their seat immediately advances to match yours. See the ${hl('trade','Trade')} article for details.</p>
+      <div class="help-callout">Tip — prioritize Hand of the King early for a combat edge during the land-grab phase. Grand Maester pays off mid-game once you have steady prestige income — it quietly accelerates every other seat in the background.</div>
       <div class="help-also">See also: ${hl('infrastructure','Prestige Infrastructure')} · ${hl('trade','Trade')} · ${hl('combat','Combat')}</div>`,
   },
 
   diplomacy: {
     title: '🤝 Diplomacy',
     html: `
-      <p>Every pair of houses has a diplomatic status: <strong>Neutral</strong>, <strong>Allied</strong>, or <strong>At War</strong>. Set it from a player's profile page (Leaderboard → 👁).</p>
-      <div class="help-hdr">Neutral</div>
-      <p>The default state. You may still attack each other — diplomacy is a declaration of intent, not a technical lock.</p>
+      <p>Every pair of houses is either <strong>Allied</strong>, in a <strong>Grace Period</strong>, or <strong>At War</strong>. There is no neutral state — houses that have not formed an alliance are considered at war by default. Manage it from a player's house card (Leaderboard → name).</p>
       <div class="help-hdr">Formal Alliance</div>
-      <p>Both sides are marked as allied. Alliance is currently a declaration of trust — allied forces will eventually share fog-of-war scanning data. Useful for coordinating attacks on shared enemies via ${hl('rookery','ravens')}.</p>
+      <p>Both sides are marked as allied. Allied players <strong>share fog-of-war vision</strong> — each ally's castle scan range extends your own visible territory. This is active immediately on both sides when an alliance is accepted. Useful for coordinating attacks on shared enemies via ${hl('rookery','ravens')}.</p>
+      <div class="help-hdr">Grace Period</div>
+      <p>When an alliance is broken, a <strong>24-tick grace period</strong> begins before full war status applies. Both sides can see each other's vision during this window and know a betrayal is coming — use the time to reposition. After 24 ticks the status becomes At War.</p>
       <div class="help-hdr">At War</div>
-      <p>War declaration is immediate and visible to both sides. It is a statement that hostilities are ongoing and expected. Mechanically identical to Neutral for now, but signals your intent to all players who can see your diplomacy status.</p>
-      <div class="help-hdr">Changing Status</div>
-      <p>Any player can change the status at any time. The change is bidirectional — if you declare war on someone, their status toward you also becomes At War.</p>
-      <div class="help-callout">Diplomacy is an honor system. An ally can still stab you in the back. Trust is earned through the ${hl('trade','Ledger')} and consistent behavior.</div>
-      <div class="help-also">See also: ${hl('trade','Trade')} · ${hl('rookery','The Rookery')}</div>`,
+      <p>The default state between any two houses that have not formed an alliance. Armies attack freely, castles can be besieged, and there is no protection. War declarations are visible to all players via the Realm News feed in The Hall.</p>
+      <div class="help-hdr">Proposing &amp; Accepting</div>
+      <p>Alliances require both sides to agree — propose from a player's house card and wait for them to accept. Breaking an alliance (declaring war) is unilateral. The status change is always bidirectional.</p>
+      <div class="help-callout">Diplomacy is an honor system. An ally can still stab you in the back — the grace period is the only protection. Trust is earned through the ${hl('trade','Ledger')} and consistent behavior over time.</div>
+      <div class="help-also">See also: ${hl('trade','Trade')} · ${hl('rookery','The Rookery')} · ${hl('winning','Winning')}</div>`,
   },
 
   trade: {
-    title: '💰 Trade',
+    title: '🪙 Trade',
     html: `
       <p>Trade is how houses cooperate and create mutual obligations. All trade is voluntary and honor-based — there is no enforcement mechanism.</p>
       <div class="help-hdr">Sharing Council Training</div>
-      <p>From any player's profile (Leaderboard → 👁 → Trade section), you can share your level in any council seat where you are ahead of them. Cost: <strong>25 gold × seat level</strong>. Their seat immediately advances to match yours.</p>
+      <p>From any player's house card (Leaderboard → name → Trade section), share your level in any council seat where you are ahead of them. Cost: <strong>25 gold × seat level</strong>. Their seat immediately advances to match yours.</p>
       <p>Example: your Coin is Level 3, theirs is Level 1. Sharing costs you 75 gold and raises their Coin to Level 3.</p>
       <div class="help-hdr">Sending Gold</div>
-      <p>Direct gold transfer to any player. Instant, no conditions. Commonly used to repay trade debts.</p>
+      <p>Direct gold transfer to any player. Instant, no conditions. Commonly used to fund an ally's expansion or repay a trade debt.</p>
       <div class="help-hdr">The Ledger</div>
-      <p>Every trade is automatically logged in the Ledger (left nav). When you spend gold helping someone, it appears as a debt they owe you. When they send you gold, it offsets that debt.</p>
-      <p>From the Ledger you can <strong>Pay</strong> (send gold to settle your debts) or <strong>Forgive</strong> (write off a debt owed to you). The net balance per house is shown in green (owed to you) or red (you owe them).</p>
-      <div class="help-callout">There is no escrow, no automated payment, and no contract enforcement. A deal is made via ${hl('rookery','ravens')} and completed on trust. The Ledger exists so neither side can claim ignorance of the balance.</div>
+      <p>Every trade is automatically logged in the Ledger (left nav). When you spend gold helping someone, it appears as a debt they owe you. When they send you gold, it offsets that debt. From the Ledger you can <strong>Pay</strong> (send gold to settle a debt) or <strong>Forgive</strong> (write off a debt owed to you). The net balance per house is shown in green (owed to you) or red (you owe them).</p>
+      <div class="help-callout">There is no escrow, no automated payment, and no contract enforcement. Deals are made via ${hl('rookery','ravens')} and completed on trust. The Ledger exists so neither side can claim ignorance of the balance.</div>
       <div class="help-also">See also: ${hl('council','Small Council')} · ${hl('diplomacy','Diplomacy')} · ${hl('rookery','The Rookery')}</div>`,
   },
 
@@ -13825,7 +13998,7 @@ const HELP_ARTICLES = {
     html: `
       <p>The Intel screen charts every player's statistics over time, giving you a historical view of who is growing fastest and where.</p>
       <div class="help-hdr">Snapshots</div>
-      <p>A snapshot of all player stats is automatically recorded at each production cycle (every 12 ticks). The chart grows as the game progresses — early game will have few data points.</p>
+      <p>A snapshot of all player stats is recorded automatically at each <strong>production cycle</strong>. The chart grows as the game progresses — early game will have few data points. Production cycle length depends on the game setup (Standard: every 24 ticks).</p>
       <div class="help-hdr">Variables</div>
       <p>Use the dropdown to choose what the Y-axis shows:<br>
       <strong>Territory:</strong> Total Castles, Total Troops, Total Commanders<br>
@@ -13833,44 +14006,44 @@ const HELP_ARTICLES = {
       <strong>Council:</strong> One track per seat level</p>
       <div class="help-hdr">Player Toggles</div>
       <p>The colored circles at the bottom correspond to each house. Click any circle to toggle that player's line on or off. Use <strong>All</strong> or <strong>None</strong> as shortcuts.</p>
-      <div class="help-callout">Tip — a steeply rising Castles line is the clearest signal of a runaway leader. Act early before they reach the 50% win threshold.</div>
-      <div class="help-also">See also: ${hl('winning','Winning')} · ${hl('houses','Houses tab')}</div>`,
+      <div class="help-callout">Tip — a steeply rising Castles line is the clearest signal of a runaway leader. Act early — a coalition is far easier to form before one house dominates the map.</div>
+      <div class="help-also">See also: ${hl('winning','Winning')} · ${hl('diplomacy','Diplomacy')}</div>`,
   },
 
   winning: {
     title: '👑 Winning',
     html: `
-      <p>The first house to control <strong>more than 50% of all castles</strong> simultaneously wins the game.</p>
-      <div class="help-hdr">Win Condition</div>
-      <p>With 188 castles on the board, you need to hold at least <strong>95 castles</strong> at the same time. The win is checked continuously — the moment you cross the threshold you win, even mid-tick.</p>
+      <p>The first house to control enough castles simultaneously wins the game. The exact threshold is set when the game is created.</p>
+      <div class="help-hdr">Victory Threshold</div>
+      <p>The required castle count is shown in the Leaderboard header — it varies by game setup. Standard games require <strong>50%</strong> of all castles (roughly 94 of 188). Quick games use 25%; Epic games 66%. The win is checked continuously — the moment you cross the threshold you win, even mid-tick.</p>
       <div class="help-hdr">Elimination</div>
       <p>A house with zero castles is eliminated. Eliminated players cannot take further actions. Their territory is unowned and open for anyone to claim.</p>
+      <div class="help-hdr">Conceding</div>
+      <p>You can concede defeat from the bottom of the Leaderboard panel. All your castles are released and your commanders disbanded. This cannot be undone.</p>
       <div class="help-hdr">Strategy</div>
-      <p>Fast expansion through neutral castles early. Secure key ${hl('infrastructure','Treasury and Recruitment')} upgrades at your best castles. Use the ${hl('council','Hand of the King')} to punch above your weight in combat. Forge alliances — then break them at the right moment.</p>
-      <p>Watch the ${hl('intel','Intel chart')} for Castles over time. A house approaching 80 castles is a threat to everyone. Coordinate with other players via ${hl('rookery','ravens')} before it is too late.</p>
+      <p>Expand through neutral castles early. Secure key ${hl('infrastructure','Treasury and Recruitment')} upgrades at your best castles. Use the ${hl('council','Hand of the King')} to punch above your weight in combat. Forge alliances early — then break them at the right moment.</p>
+      <p>Watch the ${hl('intel','Intel chart')} for Castles over time. A house approaching the threshold is a threat to everyone. Coordinate via ${hl('rookery','ravens')} before it is too late.</p>
       <div class="help-callout">"When you play the game of thrones, you win or you die." — there is no second place.</div>
       <div class="help-also">See also: ${hl('combat','Combat')} · ${hl('diplomacy','Diplomacy')} · ${hl('intel','Intel')}</div>`,
   },
 
   siege: {
-    title: '🏰 Siege',
+    title: '🏯 Siege',
     html: `
       <p>Sieges let you surround an enemy castle and apply sustained pressure without risking a direct assault. They work best when the garrison is too strong to storm head-on.</p>
       <div class="help-hdr">Starting a Siege</div>
-      <p>When sending forces to an enemy castle, choose <strong>Siege</strong> in the Send Forces dialog (instead of Assault). In a route, set the waypoint action to <strong>Siege</strong> for any enemy castle stop. The commander marches as normal but takes up position outside the walls on arrival, entering <em>Sieging</em> status.</p>
-      <div class="help-hdr">Siege Effects (per tick)</div>
-      <p>The besieged garrison loses <strong>3% of its troops</strong> every tick to attrition — starvation and desertion. Each production cycle, one random infrastructure track (Treasury, Recruitment, or Prestige) takes <strong>−1 level</strong> of damage. A long siege can cripple a castle's economy before you ever assault it.</p>
+      <p>When sending forces to an enemy castle, choose <strong>Siege</strong> in the Send Forces dialog instead of Assault. In a route, set the waypoint action to Siege for any enemy castle stop. The commander marches normally but takes up position outside the walls on arrival, entering <em>Sieging</em> status.</p>
+      <div class="help-hdr">Siege Effects</div>
+      <p>Each tick the besieged garrison loses <strong>3% of its troops</strong> to attrition — starvation and desertion. Each production cycle, one random infrastructure track (Treasury, Recruitment, or Prestige) takes <strong>−1 level</strong> of damage. A sustained siege can cripple a castle's economy before you ever assault it.</p>
       <div class="help-hdr">Break Siege &amp; Assault</div>
-      <p>After at least one full production cycle has elapsed, the <strong>Break Siege &amp; Assault</strong> button appears in the besieging commander's detail panel. The assault uses the normal castle formula — the defender still gets +20% and fires first, but by now the garrison should be weakened. Use the ⚔ War Calculator to check the numbers before committing.</p>
+      <p>After at least one full production cycle, the <strong>Break Siege &amp; Assault</strong> button appears in the besieging commander's panel. The assault uses the normal castle formula — the defender still gets +20% and fires first, but the garrison should be significantly weakened by now. Use the ⚔ War Calculator to check the numbers first.</p>
       <div class="help-hdr">Sally Out</div>
-      <p>The besieged player can tap <strong>Sally Out</strong> from their castle panel to send the garrison to fight in the open. Neither side gets a castle bonus — it is a pure open-field battle decided by troop counts and ${hl('council','Master of Whisperers')} initiative. If the garrison wins, the siege is lifted and the siege commander is destroyed. If the garrison loses, the surviving defenders return inside and the siege continues.</p>
+      <p>The besieged player can tap <strong>Sally Out</strong> to send their garrison into the open. Neither side gets a castle bonus — it is a pure open-field battle decided by troop counts and ${hl('council','Master of Whisperers')} initiative. A successful sally destroys the siege commander and lifts the siege.</p>
       <div class="help-hdr">Relief Armies</div>
-      <p>Send a friendly army to a besieged castle and your troops will fight the siege commander in the open (no castle bonus, Whisperers initiative). If your relief force wins, the siege is lifted and your troops garrison the castle. If it loses, your commander is destroyed and the siege continues uninterrupted.</p>
+      <p>March friendly troops to a besieged castle and they fight the siege commander in the open (no castle bonus). A successful relief force lifts the siege and garrisons the castle.</p>
       <div class="help-hdr">Reinforcing Your Own Siege</div>
-      <p>March additional troops to a castle where you already have a commander sieging — the incoming troops merge into the siege force with no battle. Use this to build up siege strength before ordering the final assault.</p>
-      <div class="help-hdr">Enemy Breaks Your Siege</div>
-      <p>If an enemy army arrives at a castle you are besieging, they fight your siege commander in the open first. If they win, the castle's garrison then faces them in a normal assault (castle bonus applies). Your siege commander must survive the open-field fight or the whole siege collapses.</p>
-      <div class="help-callout">Tip — siege infantry-heavy castles with strong garrisons rather than attacking head-on. Two or three cycles of 3% bleed can cut a 200-troop garrison to 130 before you even assault.</div>
+      <p>Additional troops marched to a castle you are already besieging merge into your siege force with no battle — useful for building strength before the final assault.</p>
+      <div class="help-callout">Tip — two or three production cycles of 3% bleed can cut a 200-troop garrison to around 130 before you assault. Pair with a relief denial strategy to stop the defender calling for help.</div>
       <div class="help-also">See also: ${hl('combat','Combat')} · ${hl('commanders','Commanders')} · ${hl('rookery','The Rookery')}</div>`,
   },
 
@@ -13879,14 +14052,14 @@ const HELP_ARTICLES = {
     html: `
       <p>The Kings Road is a strategic infrastructure project that dramatically accelerates march speed between connected castles.</p>
       <div class="help-hdr">Building</div>
-      <p>Open any castle you own and tap <strong>Build Kings Road</strong> in the castle inspector. The cost is fixed gold based on the castle's influence rating. You can also <strong>Demolish</strong> a road you already built from the same panel. Castles with an active Kings Road show a gold glow and a small gold badge on the map marker.</p>
+      <p>Open any castle you own and tap <strong>Build Kings Road</strong> in the castle inspector. Cost is based on the castle's influence rating. You can also <strong>Demolish</strong> a road from the same panel. Castles with an active Kings Road show a gold badge on their map marker.</p>
       <div class="help-hdr">Speed Bonus</div>
-      <p>When a march departs a castle <em>with</em> Kings Road and the destination <em>also</em> has Kings Road, march speed is exactly <strong>3×</strong> the base rate — 52.5 leagues per tick at normal game speed. The bonus applies to every leg of a route: both the initial dispatch and every waypoint continuation.</p>
+      <p>When a march departs a castle <em>with</em> Kings Road and the destination <em>also</em> has Kings Road, march speed is exactly <strong>3×</strong> the base rate — 52.5 leagues per tick at normal game speed. The bonus applies to every leg of a multi-stop route.</p>
       <div class="help-hdr">Both Ends Required</div>
-      <p>The speed bonus only activates when <strong>both</strong> the origin and destination castle have Kings Road. A road at one end does nothing on its own. Build roads along your key corridors — seat castle to front-line castles — to create rapid reinforcement lanes.</p>
+      <p>The speed bonus only activates when <strong>both</strong> the origin and destination castle have Kings Road. A single road at one end does nothing on its own. Build roads along key corridors — seat castle to front-line castles — to create rapid reinforcement lanes.</p>
       <div class="help-hdr">Strategic Use</div>
-      <p>Kings Road pays off most on high-traffic corridors that you use for repeated reinforcement or rapid strikes. The Ruler tool accounts for Kings Road speed automatically when measuring distances between two road-connected castles.</p>
-      <div class="help-callout">Tip — build Kings Road on your seat castle first, then extend it outward along your main expansion axis. One well-placed road corridor can let a relief army arrive before a siege is even established.</div>
+      <p>Kings Road pays off most on high-traffic corridors used for repeated reinforcement or rapid strikes. The 📏 Ruler tool shows Kings Road speed automatically when both ends are connected.</p>
+      <div class="help-callout">Tip — build Kings Road on your seat castle first, then extend it outward along your main expansion axis. A well-placed corridor can get a relief army to a besieged castle before the first production cycle ends.</div>
       <div class="help-also">See also: ${hl('commanders','Commanders')} · ${hl('council','Master of Horses')} · ${hl('map','The Map')}</div>`,
   },
 };
@@ -13894,15 +14067,15 @@ const HELP_ARTICLES = {
 const HELP_TOC = [
   { id: 'map',            label: '🗺 The Map'         },
   { id: 'castles',        label: '🏰 Castles'         },
-  { id: 'infrastructure', label: '💰 Infrastructure'  },
-  { id: 'commanders',     label: '⚔ Commanders'       },
+  { id: 'infrastructure', label: '🏗 Infrastructure'  },
+  { id: 'commanders',     label: '🗡 Commanders'      },
   { id: 'combat',         label: '⚔ Combat'           },
-  { id: 'siege',          label: '🏰 Siege'           },
+  { id: 'siege',          label: '🏯 Siege'           },
   { id: 'kings_road',     label: '🛤 Kings Road'      },
-  { id: 'rookery',        label: 'The Rookery'         },
+  { id: 'rookery',        label: '🪶 The Rookery'     },
   { id: 'council',        label: '⚜ Small Council'    },
   { id: 'diplomacy',      label: '🤝 Diplomacy'       },
-  { id: 'trade',          label: '💰 Trade'           },
+  { id: 'trade',          label: '🪙 Trade'           },
   { id: 'intel',          label: '📊 Intel'           },
   { id: 'winning',        label: '👑 Winning'         },
 ];
@@ -14027,16 +14200,15 @@ el.confirmBulkUpgrade.addEventListener('click', async () => {
   el.confirmBulkUpgrade.disabled = true;
   try {
     const { data, error } = await supabase.rpc('bulk_upgrade_infrastructure', {
-      p_game_id: state.activeGame.id,
-      p_type:    type,
-      p_budget:  budget,
+      p_game_id:    state.activeGame.id,
+      p_infra_type: type,
+      p_budget:     budget,
     });
     if (error) throw error;
-    if (data.upgrade_count === 0) {
+    if (data.upgraded === 0) {
       toast('No affordable upgrades found within budget', true);
     } else {
-      const names = data.upgrades.map(u => `${u.name} → Lv${u.new_level}`).join(', ');
-      toast(`${data.upgrade_count} upgrade${data.upgrade_count > 1 ? 's' : ''}: ${names} (spent ${data.total_spent} gold)`);
+      toast(`${data.upgraded} upgrade${data.upgraded > 1 ? 's' : ''} applied (spent ${data.spent} gold)`);
       el.bulkUpgradeModal.classList.remove('open');
       await refreshGameState(state.activeGame.id);
     }
@@ -14077,7 +14249,7 @@ function runWarCalcNow() {
       result = `<div class="wc-lose">DEFENDER WINS — ${survive} defender${survive !== 1 ? 's' : ''} survive</div>`;
     } else {
       const survive = Math.max(1, atkTroops - rD * defDmg);
-      result = `<div class="wc-win">⚔ ATTACKER WINS — ${survive} troop${survive !== 1 ? 's' : ''} survive</div>`;
+      result = `<div class="wc-win">ATTACKER WINS — ${survive} troop${survive !== 1 ? 's' : ''} survive</div>`;
     }
   } else {
     // Open field — initiative (Whisperers level) determines who fires first
@@ -14086,7 +14258,7 @@ function runWarCalcNow() {
       const surviveLo = Math.max(1, atkTroops - rD * defDmg);
       const surviveHi = Math.max(1, atkTroops - (rD - 1) * defDmg);
       const label = surviveLo === surviveHi ? `${surviveLo} troop${surviveLo !== 1 ? 's' : ''}` : `${surviveLo}–${surviveHi} troops`;
-      result = `<div class="wc-win">⚔ ATTACKER WINS — ${label} survive</div>`;
+      result = `<div class="wc-win">ATTACKER WINS — ${label} survive</div>`;
     } else if (rA < rD) {
       // Defender wins regardless
       const surviveLo = Math.max(1, defTroops - rA * atkDmg);
@@ -14118,20 +14290,84 @@ el.runWarCalc.addEventListener('click', runWarCalcNow);
 });
 
 // =====================================================
-// TOOLBAR: REFRESH (replaces header button)
+// TOOLBAR: ARMY OVERVIEW
 // =====================================================
-el.toolRefresh.addEventListener('click', async () => {
-  if (!state.activeGame) return;
-  el.toolRefresh.style.opacity = '0.5';
-  try {
-    const result = await processTicks(state.activeGame.id, { quiet: false });
-    if (result && result.pending_ticks > 0) {
-      await refreshGameState(state.activeGame.id);
-      await checkWinCondition();
-    } else if (result) toast('Up to date — no new ticks.');
-  } finally {
-    el.toolRefresh.style.opacity = '';
-  }
+let _armyOverviewPopover = null;
+function _closeArmyOverview() {
+  if (_armyOverviewPopover) { _armyOverviewPopover.remove(); _armyOverviewPopover = null; }
+  document.removeEventListener('click', _closeArmyOverview);
+}
+el.toolArmyOverview.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (_armyOverviewPopover) { _closeArmyOverview(); return; }
+
+  const me = state.currentPlayer;
+  if (!me) return;
+
+  const myCmds = (state.commanders || []).filter(c => c.owner_player_id === me.id && c.status !== 'dead');
+  const tick = state.activeGame?.current_tick ?? 0;
+  const speed = state.activeGame?.tick_speed ?? 'normal';
+
+  const marching = myCmds.filter(c => c.status === 'moving' || c.status === 'sieging');
+  const idle     = myCmds.filter(c => c.status === 'idle');
+
+  const marchRows = marching.map(cmd => {
+    const mov = (state.movements || []).find(m => m.commander_id === cmd.id);
+    const dest = mov ? (state.castles.find(c => c.slug === mov.to_castle_slug)?.name ?? mov.to_castle_slug) : '?';
+    const remaining = mov ? Math.max(0, mov.arrives_at_tick - tick) : 0;
+    const eta = remaining > 0 ? formatDuration(remaining, speed) : 'Arriving';
+    const statusLabel = cmd.status === 'sieging' ? 'Sieging' : 'Marching';
+    const statusColor = cmd.status === 'sieging' ? 'var(--error)' : 'var(--accent)';
+    return `<div class="prod-popover-row" style="cursor:pointer;" data-cmd-id="${cmd.id}">
+      <span class="ppr-castle" style="flex:none;min-width:0;max-width:110px;">${escapeHtml(cmd.name)}</span>
+      <span style="font-size:10px;color:${statusColor};flex-shrink:0;margin:0 4px;">${statusLabel}</span>
+      <span class="ppr-val" style="font-size:11px;color:var(--text-muted);font-weight:400;">${escapeHtml(dest)} · ${eta}</span>
+    </div>`;
+  }).join('');
+
+  const idleRows = idle.map(cmd => {
+    const gc = cmd.current_castle_slug ? state.gameCastles.find(g => g.castle_slug === cmd.current_castle_slug) : null;
+    const castleName = cmd.current_castle_slug ? (state.castles.find(c => c.slug === cmd.current_castle_slug)?.name ?? cmd.current_castle_slug) : 'Unknown';
+    const troops = cmd.troops > 0 ? cmd.troops : (gc?.troops ?? 0);
+    return `<div class="prod-popover-row" style="cursor:pointer;" data-cmd-id="${cmd.id}">
+      <span class="ppr-castle">${escapeHtml(cmd.name)}</span>
+      <span style="font-size:10px;color:var(--text-muted);flex-shrink:0;margin:0 4px;">Idle</span>
+      <span class="ppr-val" style="font-size:11px;color:var(--text-muted);font-weight:400;">${escapeHtml(castleName)} · ${troops}t</span>
+    </div>`;
+  }).join('');
+
+  const empty = `<div style="font-size:12px;color:var(--text-muted);padding:4px 0;font-style:italic;">No commanders</div>`;
+
+  const p = document.createElement('div');
+  p.className = 'prod-popover';
+  p.style.cssText = 'min-width:280px;max-width:340px;';
+  p.innerHTML = `
+    ${marching.length ? `<div class="prod-popover-title">In the Field</div>${marchRows}` : ''}
+    ${idle.length ? `<div class="prod-popover-title" style="margin-top:${marching.length?'10px':'0'};">At Garrison</div>${idleRows}` : ''}
+    ${!myCmds.length ? empty : ''}
+    <div class="prod-popover-total" style="font-size:11px;">
+      <span>${myCmds.length} commander${myCmds.length !== 1 ? 's' : ''}</span>
+      <span>${marching.length} marching · ${idle.length} idle</span>
+    </div>`;
+
+  const rect = el.toolArmyOverview.getBoundingClientRect();
+  p.style.position = 'fixed';
+  p.style.top  = (rect.bottom + 6) + 'px';
+  p.style.left = rect.left + 'px';
+  document.body.appendChild(p);
+  _armyOverviewPopover = p;
+
+  p.querySelectorAll('[data-cmd-id]').forEach(row => {
+    row.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const cmdId = parseInt(row.dataset.cmdId);
+      _closeArmyOverview();
+      state.selectedCommanderId = cmdId;
+      renderCommanderDetail(cmdId);
+    });
+  });
+
+  setTimeout(() => document.addEventListener('click', _closeArmyOverview), 0);
 });
 
 // =====================================================
