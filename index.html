@@ -495,12 +495,14 @@
   .tb-cycle-block {
     display: flex; align-items: center; gap: clamp(5px, 0.6vw, 8px);
     background: var(--bg-elevated); border: 1px solid var(--border);
-    border-radius: 5px; padding: 5px clamp(6px, 0.8vw, 10px); flex-shrink: 0;
+    border-radius: 5px; padding: 7px clamp(8px, 0.9vw, 12px); flex-shrink: 0;
   }
-  .tb-cycle-block i { font-size: clamp(12px, 1vw, 14px); color: var(--text-muted); }
-  .tb-cycle-block span { font-size: clamp(12px, 1vw, 14px); color: var(--text); letter-spacing: .03em; }
+  .tb-cycle-block i { font-size: clamp(14px, 1.2vw, 18px); color: var(--accent); }
+  .tb-cycle-block span { font-size: clamp(14px, 1.1vw, 16px); color: var(--text); letter-spacing: .03em; }
   .tb-cycle-label { font-size: clamp(10px, 0.75vw, 11px); color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; line-height: 1; display: block; }
-  #cycleCountdown { font-family: 'Cinzel', Georgia, serif; font-size: clamp(12px, 1vw, 14px); color: var(--accent); font-weight: 700; line-height: 1.2; display: block; }
+  .tb-stack .tb-num { font-family: 'Cinzel', Georgia, serif; font-size: clamp(15px, 1.3vw, 19px); font-weight: 700; color: var(--accent); line-height: 1.1; display: block; }
+  .tb-stack .tb-rate { font-size: clamp(10px, 0.75vw, 11px); color: var(--text-muted); line-height: 1; display: block; }
+  #cycleCountdown { font-family: 'Cinzel', Georgia, serif; font-size: clamp(14px, 1.2vw, 17px); color: var(--accent); font-weight: 700; line-height: 1.2; display: block; }
   .tb-moon-svg {
     width: clamp(16px, 1.5vw, 22px); height: clamp(16px, 1.5vw, 22px); flex-shrink: 0;
     color: var(--accent);
@@ -538,7 +540,7 @@
     align-items: center;
     padding: 0 14px;
     gap: 14px;
-    min-height: 52px;
+    min-height: 64px;
   }
   .header-brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .header .title {
@@ -625,12 +627,12 @@
     flex-direction: column;
   }
   .section-title {
-    font-size: 13px;
+    font-size: 15px;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-muted);
-    margin-bottom: 10px;
-    margin-top: 18px;
+    margin-bottom: 12px;
+    margin-top: 22px;
   }
   .section-title:first-of-type { margin-top: 0; }
   .section-title .actions { float: right; }
@@ -1032,9 +1034,9 @@
   .info-row {
     display: flex;
     justify-content: space-between;
-    padding: 6px 0;
+    padding: 9px 0;
     border-bottom: 1px solid var(--border);
-    font-size: 12px;
+    font-size: 14px;
   }
   .info-row .label { color: var(--text-muted); }
   .info-row .value { color: var(--text); font-weight: 500; }
@@ -1282,12 +1284,12 @@
   }
   .inbox-tab {
     flex: 1;
-    padding: 11px 8px;
+    padding: 13px 8px;
     border: none;
     background: transparent;
     color: var(--text-muted);
     font-family: inherit;
-    font-size: 13px;
+    font-size: 15px;
     cursor: pointer;
     border-bottom: 2px solid transparent;
     transition: all 0.1s;
@@ -1342,20 +1344,20 @@
   .inbox-msg.unread .msg-read-dot { background: var(--accent); }
   .msg-read-dot:hover { opacity: 0.7; }
   .inbox-msg-tick {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
     white-space: nowrap;
   }
   .inbox-msg-title {
     flex: 1;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
   }
   .inbox-msg-body {
     display: none;
-    padding: 0 14px 14px;
-    font-size: 13px;
-    line-height: 1.7;
+    padding: 0 16px 16px;
+    font-size: 15px;
+    line-height: 1.75;
     color: var(--text-muted);
     border-top: 1px solid var(--border);
     overflow-x: auto;
@@ -1442,14 +1444,14 @@
   #threadList { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
   .thread-item {
     background: var(--bg-elevated); border: 1px solid var(--border);
-    border-radius: 5px; padding: 10px 12px; cursor: pointer; transition: border-color .1s;
+    border-radius: 5px; padding: 13px 14px; cursor: pointer; transition: border-color .1s;
     display: flex; align-items: center; gap: 10px;
   }
   .thread-item:hover { border-color: var(--border-strong); }
   .thread-item.unread { border-left: 3px solid #9b6fd0; }
   .thread-item-body { flex: 1; min-width: 0; }
-  .thread-item-subject { font-size: 14px; font-weight: 500; }
-  .thread-item-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .thread-item-subject { font-size: 15px; font-weight: 500; }
+  .thread-item-meta { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
   .thread-delete-btn {
     flex-shrink: 0; background: none; border: none; color: var(--text-muted);
     font-size: 14px; cursor: pointer; padding: 2px 5px; border-radius: 3px;
@@ -1470,12 +1472,12 @@
   .tdel-yes:hover { background: var(--error); color: #fff; }
   .tdel-no:hover { background: var(--bg-elevated); }
   .thread-detail-header {
-    display: flex; align-items: center; gap: 10px; padding: 8px 10px;
-    border-bottom: 1px solid var(--border); flex-shrink: 0; font-size: 13px; font-weight: 500;
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    border-bottom: 1px solid var(--border); flex-shrink: 0; font-size: 15px; font-weight: 500;
   }
   .thread-back-btn {
     background: transparent; border: none; color: var(--accent);
-    cursor: pointer; font-size: 12px; font-family: inherit; flex-shrink: 0; padding: 0;
+    cursor: pointer; font-size: 14px; font-family: inherit; flex-shrink: 0; padding: 0;
   }
   .thread-back-btn:hover { text-decoration: underline; }
   .recipient-picker { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -1539,7 +1541,7 @@
     background: var(--bg-deep);
   }
   .section-back:hover { color: var(--text); }
-  .section-content { padding: clamp(8px, 0.8vw, 10px); overflow-y: auto; font-size: clamp(12px, 1vw, 14px); line-height: 1.6; }
+  .section-content { padding: clamp(10px, 0.9vw, 14px); overflow-y: auto; font-size: clamp(14px, 1.1vw, 16px); line-height: 1.65; }
 
   .section-back { 
     display: flex; align-items: center; justify-content: space-between;
@@ -1553,7 +1555,7 @@
   }
   .section-help-trigger:hover { color: var(--accent); border-color: var(--accent); }
   .settings-section { border:1px solid var(--border); border-radius:6px; padding:12px; margin-bottom:12px; }
-  .settings-section-title { font-size:13px; font-weight:700; letter-spacing:.08em; color:var(--accent); text-transform:uppercase; margin-bottom:12px; }
+  .settings-section-title { font-size:15px; font-weight:700; letter-spacing:.08em; color:var(--accent); text-transform:uppercase; margin-bottom:14px; }
   .form-row { display:flex; gap:10px; }
   .form-row .form-group { margin-bottom:8px; }
   .scan-ring {
@@ -1867,16 +1869,16 @@
   .scoreboard-rank.top3 { color:var(--row-color,var(--accent)); }
   .castle-bar-track { height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:7px;overflow:hidden; }
   .castle-bar-fill { height:100%;border-radius:2px;background:var(--row-color,var(--accent)); }
-  .dip-badge { font-size:9px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid;flex-shrink:0;white-space:nowrap; }
-  .scoreboard-row .name { font-size: 16px; font-weight: 700; font-family:'Cinzel',Georgia,serif; }
-  .scoreboard-row .meta { font-size: 13px; color: var(--text-muted); margin-top: 4px; font-family:'EB Garamond',Georgia,serif; }
-  .lb-sort-tabs { display:flex;gap:4px;padding:0 0 12px;justify-content:center; }
-  .lb-sort-tab { font-size:10px;font-family:'Cinzel',Georgia,serif;letter-spacing:.06em;text-transform:uppercase;padding:3px 12px;border-radius:3px;border:1px solid var(--border);background:none;color:var(--text-muted);cursor:pointer;transition:all .1s; }
+  .dip-badge { font-size:11px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;padding:3px 8px;border-radius:3px;border:1px solid;flex-shrink:0;white-space:nowrap; }
+  .scoreboard-row .name { font-size: 18px; font-weight: 700; font-family:'Cinzel',Georgia,serif; }
+  .scoreboard-row .meta { font-size: 14px; color: var(--text-muted); margin-top: 4px; font-family:'EB Garamond',Georgia,serif; }
+  .lb-sort-tabs { display:flex;gap:4px;padding:0 0 14px;justify-content:center; }
+  .lb-sort-tab { font-size:12px;font-family:'Cinzel',Georgia,serif;letter-spacing:.06em;text-transform:uppercase;padding:5px 14px;border-radius:3px;border:1px solid var(--border);background:none;color:var(--text-muted);cursor:pointer;transition:all .1s; }
   .lb-sort-tab.active { border-color:var(--accent);color:var(--accent);background:rgba(201,168,76,.08); }
-  .lb-stats { display:flex;align-items:baseline;gap:6px;margin-top:8px;flex-wrap:wrap; }
-  .lb-stat-val { font-family:'Cinzel',Georgia,serif;font-size:13px;font-weight:700; }
-  .lb-stat-label { color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em; }
-  .lb-sep { color:var(--border);font-size:11px;line-height:1; }
+  .lb-stats { display:flex;align-items:baseline;gap:8px;margin-top:10px;flex-wrap:wrap; }
+  .lb-stat-val { font-family:'Cinzel',Georgia,serif;font-size:15px;font-weight:700; }
+  .lb-stat-label { color:var(--text-muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em; }
+  .lb-sep { color:var(--border);font-size:13px;line-height:1; }
 
   /* Castle info in game mode */
   .castle-owner-bar {
@@ -1908,15 +1910,15 @@
     text-align: center;
   }
   .stat-cell .stat-label {
-    font-size: 11px;
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--text-muted);
   }
   .stat-cell .stat-value {
-    font-size: 16px;
+    font-size: 19px;
     font-weight: 600;
-    margin-top: 2px;
+    margin-top: 4px;
   }
   .stat-cell.gold .stat-value { color: var(--accent); }
   .stat-cell.industry .stat-value { color: #a04050; }
@@ -2372,11 +2374,11 @@
   .sidebar-nav-item {
     display:flex;
     align-items:center;
-    gap:clamp(10px, 1vw, 14px);
-    padding:clamp(10px, 1vh, 14px) clamp(12px, 1.3vw, 18px);
+    gap:clamp(12px, 1.1vw, 16px);
+    padding:clamp(13px, 1.2vh, 17px) clamp(14px, 1.4vw, 20px);
     cursor:pointer;
     font-family:'Cinzel',Georgia,serif;
-    font-size:clamp(12px, 1.1vw, 15px);
+    font-size:clamp(14px, 1.3vw, 17px);
     font-weight:600;
     letter-spacing:.05em;
     color:var(--text-muted);
@@ -2394,8 +2396,8 @@
     border-left-color:var(--accent) !important;
     background:rgba(201,168,76,.06) !important;
   }
-  .snav-icon { width:26px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .snav-icon svg { width:22px; height:22px; }
+  .snav-icon { width:30px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:20px; }
+  .snav-icon svg { width:24px; height:24px; }
   .sidebar-nav-divider { height:1px; background:linear-gradient(90deg,transparent,var(--border-gold),transparent); margin:10px 16px; }
 
   /* Section back button */
@@ -2732,19 +2734,19 @@
     background: var(--bg-elevated);
     overflow: hidden;
   }
-  .dip-card-inner { padding: 14px 14px 12px; }
-  .dip-divider { height:1px; background:var(--border); margin: 10px 0 8px; }
+  .dip-card-inner { padding: 16px 16px 14px; font-size: 14px; }
+  .dip-divider { height:1px; background:var(--border); margin: 12px 0 10px; }
   .dip-btn {
     font-family: 'Cinzel', Georgia, serif;
-    font-size: 9px; font-weight: 700; letter-spacing: .06em;
-    padding: 5px 10px; border-radius: 5px; cursor: pointer;
+    font-size: 11px; font-weight: 700; letter-spacing: .06em;
+    padding: 6px 12px; border-radius: 5px; cursor: pointer;
     border: 1px solid var(--border); background: var(--bg-deep);
     color: var(--text-muted); transition: all .15s; white-space: nowrap;
   }
   .dip-btn:hover:not(:disabled) { color: var(--text); border-color: var(--border-strong); }
   .dip-btn:disabled { opacity: .45; cursor: default; }
   .dip-btn.dip-primary {
-    font-size: 10px; padding: 7px 16px;
+    font-size: 12px; padding: 8px 18px;
     background: var(--bg-elevated); color: var(--text); border-color: var(--border-strong);
   }
   .dip-btn.dip-primary:hover { border-color: var(--accent); color: var(--accent); }
@@ -3300,21 +3302,23 @@
 
       <div class="tb-vsep"></div>
 
-      <div class="tb-stat-block">
+      <div class="tb-cycle-block">
         <i class="ti ti-coin" aria-hidden="true"></i>
-        <div class="tb-stat-vals">
-          <strong id="resourceGold">0</strong>
-          <span id="rateGold"></span>
+        <div class="tb-stack">
+          <span class="tb-cycle-label">Gold</span>
+          <span class="tb-num" id="resourceGold">0</span>
+          <span class="tb-rate" id="rateGold"></span>
         </div>
       </div>
 
       <div class="tb-vsep"></div>
 
-      <div class="tb-stat-block">
-        <i class="ti ti-shield-chevron" aria-hidden="true"></i>
-        <div class="tb-stat-vals">
-          <strong id="resourceTroops">0</strong>
-          <span id="rateTroops"></span>
+      <div class="tb-cycle-block">
+        <i class="ti ti-sword" aria-hidden="true"></i>
+        <div class="tb-stack">
+          <span class="tb-cycle-label">Troops</span>
+          <span class="tb-num" id="resourceTroops">0</span>
+          <span class="tb-rate" id="rateTroops"></span>
         </div>
       </div>
 
@@ -5070,10 +5074,11 @@ el.npPanelBack?.addEventListener('click', () => {
   state.selectedMovementId = null;
   renderMarkers();
   renderMovements();
-  if (_sidebarSection) {
-    renderSidebarSection(_sidebarSection);
+  if (_sidebarSection === 'player_detail') {
+    _sidebarSection = 'leaderboard';
+    renderSidebarSection('leaderboard');
   } else {
-    openPanel('Menu', false);
+    _sidebarSection = null;
     renderSidebarNav();
   }
 });
@@ -7448,9 +7453,9 @@ function renderWhispersPane() {
       : 'Your Master of Whisperers commands a vast network. Little escapes their notice.';
     el_list.innerHTML = `
       <div style="padding:28px 20px;text-align:center;color:var(--text-muted);line-height:1.7;">
-        <div style="font-size:22px;margin-bottom:10px;">👁</div>
-        <div style="color:var(--text);font-size:13px;font-weight:600;margin-bottom:8px;">Master of Whisperers — Level ${mowLv}</div>
-        <div style="font-size:12px;">${desc}</div>
+        <div style="font-size:28px;margin-bottom:12px;"><i class="ti ti-eye"></i></div>
+        <div style="color:var(--text);font-size:15px;font-weight:600;margin-bottom:10px;">Master of Whisperers — Level ${mowLv}</div>
+        <div style="font-size:14px;">${desc}</div>
       </div>`;
     return;
   }
@@ -7469,27 +7474,27 @@ function renderWhispersPane() {
     }[w.category] || w.category;
 
     return `
-      <div style="padding:14px 16px;border-bottom:1px solid var(--border);${!w.is_read ? 'background:rgba(180,140,60,0.04);' : ''}">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;${!w.is_read ? 'background:#C9A84C;' : 'opacity:0;'}"></span>
-          <span style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+      <div style="padding:16px 18px;border-bottom:1px solid var(--border);${!w.is_read ? 'background:rgba(180,140,60,0.04);' : ''}">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+          <span style="width:7px;height:7px;border-radius:50%;flex-shrink:0;${!w.is_read ? 'background:#C9A84C;' : 'opacity:0;'}"></span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
             color:${confColor};border:1px solid ${confColor}44;background:${confColor}14;
-            padding:2px 6px;border-radius:3px;flex-shrink:0;">${conf}% confidence</span>
-          <span style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">${catLabel}</span>
-          <span style="font-size:10px;color:var(--text-muted);margin-left:auto;flex-shrink:0;">Tick ${w.tick}</span>
+            padding:3px 8px;border-radius:3px;flex-shrink:0;">${conf}% confidence</span>
+          <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">${catLabel}</span>
+          <span style="font-size:11px;color:var(--text-muted);margin-left:auto;flex-shrink:0;">Tick ${w.tick}</span>
         </div>
-        <div style="font-size:13px;line-height:1.6;color:${w.text ? 'var(--text)' : 'var(--text-muted)'};font-style:${w.text ? 'normal' : 'italic'};">
+        <div style="font-size:15px;line-height:1.7;color:${w.text ? 'var(--text)' : 'var(--text-muted)'};font-style:${w.text ? 'normal' : 'italic'};">
           ${w.text ? w.text : 'Your agent\'s report is being transcribed…'}
         </div>
         ${w.verified !== null && w.verified !== undefined ? `
-          <div style="font-size:11px;margin-top:6px;color:${w.verified ? '#62C030' : '#E82040'};">
+          <div style="font-size:13px;margin-top:8px;color:${w.verified ? '#62C030' : '#E82040'};">
             ${w.verified ? '✓ Intelligence confirmed' : '✗ Intelligence proved incorrect'}
           </div>` : ''}
-        <div style="display:flex;gap:12px;margin-top:9px;">
-          <button onclick="toggleWhisperRead(${w.id})" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">
+        <div style="display:flex;gap:14px;margin-top:10px;">
+          <button onclick="toggleWhisperRead(${w.id})" style="font-size:12px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">
             ${w.is_read ? 'Mark unread' : 'Mark read'}
           </button>
-          <button onclick="deleteWhisper(${w.id})" style="font-size:11px;color:#b04040;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">
+          <button onclick="deleteWhisper(${w.id})" style="font-size:12px;color:#b04040;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">
             Dismiss
           </button>
         </div>
@@ -10503,11 +10508,11 @@ function renderSidebarNav() {
 
   const myHouse = state.currentPlayer ? state.houses.find(h => h.slug === state.currentPlayer.house_slug) : null;
   const houseTopHtml = myHouse ? `
-    <div style="display:flex;align-items:center;gap:12px;padding:14px 16px 12px;border-bottom:1px solid var(--border-gold);">
-      ${shieldBadgeHtml(myHouse.slug, myHouse.color, 48)}
+    <div style="display:flex;align-items:center;gap:18px;padding:22px 18px 20px;border-bottom:1px solid var(--border-gold);">
+      ${shieldBadgeHtml(myHouse.slug, myHouse.color, 90)}
       <div style="min-width:0;">
-        <div style="font-family:'Cinzel',Georgia,serif;font-size:13px;font-weight:700;color:${myHouse.color};">${escapeHtml(myHouse.name)}</div>
-        <div style="font-family:'EB Garamond',Georgia,serif;font-style:italic;font-size:11px;color:var(--text-muted);margin-top:1px;">"${escapeHtml(myHouse.words)}"</div>
+        <div style="font-family:'Cinzel',Georgia,serif;font-size:22px;font-weight:700;color:${myHouse.color};line-height:1.2;">${escapeHtml(myHouse.name)}</div>
+        <div style="font-family:'EB Garamond',Georgia,serif;font-style:italic;font-size:15px;color:var(--text-muted);margin-top:6px;line-height:1.4;">"${escapeHtml(myHouse.words)}"</div>
       </div>
     </div>` : '';
 
