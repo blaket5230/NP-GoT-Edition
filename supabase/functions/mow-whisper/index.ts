@@ -22,13 +22,32 @@ const CATEGORY_CONTEXT: Record<string, string> = {
   diplomacy_shift:  'diplomatic intelligence',
 };
 
-// ── Confidence phrase ──────────────────────────────────────────────────────────
+// ── Voice templates — rotated by tick to break repetition ─────────────────────
 
-function certaintyPhrase(confidence: number): string {
-  if (confidence >= 80) return 'My lord, our sources confirm —';
-  if (confidence >= 60) return 'Our ravens suggest —';
-  if (confidence >= 40) return 'Word reaches us, though the source is uncertain —';
-  return 'Rumor alone carries this word, my lord —';
+const VOICES: Array<(house: string, label: string) => string> = [
+  (house, label) =>
+    `You are the Master of Whisperers serving House ${house}. Deliver this ${label} to your lord as a careful spymaster would: name your source type briefly, note what could not be confirmed, and say no more than the intelligence warrants. 2-3 sentences. No markdown. No modern language.`,
+  (house, label) =>
+    `You are the Master of Whisperers serving House ${house}. Deliver this ${label} to your lord with barely concealed urgency — the informant came to you only hours ago, you have not had time to verify everything, and you say so plainly. 2-3 sentences. No markdown. No modern language.`,
+  (house, label) =>
+    `You are the Master of Whisperers serving House ${house}. Deliver this ${label} to your lord in the manner of Varys of King's Landing — oblique, layered, never quite saying what you mean but meaning every word. 2 sentences. No markdown. No modern language.`,
+  (house, label) =>
+    `You are the Master of Whisperers serving House ${house}. Deliver this ${label} to your lord as a strategist would: interpret what the intelligence means, what it implies about your enemies' intentions, what your lord ought to consider. 2-3 sentences. No markdown. No modern language.`,
+  (house, label) =>
+    `You are the Master of Whisperers serving House ${house}. Deliver this ${label} to your lord drily — you are a man who has seen too much to be surprised, and you report the world as it is, without embellishment. 2 sentences. No markdown. No modern language.`,
+  (house, label) =>
+    `You are the Master of Whisperers serving House ${house}. Deliver this ${label} to your lord in the manner of a cautious Maester — measured, clinical, aware that intelligence is rarely clean, hedging only where the facts demand it. 2-3 sentences. No markdown. No modern language.`,
+  (house, label) =>
+    `You are the Master of Whisperers serving House ${house}. Deliver this ${label} to your lord with the weariness of a man who carries too many secrets — note the limits of what you know, and remind your lord that men have made grave errors on better intelligence than this. 2-3 sentences. No markdown. No modern language.`,
+];
+
+// ── Confidence instruction — shapes hedging without prescribing exact words ───
+
+function confidenceInstruction(confidence: number): string {
+  if (confidence >= 80) return `This intelligence is confirmed by multiple independent sources. Write with conviction — no hedging, no qualification.`;
+  if (confidence >= 60) return `This comes from a source you trust, but is not corroborated. Convey reliability alongside mild uncertainty.`;
+  if (confidence >= 40) return `This is unverified — a single informant, motivation unclear. Let your lord feel genuine doubt without dismissing the report.`;
+  return `This is rumor only, passed through too many hands to fully trust. Be frank that it may be false, but worth your lord's awareness.`;
 }
 
 // ── Fetch house name for a game_player id ─────────────────────────────────────
@@ -93,8 +112,8 @@ async function buildContext(
     }
 
     case 'castle_captured': {
-      const castleName    = body.castle_name as string ?? 'an unnamed keep';
-      const captureHouse  = body.player_id ? await houseName(body.player_id as string) : 'an unknown house';
+      const castleName   = body.castle_name as string ?? 'an unnamed keep';
+      const captureHouse = body.player_id ? await houseName(body.player_id as string) : 'an unknown house';
       return `${captureHouse} has taken control of ${castleName}.`;
     }
 
@@ -120,16 +139,9 @@ async function generateText(
   category: string,
 ): Promise<string> {
   const label  = CATEGORY_CONTEXT[category] ?? 'intelligence report';
-  const phrase = certaintyPhrase(confidence);
-
-  const system = [
-    `You are the Master of Whisperers serving House ${myHouse} in the realm of Westeros.`,
-    `Write a brief ${label} to your lord. Exactly 2–3 sentences. No markdown. No bullet points. No modern language.`,
-    `Your confidence in this intelligence is ${confidence}%. Your tone, hedging, and certainty must reflect this exactly.`,
-    `Open the dispatch with: "${phrase}" — then continue naturally from there.`,
-  ].join(' ');
-
-  const user = `Tick ${tick}. ${context} Write the dispatch now.`;
+  const voice  = VOICES[tick % VOICES.length];
+  const system = `${voice(myHouse, label)} ${confidenceInstruction(confidence)}`;
+  const user   = `${context} Write the dispatch now.`;
 
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -139,7 +151,7 @@ async function generateText(
       'content-type':      'application/json',
     },
     body: JSON.stringify({
-      model:      'claude-haiku-20240307',
+      model:      'claude-haiku-4-5-20251001',
       max_tokens: 200,
       system,
       messages: [{ role: 'user', content: user }],
@@ -147,7 +159,11 @@ async function generateText(
   });
 
   const json = await resp.json();
-  return json.content?.[0]?.text?.trim() ?? null;
+  const text = json.content?.[0]?.text?.trim();
+  if (!text) {
+    console.error('Anthropic returned no content:', JSON.stringify(json).slice(0, 300));
+  }
+  return text ?? null;
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
@@ -163,7 +179,6 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Missing whisper_id' }), { status: 400, headers: CORS });
     }
 
-    // Fetch the whisper
     const { data: whisper, error: wErr } = await db
       .from('whispers')
       .select('*')
@@ -174,17 +189,14 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Whisper not found' }), { status: 404, headers: CORS });
     }
 
-    // Idempotent — skip if already generated
     if (whisper.text !== null) {
       return new Response(JSON.stringify({ ok: true, skipped: true }), {
         headers: { 'Content-Type': 'application/json', ...CORS },
       });
     }
 
-    // Fetch the player's house name
     const myHouse = await houseName(whisper.player_id);
 
-    // Build event context
     const context = await buildContext(
       whisper.category,
       whisper.body ?? {},
@@ -194,7 +206,6 @@ serve(async (req) => {
       whisper.player_id,
     );
 
-    // Generate text
     const text = await generateText(
       myHouse,
       whisper.confidence,
@@ -203,7 +214,13 @@ serve(async (req) => {
       whisper.category,
     );
 
-    // Write back
+    if (!text) {
+      return new Response(JSON.stringify({ error: 'AI generation returned no content' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...CORS },
+      });
+    }
+
     await db.from('whispers').update({ text }).eq('id', whisper_id);
 
     return new Response(JSON.stringify({ ok: true }), {

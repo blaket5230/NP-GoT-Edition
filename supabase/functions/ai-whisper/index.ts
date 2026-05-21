@@ -107,7 +107,7 @@ async function generateReply(trigger: Request['trigger'], ctx: Ctx): Promise<str
       'content-type':      'application/json',
     },
     body: JSON.stringify({
-      model:      'claude-haiku-20240307',
+      model:      'claude-haiku-4-5-20251001',
       max_tokens: 250,
       system:     systemPrompt(ctx),
       messages:   [{ role: 'user', content: userPrompt(trigger, ctx) }],
@@ -137,7 +137,7 @@ serve(async (req) => {
 
     if (thread_id) {
       // Reply into existing thread
-      const { error } = await supabase.rpc('send_thread_message', {
+      const { error } = await supabase.rpc('ai_send_thread_message', {
         p_thread_id: thread_id,
         p_player_id: ai_player_id,
         p_message:   replyText,
@@ -146,7 +146,7 @@ serve(async (req) => {
     } else {
       // Create a new thread initiated by the AI
       const subject = threadSubject(trigger, ctx);
-      const { error } = await supabase.rpc('create_thread', {
+      const { error } = await supabase.rpc('ai_create_thread', {
         p_game_id:    game_id,
         p_player_id:  ai_player_id,
         p_subject:    subject,

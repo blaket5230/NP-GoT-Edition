@@ -1121,6 +1121,85 @@
     pointer-events: none;
     transition: opacity 0.2s;
   }
+  /* Combat Resolution Screen */
+  .combat-screen-overlay {
+    position: fixed; inset: 0; z-index: 9995;
+    background: rgba(0,0,0,0.88);
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(5px);
+    animation: combat-fade-in 0.35s ease;
+  }
+  .combat-screen-overlay.hidden { display: none; }
+  @keyframes combat-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .combat-screen-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    width: 90%; max-width: 500px;
+    overflow: hidden;
+    box-shadow: 0 0 80px rgba(0,0,0,0.8);
+    animation: combat-card-in 0.4s cubic-bezier(0.16,1,0.3,1);
+  }
+  @keyframes combat-card-in { from { transform: scale(0.88) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .combat-screen-banner {
+    padding: 20px 24px 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .combat-screen-vs {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .combat-screen-house {
+    flex: 1; text-align: center;
+  }
+  .combat-screen-house-name {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 14px; font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .combat-screen-house-role {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+  .combat-screen-divider {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 0 8px;
+  }
+  .combat-screen-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0; border-bottom: 1px solid var(--border);
+  }
+  .combat-screen-stat {
+    padding: 10px 16px; text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .combat-screen-stat:nth-child(2n) { border-right: none; }
+  .combat-screen-stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 3px; }
+  .combat-screen-stat-val { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; }
+  .combat-screen-result {
+    padding: 14px 20px; text-align: center;
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 17px; font-weight: 700; letter-spacing: 0.05em;
+  }
+  .combat-screen-result.won { background: rgba(58,122,58,0.2); color: #5cb85c; }
+  .combat-screen-result.lost { background: rgba(180,50,50,0.2); color: var(--error); }
+  .combat-screen-result.neutral { background: rgba(100,100,100,0.15); color: var(--text-muted); }
+  .combat-screen-footer {
+    padding: 12px 16px; display: flex; justify-content: flex-end;
+  }
+  .combat-screen-btn {
+    background: var(--accent); color: var(--bg-deep);
+    border: none; border-radius: 4px;
+    padding: 8px 22px; font-family: 'Cinzel', Georgia, serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; cursor: pointer;
+  }
+  .combat-screen-btn:hover { background: var(--accent-bright); }
+
   /* Game Over Overlay */
   .game-over-overlay {
     position: fixed; inset: 0; z-index: 9999;
@@ -1337,6 +1416,11 @@
     max-width: 90%; word-break: break-word;
   }
   .chat-msg.mine .chat-bubble { background: rgba(201,168,76,.1); border-color: rgba(201,168,76,.25); }
+  .typing-dots { display: inline-flex; gap: 4px; align-items: center; height: 14px; }
+  .typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); animation: typing-bounce 1.2s infinite; }
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing-bounce { 0%,60%,100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-5px); opacity: 1; } }
   .chat-input-row {
     display: flex; gap: 6px; padding: 8px;
     border-top: 1px solid var(--border); flex-shrink: 0;
@@ -3226,6 +3310,16 @@
 
       <div class="tb-vsep"></div>
 
+      <div class="tb-stat-block">
+        <i class="ti ti-shield-chevron" aria-hidden="true"></i>
+        <div class="tb-stat-vals">
+          <strong id="resourceTroops">0</strong>
+          <span id="rateTroops"></span>
+        </div>
+      </div>
+
+      <div class="tb-vsep"></div>
+
       <div class="tb-cycle-block" id="cyclePill">
         <svg class="tb-moon-svg" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
@@ -3503,6 +3597,11 @@
 
   <!-- WHISPERS PANE -->
   <div class="rook-pane" id="rookWhispersPane" style="display:none;flex-direction:column;overflow:hidden;flex:1;min-height:0;">
+    <div id="whispersToolbar" style="display:flex;align-items:center;gap:14px;padding:9px 16px 8px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <button onclick="markAllWhispersRead()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">Mark all read</button>
+      <button onclick="dismissReadWhispers()" style="font-size:11px;color:#b04040;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">Dismiss read</button>
+      <button onclick="dismissAllWhispers()" style="font-size:11px;color:#b04040;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">Dismiss all</button>
+    </div>
     <div style="flex:1;overflow-y:auto;" id="whispersList"></div>
   </div>
 </div>
@@ -3522,11 +3621,11 @@
         </div>
         <div class="form-row">
           <div class="form-group" style="flex:1;">
-            <label>Moon Speed</label>
+            <label>Tick Speed</label>
             <select id="newGameTickSpeed">
               <option value="normal">Normal (1 hr/tick)</option>
               <option value="slow">Slow (2 hr/tick)</option>
-              <option value="fast">Fast (30 min/tick)</option>
+              <option value="fast">Double (30 min/tick)</option>
               <option value="quad">Quad (15 min/tick)</option>
               <option value="turn_based">Turn Based</option>
             </select>
@@ -3534,10 +3633,36 @@
           <div class="form-group" style="flex:1;">
             <label>Production Cycle</label>
             <select id="newGameCycleTicks">
-              <option value="8">Every 8 moons (fast)</option>
-              <option value="12" selected>Every 12 moons (standard)</option>
-              <option value="16">Every 16 moons (slow)</option>
-              <option value="24">Every 24 moons (epic)</option>
+              <option value="16">Every 16 ticks (quick)</option>
+              <option value="20">Every 20 ticks</option>
+              <option value="24" selected>Every 24 ticks (standard)</option>
+              <option value="28">Every 28 ticks</option>
+              <option value="32">Every 32 ticks</option>
+              <option value="36">Every 36 ticks (epic)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row" id="newGameTurnOptions" style="display:none;">
+          <div class="form-group" style="flex:1;">
+            <label>Turn Deadline</label>
+            <select id="newGameTurnDeadline">
+              <option value="5">5 minutes</option>
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="60">1 hour</option>
+              <option value="240">4 hours</option>
+              <option value="480">8 hours</option>
+              <option value="1440" selected>24 hours</option>
+              <option value="2880">48 hours</option>
+              <option value="4320">72 hours</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Ticks per Turn</label>
+            <select id="newGameTicksPerTurn">
+              <option value="1" selected>1 tick/turn</option>
+              <option value="2">2 ticks/turn</option>
+              <option value="3">3 ticks/turn</option>
             </select>
           </div>
         </div>
@@ -3756,17 +3881,23 @@
       <!-- Basics -->
       <div class="settings-section">
         <div class="settings-section-title">Game Basics</div>
-        <div class="form-group">
-          <label>Game Name</label>
-          <input type="text" id="spGameName" required placeholder="e.g. Solo — House Stark">
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>Your Name</label>
+            <input type="text" id="spPlayerName" placeholder="Lord of the realm" maxlength="24">
+          </div>
+          <div class="form-group" style="flex:2;">
+            <label>Game Name</label>
+            <input type="text" id="spGameName" required placeholder="e.g. Solo — House Stark">
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group" style="flex:1;">
-            <label>Moon Speed</label>
+            <label>Tick Speed</label>
             <select id="spTickSpeed">
               <option value="normal">Normal (1 hr/tick)</option>
               <option value="slow">Slow (2 hr/tick)</option>
-              <option value="fast">Fast (30 min/tick)</option>
+              <option value="fast">Double (30 min/tick)</option>
               <option value="quad">Quad (15 min/tick)</option>
               <option value="turn_based">Turn Based</option>
             </select>
@@ -3774,10 +3905,36 @@
           <div class="form-group" style="flex:1;">
             <label>Production Cycle</label>
             <select id="spCycleTicks">
-              <option value="8">Every 8 moons (fast)</option>
-              <option value="12" selected>Every 12 moons (standard)</option>
-              <option value="16">Every 16 moons (slow)</option>
-              <option value="24">Every 24 moons (epic)</option>
+              <option value="16">Every 16 ticks (quick)</option>
+              <option value="20">Every 20 ticks</option>
+              <option value="24" selected>Every 24 ticks (standard)</option>
+              <option value="28">Every 28 ticks</option>
+              <option value="32">Every 32 ticks</option>
+              <option value="36">Every 36 ticks (epic)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row" id="spTurnOptions" style="display:none;">
+          <div class="form-group" style="flex:1;">
+            <label>Turn Deadline</label>
+            <select id="spTurnDeadline">
+              <option value="5">5 minutes</option>
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="60">1 hour</option>
+              <option value="240">4 hours</option>
+              <option value="480">8 hours</option>
+              <option value="1440" selected>24 hours</option>
+              <option value="2880">48 hours</option>
+              <option value="4320">72 hours</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Ticks per Turn</label>
+            <select id="spTicksPerTurn">
+              <option value="1" selected>1 tick/turn</option>
+              <option value="2">2 ticks/turn</option>
+              <option value="3">3 ticks/turn</option>
             </select>
           </div>
         </div>
@@ -3923,6 +4080,10 @@
   <div class="modal">
     <h2 id="joinModalTitle">Join Game</h2>
     <div id="joinGameInfo" style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;"></div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);">Your Name</label>
+      <input type="text" id="joinPlayerName" placeholder="Lord of the realm" maxlength="24" style="margin-top:4px;">
+    </div>
     <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 8px;">Choose Your House</div>
     <div class="house-grid" id="joinHouseGrid"></div>
     <div class="modal-actions">
@@ -3937,21 +4098,148 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="turnStatusModal" style="display:none;align-items:center;justify-content:center;">
+  <div class="modal" style="max-width:380px;width:100%;">
+    <h2 style="margin:0 0 14px;font-size:15px;">Turn Status</h2>
+    <div id="turnStatusContent"></div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button type="button" class="btn-secondary" onclick="closeTurnStatusModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
+
+<!-- First-run experience overlay -->
+<div id="ftueOverlay" style="display:none;position:fixed;inset:0;z-index:9990;background:rgba(6,7,14,0.82);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div style="background:var(--bg-panel);border:1px solid var(--border-gold);border-radius:12px;padding:36px 40px;max-width:480px;width:90%;text-align:center;box-shadow:0 0 80px rgba(201,168,76,0.15);">
+    <div style="font-family:'Cinzel Decorative','Cinzel',Georgia,serif;font-size:26px;font-weight:700;color:var(--accent);letter-spacing:0.1em;margin-bottom:8px;">Westeros Awaits</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:24px;font-style:italic;">The Iron Throne is claimed by conquest, not birthright.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;text-align:left;">
+      <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:12px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><i class="ti ti-map-pin" style="color:var(--accent);font-size:16px;"></i><span style="font-family:'Cinzel',serif;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Map</span></div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">Click any castle to inspect it. Click your own to send forces.</div>
+      </div>
+      <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:12px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><i class="ti ti-users" style="color:var(--accent);font-size:16px;"></i><span style="font-family:'Cinzel',serif;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Commanders</span></div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">Send commanders to capture neutral castles or assault enemies.</div>
+      </div>
+      <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:12px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><i class="ti ti-coin" style="color:var(--accent);font-size:16px;"></i><span style="font-family:'Cinzel',serif;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Economy</span></div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">Gold and troops are produced each cycle. Upgrade castles to grow faster.</div>
+      </div>
+      <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:12px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><i class="ti ti-feather" style="color:var(--accent);font-size:16px;"></i><span style="font-family:'Cinzel',serif;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Ravens</span></div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">Correspond with other lords via the Rookery. AI lords will reply.</div>
+      </div>
+    </div>
+    <button id="ftueCloseBtn" style="background:var(--accent);color:var(--bg-deep);border:none;border-radius:5px;padding:11px 32px;font-family:'Cinzel',Georgia,serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Begin Your Reign</button>
+  </div>
+</div>
+
+<!-- Game loading overlay -->
+<div id="gameLoadingOverlay" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(6,7,14,0.88);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" style="animation:moon-spin 1.2s linear infinite;">
+    <circle cx="12" cy="12" r="8"/><path d="M12 4 a8 8 0 0 1 0 16 a6 6 0 0 0 0-16z" fill="var(--accent)"/>
+  </svg>
+  <div style="font-family:'Cinzel',Georgia,serif;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);">Entering the Realm…</div>
+</div>
+
+<!-- Combat Resolution Screen -->
+<div class="combat-screen-overlay hidden" id="combatScreenOverlay">
+  <div class="combat-screen-card">
+    <div class="combat-screen-banner" id="combatScreenBanner"></div>
+    <div class="combat-screen-vs" id="combatScreenVs"></div>
+    <div class="combat-screen-stats" id="combatScreenStats"></div>
+    <div class="combat-screen-result" id="combatScreenResult"></div>
+    <div class="combat-screen-footer">
+      <button class="combat-screen-btn" id="combatScreenDismiss">Dismiss</button>
+    </div>
+  </div>
+</div>
 
 <!-- Game Over Overlay -->
 <div class="game-over-overlay hidden" id="gameOverOverlay">
   <div class="game-over-card" id="gameOverCard">
-    <div class="game-over-icon" id="gameOverIcon">👑</div>
+    <div class="game-over-icon" id="gameOverIcon"><i class="ti ti-crown"></i></div>
     <div class="game-over-title" id="gameOverTitle">Victory</div>
     <div class="game-over-sub" id="gameOverSub">The Iron Throne is yours</div>
     <div class="game-over-stats" id="gameOverStats"></div>
+    <div class="game-over-detail" id="gameOverDetail"></div>
     <button class="send-forces-btn" id="gameOverCloseBtn" style="margin-top:20px;padding:10px 32px;font-size:14px;">Continue</button>
   </div>
 </div>
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// =====================================================
+// SOUND ENGINE  (Web Audio API — no external files)
+// =====================================================
+const SFX = (() => {
+  let ctx = null;
+  function getCtx() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(freq, type, gainVal, duration, startDelay = 0) {
+    const c = getCtx();
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.connect(gain); gain.connect(c.destination);
+    osc.type = type; osc.frequency.value = freq;
+    const t = c.currentTime + startDelay;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(gainVal, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+    osc.start(t); osc.stop(t + duration + 0.05);
+  }
+  function noise(gainVal, duration) {
+    const c = getCtx();
+    const buf = c.createBuffer(1, c.sampleRate * duration, c.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const src = c.createBufferSource(); src.buffer = buf;
+    const gain = c.createGain(); gain.gain.value = gainVal;
+    const filter = c.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 800;
+    src.connect(filter); filter.connect(gain); gain.connect(c.destination);
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+    src.start(); src.stop(c.currentTime + duration);
+  }
+  return {
+    march() {
+      // Low drum roll + horn
+      noise(0.04, 0.18);
+      tone(130, 'sawtooth', 0.08, 0.3, 0.05);
+      tone(196, 'sawtooth', 0.06, 0.25, 0.15);
+    },
+    victory() {
+      // Triumphant rising chord
+      [523, 659, 784, 1047].forEach((f, i) => tone(f, 'triangle', 0.1, 0.6, i * 0.07));
+    },
+    defeat() {
+      // Descending minor
+      [392, 349, 294, 220].forEach((f, i) => tone(f, 'sawtooth', 0.07, 0.5, i * 0.1));
+    },
+    raven() {
+      // Two soft bell tones
+      tone(880, 'sine', 0.12, 0.4);
+      tone(1108, 'sine', 0.07, 0.35, 0.18);
+    },
+    gold() {
+      // Quick coin clink
+      tone(1760, 'sine', 0.14, 0.12);
+      tone(2093, 'sine', 0.08, 0.1, 0.06);
+    },
+    captured() {
+      // Castle taken — impact + swell
+      noise(0.06, 0.12);
+      tone(220, 'sawtooth', 0.09, 0.4, 0.05);
+      tone(330, 'triangle', 0.07, 0.35, 0.2);
+    },
+  };
+})();
 
 // =====================================================
 // SUPABASE CONFIGURATION
@@ -4081,8 +4369,10 @@ const el = {
   lobbyRight: document.getElementById('lobbyRight'),
   gameName: document.getElementById('gameName'),
   gameYearLabel: document.getElementById('gameYearLabel'),
-  resourceGold: document.getElementById('resourceGold'),
-  rateGold: document.getElementById('rateGold'),
+  resourceGold:   document.getElementById('resourceGold'),
+  rateGold:       document.getElementById('rateGold'),
+  resourceTroops: document.getElementById('resourceTroops'),
+  rateTroops:     document.getElementById('rateTroops'),
   cycleCountdown: document.getElementById('cycleCountdown'),
   refreshGameBtn: null,   // moved to toolbar ⟳
   forceTickWrap:  null,   // moved to Options sidebar section
@@ -4136,11 +4426,13 @@ const el = {
   councilClose:   document.getElementById('councilClose'),
   councilList:    document.getElementById('councilList'),
   councilPrestigeDisplay: document.getElementById('councilPrestigeDisplay'),
+  combatScreenOverlay: document.getElementById('combatScreenOverlay'),
   gameOverOverlay: document.getElementById('gameOverOverlay'),
   gameOverIcon:    document.getElementById('gameOverIcon'),
   gameOverTitle:   document.getElementById('gameOverTitle'),
   gameOverSub:     document.getElementById('gameOverSub'),
   gameOverStats:   document.getElementById('gameOverStats'),
+  gameOverDetail:  document.getElementById('gameOverDetail'),
   gameOverCloseBtn:document.getElementById('gameOverCloseBtn'),
   lobbyContent: document.getElementById('lobbyContent'),
   gameContent: document.getElementById('gameContent'),
@@ -5196,6 +5488,7 @@ async function loadGames() {
 let _lobbyNavMode = 'mp-my'; // 'sp-my' | 'mp-my' | 'join'
 
 function renderGamesList() {
+  if (!_activeNavView) return;
   const visibleGames = state.games.filter(game => {
     const players     = game.game_players || [];
     const humans      = players.filter(p => !p.is_ai);
@@ -5651,7 +5944,7 @@ function _renderSpHouseDetail(slug, house) {
   const traits = HOUSE_TRAITS[slug];
   if (!data || !house) { panel.style.display = 'none'; return; }
 
-  const COUNCIL_ICONS = { hand:'⚔️', coin:'💰', lord_commander:'🛡️', whisperers:'🦅', grand_maester:'📜', laws:'⚖️', horses:'🐎' };
+  const COUNCIL_ICONS = { hand:'<i class="ti ti-sword"></i>', coin:'<i class="ti ti-coin"></i>', lord_commander:'<i class="ti ti-shield"></i>', whisperers:'<i class="ti ti-eye"></i>', grand_maester:'<i class="ti ti-book"></i>', laws:'<i class="ti ti-scale"></i>', horses:'<i class="ti ti-horse-toy"></i>' };
   const COUNCIL_NAMES = { hand:'Hand of the King', coin:'Master of Coin', lord_commander:'Lord Commander', whisperers:'Master of Whisperers', grand_maester:'Grand Maester', laws:'Master of Laws', horses:'Master of Horses' };
 
   const strIcon  = traits ? (COUNCIL_ICONS[traits.strength.seat] || '') : '';
@@ -5740,6 +6033,7 @@ async function startSinglePlayerGame(houseSlug) {
   if (!house) return;
 
   const v = id => document.getElementById(id)?.value;
+  const playerName     = (v('spPlayerName') || '').trim() || state.user.email.split('@')[0];
   const name           = (v('spGameName') || '').trim() || `Solo — ${house.name}`;
   const tickSpeed      = v('spTickSpeed')           || 'normal';
   const cycleTicks     = parseInt(v('spCycleTicks') || '12');
@@ -5754,6 +6048,8 @@ async function startSinglePlayerGame(houseSlug) {
   const infraCost      = parseFloat(v('spInfraCost')    || '1.0');
   const councilCost    = parseFloat(v('spCouncilCost')  || '1.0');
   const aiDifficulty   = parseInt(v('spAIDifficulty')   || '3');
+  const turnTimeoutMins = parseInt(v('spTurnDeadline')  || '1440');
+  const ticksPerTurn    = parseInt(v('spTicksPerTurn')  || '1');
 
   try {
     // 1. Create game
@@ -5776,6 +6072,8 @@ async function startSinglePlayerGame(houseSlug) {
       commander_speed_mult: cmdSpeed,
       infra_cost_mult: infraCost,
       council_cost_mult: councilCost,
+      turn_timeout_minutes: turnTimeoutMins,
+      ticks_per_turn: ticksPerTurn,
     }).select().single();
     if (createErr) throw createErr;
 
@@ -5784,7 +6082,7 @@ async function startSinglePlayerGame(houseSlug) {
       game_id: game.id,
       user_id: state.user.id,
       house_slug: houseSlug,
-      display_name: state.user.email.split('@')[0],
+      display_name: playerName,
     });
     if (joinErr) throw joinErr;
 
@@ -5820,6 +6118,15 @@ document.getElementById('newGameFillAI')?.addEventListener('change', e => {
   const grp = document.getElementById('aiDifficultyGroup');
   if (grp) grp.style.display = e.target.checked ? '' : 'none';
 });
+// Show/hide turn-based options
+document.getElementById('newGameTickSpeed')?.addEventListener('change', e => {
+  const opts = document.getElementById('newGameTurnOptions');
+  if (opts) opts.style.display = e.target.value === 'turn_based' ? '' : 'none';
+});
+document.getElementById('spTickSpeed')?.addEventListener('change', e => {
+  const opts = document.getElementById('spTurnOptions');
+  if (opts) opts.style.display = e.target.value === 'turn_based' ? '' : 'none';
+});
 
 el.createGameForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -5835,10 +6142,12 @@ el.createGameForm.addEventListener('submit', async (e) => {
   const startGoldLv  = parseInt(document.getElementById('newGameStartGoldLevel').value);
   const startIndLv   = parseInt(document.getElementById('newGameStartIndustryLevel').value);
   const startPresLv  = parseInt(document.getElementById('newGameStartPrestigeLevel').value);
-  const cycleTicks   = parseInt(document.getElementById('newGameCycleTicks').value);
-  const cmdSpeed     = parseFloat(document.getElementById('newGameCmdSpeed').value);
-  const infraCost    = parseFloat(document.getElementById('newGameInfraCost').value);
-  const councilCost  = parseFloat(document.getElementById('newGameCouncilCost').value);
+  const cycleTicks        = parseInt(document.getElementById('newGameCycleTicks').value);
+  const cmdSpeed          = parseFloat(document.getElementById('newGameCmdSpeed').value);
+  const infraCost         = parseFloat(document.getElementById('newGameInfraCost').value);
+  const councilCost       = parseFloat(document.getElementById('newGameCouncilCost').value);
+  const turnTimeoutMins   = parseInt(document.getElementById('newGameTurnDeadline')?.value || '1440');
+  const ticksPerTurn      = parseInt(document.getElementById('newGameTicksPerTurn')?.value || '1');
 
   try {
     const { data, error } = await supabase
@@ -5853,6 +6162,7 @@ el.createGameForm.addEventListener('submit', async (e) => {
         starting_prestige_level: startPresLv,
         production_cycle_ticks: cycleTicks, commander_speed_mult: cmdSpeed,
         infra_cost_mult: infraCost, council_cost_mult: councilCost,
+        turn_timeout_minutes: turnTimeoutMins, ticks_per_turn: ticksPerTurn,
       })
       .select().single();
     if (error) throw error;
@@ -5963,6 +6273,7 @@ document.getElementById('cancelJoinGame').addEventListener('click', () => {
 
 el.confirmJoinGame.addEventListener('click', async () => {
   if (!state.selectedGame || !state.selectedHouseToJoin) return;
+  const joinName = (document.getElementById('joinPlayerName')?.value || '').trim() || state.user.email.split('@')[0];
   try {
     const { error } = await supabase
       .from('game_players')
@@ -5970,7 +6281,7 @@ el.confirmJoinGame.addEventListener('click', async () => {
         game_id: state.selectedGame,
         user_id: state.user.id,
         house_slug: state.selectedHouseToJoin,
-        display_name: state.user.email.split('@')[0],
+        display_name: joinName,
       });
     if (error) throw error;
     el.joinGameModal.classList.remove('open');
@@ -6011,6 +6322,8 @@ el.startGameBtn.addEventListener('click', async () => {
 // GAME MODE: enter, exit, load state, render UI
 // =====================================================
 async function enterGameMode(gameId, { reload = true } = {}) {
+  const loadingEl = document.getElementById('gameLoadingOverlay');
+  if (loadingEl) loadingEl.style.display = 'flex';
   try {
     // Make sure we have the latest game data
     if (reload) await loadGames();
@@ -6033,6 +6346,8 @@ async function enterGameMode(gameId, { reload = true } = {}) {
     state.activeGame = game;
     state.currentPlayer = currentPlayer;
     localStorage.setItem('westeros_resume_game', String(gameId));
+    _aiWhisperFired.clear();
+    _loadWhisperFired(gameId);
     state.gamePlayers = game.game_players || [];
     state.selectedCastle = null;
 
@@ -6063,11 +6378,26 @@ async function enterGameMode(gameId, { reload = true } = {}) {
     // panToCastle with zoom=1.0 always sets the zoom even if no castle found.
     panToCastle(getPrimaryCastle(), 1.0);
 
+    if (loadingEl) loadingEl.style.display = 'none';
     toast(`Welcome to ${escapeHtml(game.name)}. You play ${escapeHtml(state.houses.find(h => h.slug === currentPlayer.house_slug).name)}.`);
+    _showFtueIfFirst(gameId);
   } catch (err) {
+    if (loadingEl) loadingEl.style.display = 'none';
     console.error('Failed to enter game:', err);
     toast(`Failed to enter game: ${err.message}`, true);
   }
+}
+
+function _showFtueIfFirst(gameId) {
+  const key = `westeros_ftue_${gameId}`;
+  if (localStorage.getItem(key)) return;
+  const overlay = document.getElementById('ftueOverlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  document.getElementById('ftueCloseBtn')?.addEventListener('click', () => {
+    overlay.style.display = 'none';
+    localStorage.setItem(key, '1');
+  }, { once: true });
 }
 
 async function refreshGameState(gameId) {
@@ -6125,6 +6455,7 @@ async function refreshGameState(gameId) {
   renderCastleInfo();
   renderInboxBadge();
   renderSidebar();
+  renderTurnBar();
 }
 
 async function processTicks(gameId, { quiet = false } = {}) {
@@ -6138,22 +6469,28 @@ async function processTicks(gameId, { quiet = false } = {}) {
     if (data.combat_events && data.combat_events.length > 0) {
       const myId = state.currentPlayer?.id;
       data.combat_events.forEach((ev, i) => {
-        setTimeout(() => {
-          const castle = state.castles.find(c => c.slug === ev.castle);
-          const name = castle ? castle.name : ev.castle;
-          if (ev.result === 'attacker_won' && ev.attacker === myId)
-            toast(`⚔ Victory! ${name} conquered (${ev.atk_remain} troops remain)`);
-          else if (ev.result === 'attacker_won' && ev.defender === myId)
-            toast(`💀 ${name} was conquered by the enemy!`, true);
-          else if (ev.result === 'defender_won' && ev.defender === myId)
-            toast(`🛡 Assault on ${name} repelled (${ev.def_remain} defenders survive)`);
-          else if (ev.result === 'defender_won' && ev.attacker === myId)
-            toast(`⚔ Assault on ${name} failed — commander lost`, true);
-        }, i * 600);
+        const involved = ev.attacker === myId || ev.defender === myId;
+        if (involved) {
+          setTimeout(() => showCombatResult(ev), i * 400);
+        } else {
+          setTimeout(() => {
+            const castle = state.castles.find(c => c.slug === ev.castle);
+            const name = castle ? castle.name : ev.castle;
+            const atkP = state.gamePlayers.find(p => p.id === ev.attacker);
+            const defP = state.gamePlayers.find(p => p.id === ev.defender);
+            const atkH = state.houses.find(h => h.slug === atkP?.house_slug)?.name ?? 'Unknown';
+            const defH = state.houses.find(h => h.slug === defP?.house_slug)?.name ?? 'Unknown';
+            if (ev.result === 'attacker_won')
+              toast(`${atkH} conquered ${name} from ${defH}`);
+            else
+              toast(`${defH} repelled ${atkH} at ${name}`);
+          }, i * 600);
+        }
       });
     }
     // Record intel snapshot after any cycle fires
     if ((data.cycles_fired || 0) > 0 && state.activeGame) {
+      SFX.gold();
       supabase.rpc('record_intel_snapshot', { p_game_id: gameId }).then(null, () => {});
     }
     // AI whisper triggers — run after state is refreshed so inbox/castles are current
@@ -6295,6 +6632,26 @@ function buildSystemBody(body) {
     const meta = COUNCIL_META[body.seat];
     return `<div style="font-size:13px;">${meta?.icon||''} <strong>${meta?.title||body.seat}</strong> raised to Level ${body.new_level} by ${hLink}.</div>`;
   }
+  if (body.gift_type === 'council_levelup') {
+    const meta = COUNCIL_META[body.seat];
+    const lv   = body.new_level ?? '?';
+    const src  = body.source === 'grand_maester' ? 'Grand Maester research' : 'council research';
+    const voices = {
+      hand:           lv => `My lord, the swords of your realm grow sharper. The Hand's reach now strikes at level ${lv} — your commanders will carve deeper with each engagement.`,
+      coin:           lv => `My lord, the coin flows more freely than before. The Master of Coin has reached level ${lv}. Each castle now yields greater returns to your treasury.`,
+      lord_commander: lv => `My lord, the training grounds bear fruit. The Lord Commander stands at level ${lv}. Your garrisons shall grow more swiftly with each passing cycle.`,
+      whisperers:     lv => `My lord. Level ${lv} now. My little birds see further — your castles' eyes reach deeper into contested lands than before.`,
+      grand_maester:  lv => `My lord, the chains of knowledge weigh heavier upon me now, and I am grateful for it. Grand Maester at level ${lv}. The random seat I tend each cycle shall receive more from my efforts.`,
+      laws:           lv => `My lord, the realm's foundations settle more firmly. Master of Laws at level ${lv}. Your castles' influence spreads wider, and your builders find their work comes cheaper.`,
+      horses:         lv => `My lord, the cavalry grows sharper with each ride. Master of Horses at level ${lv}. Your commanders range further, and the King's Road flies faster beneath their hooves.`,
+    };
+    const voice = voices[body.seat]?.(lv) ?? `${meta?.title || body.seat} has reached Level ${lv}.`;
+    return `<div style="font-size:13px;line-height:1.6;">
+      <div style="margin-bottom:5px;">${meta?.icon||''} <strong>${meta?.title||body.seat}</strong> — Level ${lv}</div>
+      <div style="color:var(--text-muted);font-style:italic;">"${escapeHtml(voice)}"</div>
+      <div style="margin-top:5px;font-size:11px;color:var(--text-muted);">Advanced via ${src}.</div>
+    </div>`;
+  }
   if (body.gift_type === 'diplomacy') {
     if (body.new_status === 'allied') {
       const fromPlayer = state.gamePlayers.find(p => p.house_slug === body.from_house);
@@ -6411,7 +6768,12 @@ function buildProductionBody(body) {
         </tr>
       </tbody>
     </table>
-    <div style="font-size:11px;color:var(--text-muted);margin-top:6px;font-style:italic;">${body.council_note ? '📜 ' + body.council_note : ''}</div>
+    ${body.gm_rand_seat ? (() => {
+      const gmMeta = COUNCIL_META[body.gm_rand_seat];
+      return `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">
+        📜 Grand Maester bonus applied to <strong style="color:var(--text);">${gmMeta?.title || body.gm_rand_seat}</strong> this cycle.
+      </div>`;
+    })() : ''}
   `;
 }
 
@@ -6956,6 +7318,32 @@ function renderThreadMessages(thread) {
   el.threadMessages.scrollTop = el.threadMessages.scrollHeight;
 }
 
+let _aiTypingThreadId = null;
+
+function _showAiTypingIndicator(threadId, houseName, color) {
+  if (_activeThreadId !== threadId) return;
+  _clearAiTypingIndicator();
+  _aiTypingThreadId = threadId;
+  const div = document.createElement('div');
+  div.className = 'chat-msg';
+  div.id = 'aiTypingBubble';
+  div.innerHTML =
+    `<div class="chat-meta">
+       <span class="chat-author" style="color:${color}">${escapeHtml(houseName)}</span>
+       <span>composing…</span>
+     </div>
+     <div class="chat-bubble" style="padding:10px 14px;">
+       <span class="typing-dots"><span></span><span></span><span></span></span>
+     </div>`;
+  el.threadMessages.appendChild(div);
+  el.threadMessages.scrollTop = el.threadMessages.scrollHeight;
+}
+
+function _clearAiTypingIndicator() {
+  document.getElementById('aiTypingBubble')?.remove();
+  _aiTypingThreadId = null;
+}
+
 async function sendThreadReply() {
   const msg = el.threadReplyInput.value.trim();
   if (!msg || !_activeThreadId || !state.currentPlayer) return;
@@ -6988,6 +7376,8 @@ async function sendThreadReply() {
         thread_id: _activeThreadId,
         prior_messages: priorMessages,
       });
+      const aiHouse = state.houses.find(h => h.slug === aiPlayer.house_slug);
+      _showAiTypingIndicator(_activeThreadId, aiHouse?.name ?? 'Unknown', aiHouse?.color ?? 'var(--text-muted)');
     }
   }
 }
@@ -7081,6 +7471,7 @@ function renderWhispersPane() {
     return `
       <div style="padding:14px 16px;border-bottom:1px solid var(--border);${!w.is_read ? 'background:rgba(180,140,60,0.04);' : ''}">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;${!w.is_read ? 'background:#C9A84C;' : 'opacity:0;'}"></span>
           <span style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
             color:${confColor};border:1px solid ${confColor}44;background:${confColor}14;
             padding:2px 6px;border-radius:3px;flex-shrink:0;">${conf}% confidence</span>
@@ -7094,8 +7485,63 @@ function renderWhispersPane() {
           <div style="font-size:11px;margin-top:6px;color:${w.verified ? '#62C030' : '#E82040'};">
             ${w.verified ? '✓ Intelligence confirmed' : '✗ Intelligence proved incorrect'}
           </div>` : ''}
+        <div style="display:flex;gap:12px;margin-top:9px;">
+          <button onclick="toggleWhisperRead(${w.id})" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">
+            ${w.is_read ? 'Mark unread' : 'Mark read'}
+          </button>
+          <button onclick="deleteWhisper(${w.id})" style="font-size:11px;color:#b04040;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">
+            Dismiss
+          </button>
+        </div>
       </div>`;
   }).join('');
+}
+
+async function toggleWhisperRead(id) {
+  const idNum = Number(id);
+  const w = state.whispers?.find(w => Number(w.id) === idNum);
+  if (!w) return;
+  const newVal = !w.is_read;
+  const { error } = await supabase.rpc('mark_whisper_read', { p_whisper_id: idNum, p_is_read: newVal });
+  if (error) { console.error('toggleWhisperRead failed:', error); return; }
+  w.is_read = newVal;
+  renderWhispersPane();
+  renderInboxBadge();
+}
+
+async function deleteWhisper(id) {
+  const { error } = await supabase.rpc('delete_whisper', { p_whisper_id: id });
+  if (error) { console.error('deleteWhisper failed:', error); return; }
+  state.whispers = (state.whispers || []).filter(w => w.id !== id);
+  renderWhispersPane();
+  renderInboxBadge();
+}
+
+async function markAllWhispersRead() {
+  const unread = (state.whispers || []).filter(w => !w.is_read);
+  if (!unread.length) return;
+  await Promise.all(unread.map(w => supabase.rpc('mark_whisper_read', { p_whisper_id: w.id, p_is_read: true })));
+  unread.forEach(w => { w.is_read = true; });
+  renderWhispersPane();
+  renderInboxBadge();
+}
+
+async function dismissReadWhispers() {
+  const read = (state.whispers || []).filter(w => w.is_read);
+  if (!read.length) return;
+  await Promise.all(read.map(w => supabase.rpc('delete_whisper', { p_whisper_id: w.id })));
+  state.whispers = (state.whispers || []).filter(w => !w.is_read);
+  renderWhispersPane();
+  renderInboxBadge();
+}
+
+async function dismissAllWhispers() {
+  const all = state.whispers || [];
+  if (!all.length) return;
+  await Promise.all(all.map(w => supabase.rpc('delete_whisper', { p_whisper_id: w.id })));
+  state.whispers = [];
+  renderWhispersPane();
+  renderInboxBadge();
 }
 
 // =====================================================
@@ -7211,6 +7657,9 @@ el.composeSendBtn.addEventListener('click', async () => {
         thread_id: threadId,
         prior_messages: [{ sender: state.currentPlayer.house_slug, text: msg }],
       });
+      const aiPlayer = state.gamePlayers.find(p => p.id === aiId);
+      const aiHouse  = state.houses.find(h => h.slug === aiPlayer?.house_slug);
+      _showAiTypingIndicator(threadId, aiHouse?.name ?? 'Unknown', aiHouse?.color ?? 'var(--text-muted)');
     }
   }
 });
@@ -7219,9 +7668,21 @@ el.composeSendBtn.addEventListener('click', async () => {
 // AI WHISPER ENGINE
 // =====================================================
 
-// Tracks which unsolicited triggers have already fired this session to avoid spam.
-// Keys: `${trigger}_${ai_player_id}_${tick_bucket}`
+// Tracks which unsolicited triggers have already fired to avoid spam.
+// Keys: `${trigger}_${ai_player_id}_${tick_bucket}` — persisted per game in localStorage.
 const _aiWhisperFired = new Set();
+
+function _whisperFiredKey(gameId) { return `westeros_whisper_fired_${gameId}`; }
+function _loadWhisperFired(gameId) {
+  try { JSON.parse(localStorage.getItem(_whisperFiredKey(gameId)) || '[]').forEach(k => _aiWhisperFired.add(k)); } catch {}
+}
+function _saveWhisperFired(gameId, key) {
+  _aiWhisperFired.add(key);
+  try {
+    const existing = JSON.parse(localStorage.getItem(_whisperFiredKey(gameId)) || '[]');
+    if (!existing.includes(key)) { existing.push(key); localStorage.setItem(_whisperFiredKey(gameId), JSON.stringify(existing)); }
+  } catch {}
+}
 
 function _aiWhisperCtx(aiPlayerId) {
   const aiPlayer    = state.gamePlayers.find(p => p.id === aiPlayerId);
@@ -7314,7 +7775,7 @@ function _checkAiWhisperTriggers({ combats = 0 } = {}) {
       if (!aiPlayer) continue;
       const key = `combat_${aiPlayer.id}_${tick}`;
       if (_aiWhisperFired.has(key)) continue;
-      _aiWhisperFired.add(key);
+      _saveWhisperFired(state.activeGame.id, key);
       // From the AI's perspective: if AI was defender and lost, outcome = 'lost'; etc.
       const aiWon = attackerIsMe ? false : true;
       _queueAiWhisper({
@@ -7332,7 +7793,7 @@ function _checkAiWhisperTriggers({ combats = 0 } = {}) {
     if (castleCount <= 2 && castleCount > 0) {
       const key = `elim_${aiPlayer.id}`;
       if (_aiWhisperFired.has(key)) continue;
-      _aiWhisperFired.add(key);
+      _saveWhisperFired(state.activeGame.id, key);
       _queueAiWhisper({ trigger: 'near_elimination', ai_player_id: aiPlayer.id });
     }
   }
@@ -7343,7 +7804,7 @@ function _checkAiWhisperTriggers({ combats = 0 } = {}) {
   if (cycleNum > 0 && cycleNum % 3 === 0) {
     const key = `prod_${cycleNum}`;
     if (!_aiWhisperFired.has(key) && aiPlayers.length) {
-      _aiWhisperFired.add(key);
+      _saveWhisperFired(state.activeGame.id, key);
       const aiPlayer = aiPlayers[Math.floor(Math.random() * aiPlayers.length)];
       _queueAiWhisper({ trigger: 'production_milestone', ai_player_id: aiPlayer.id });
     }
@@ -7354,13 +7815,13 @@ function _checkAiWhisperTriggers({ combats = 0 } = {}) {
 // SMALL COUNCIL
 // =====================================================
 const COUNCIL_META = {
-  hand:           { title: 'Hand of the King',    icon: '⚔', bonus: 'Damage per round = Hand × (1 + cmd_lv×0.1). Defender at a castle gains +1 Hand and fires first.' },
-  coin:           { title: 'Master of Coin',       icon: '💰', bonus: 'Gold/cycle = total_treasury × (10 + Coin×2)' },
-  lord_commander: { title: 'Lord Commander',       icon: '🛡', bonus: 'A castle produces Y × (X + 4) troops per cycle where X is Lord Commander level and Y is recruitment. Accrues fractionally each tick.' },
-  whisperers:     { title: 'Master of Whisperers', icon: '👁', bonus: 'Castle scan: 90 leagues base + 60 per level' },
-  grand_maester:  { title: 'Grand Maester',        icon: '📜', bonus: '72 × GrandMaester prestige per cycle to a random seat' },
-  laws:           { title: 'Master of Laws',       icon: '⚖',  bonus: 'Castle influence = base + (Laws×5), reducing upgrade costs' },
-  horses:         { title: 'Master of Horses',     icon: '🐎', bonus: 'March range: 90 + Horses×60 leagues. Kings Road: flat 3× speed when both castles have the road.' },
+  hand:           { title: 'Hand of the King',    icon: '<i class="ti ti-sword"></i>',      bonus: 'Damage per round = Hand × (1 + cmd_lv×0.1). Defender at a castle gains +1 Hand and fires first.' },
+  coin:           { title: 'Master of Coin',       icon: '<i class="ti ti-coin"></i>',       bonus: 'Gold/cycle = total_treasury × (10 + Coin×2)' },
+  lord_commander: { title: 'Lord Commander',       icon: '<i class="ti ti-shield"></i>',     bonus: 'A castle produces Y × (X + 4) troops per cycle where X is Lord Commander level and Y is recruitment. Accrues fractionally each tick.' },
+  whisperers:     { title: 'Master of Whisperers', icon: '<i class="ti ti-eye"></i>',        bonus: 'Castle scan: 90 leagues base + 60 per level' },
+  grand_maester:  { title: 'Grand Maester',        icon: '<i class="ti ti-book"></i>',       bonus: '72 × GrandMaester prestige per cycle to a random seat' },
+  laws:           { title: 'Master of Laws',       icon: '<i class="ti ti-scale"></i>',      bonus: 'Castle influence = base + (Laws×5), reducing upgrade costs' },
+  horses:         { title: 'Master of Horses',     icon: '<i class="ti ti-horse-toy"></i>',  bonus: 'March range: 90 + Horses×60 leagues. Kings Road: flat 3× speed when both castles have the road.' },
 };
 
 function councilUpgradeCost(currentLevel) {
@@ -7600,6 +8061,7 @@ async function saveNewRoute() {
       p_is_loop:      _routeIsLoop,
     });
     if (error) throw error;
+    SFX.march();
     const loopLabel = _routeIsLoop ? ' (looping)' : '';
     toast(`${escapeHtml(cmd.name)} marching${loopLabel} — ${data.waypoints} stop${data.waypoints !== 1 ? 's' : ''}`);
     cancelNewRouteBuild();
@@ -7635,14 +8097,21 @@ function renderGameResources() {
 
   // Moon / year label
   const tick = state.activeGame.current_tick;
-  const cycleLen = state.activeGame?.production_cycle_ticks ?? 20;
+  const cycleLen = state.activeGame?.production_cycle_ticks ?? 24;
   const year = Math.floor(tick / cycleLen) + 1;
-  if (el.gameYearLabel) el.gameYearLabel.textContent = `Year ${year} · Moon ${tick}`;
+  if (el.gameYearLabel) el.gameYearLabel.textContent = `Year ${year} · Tick ${tick}`;
 
   // Production rates
   const myCastles = state.gameCastles.filter(gc => gc.owner_player_id === state.currentPlayer.id);
   const goldRate = myCastles.reduce((s, c) => s + c.gold_level, 0);
   if (el.rateGold) el.rateGold.textContent = goldRate > 0 ? `+${goldRate * cycleLen}/cycle` : '';
+
+  // Troop production rate
+  const lcLv = state.councilSeats?.find(s => s.seat === 'lord_commander')?.level ?? 0;
+  const troopRate = myCastles.reduce((s, c) => s + c.industry_level, 0) * (lcLv + 4);
+  const totalGarrison = myCastles.reduce((s, c) => s + (c.troops ?? 0), 0);
+  if (el.resourceTroops) el.resourceTroops.textContent = totalGarrison;
+  if (el.rateTroops) el.rateTroops.textContent = troopRate > 0 ? `+${troopRate}/cycle` : '';
 
   // Start the live production countdown (drift-free via absolute timestamp)
   startProductionCountdown();
@@ -7717,6 +8186,7 @@ function startProductionCountdown() {
 function exitGameMode() {
   localStorage.removeItem('westeros_resume_game');
   if (window._productionTimer) { clearInterval(window._productionTimer); window._productionTimer = null; }
+  if (_turnClockInterval) { clearInterval(_turnClockInterval); _turnClockInterval = null; }
   state.mode = 'lobby';
   state.activeGame = null;
   state.currentPlayer = null;
@@ -8473,8 +8943,8 @@ function handleDestinationPick(castle) {
     : commander.current_castle_slug;
   const srcCastle = state.castles.find(c => c.slug === srcSlug);
   if (srcCastle && castle.map_x != null && srcCastle.map_x != null) {
-    const whispLv  = state.councilSeats.find(s => s.seat === 'whisperers')?.level ?? 1;
-    const radiusPx = FOG_SCAN_BASE + whispLv * FOG_SCAN_PER_LV;
+    const horsesLv = state.councilSeats.find(s => s.seat === 'horses')?.level ?? 0;
+    const radiusPx = HORSES_MARCH_BASE + horsesLv * HORSES_MARCH_UNIT;
     const dx = (castle.map_x - srcCastle.map_x) * MAP_NATIVE_W;
     const dy = (castle.map_y - srcCastle.map_y) * MAP_NATIVE_H;
     if (Math.hypot(dx, dy) > radiusPx) {
@@ -8606,6 +9076,7 @@ el.confirmSendForces.addEventListener('click', async () => {
         p_march_type:   marchType,
       });
       if (error) throw error;
+      SFX.march();
       const duration = formatDuration(data.travel_ticks, state.activeGame.tick_speed);
       const typeLabel = marchType === 'siege' ? 'Siege march' : 'Forces';
       toast(`${typeLabel} dispatched (${troops} troops, ${data.travel_ticks} ticks / ${duration})`);
@@ -8742,12 +9213,13 @@ function renderMovements() {
         });
       }
 
-      // Interpolated icon position
+      // Interpolated icon position (integer-tick baseline; RAF refines sub-tick)
       const total = mov.arrives_at_tick - mov.departed_at_tick;
       const elapsed = Math.max(0, Math.min(total, state.activeGame.current_tick - mov.departed_at_tick));
       const t = total > 0 ? elapsed / total : 0;
       const ix = fx + (tx - fx) * t;
       const iy = fy + (ty - fy) * t;
+      _movDataCache.set(mov.id, { fx, fy, tx, ty, elapsed, total });
 
       // Intercept ring — own moving commanders only
       const isOwnMov = movCommander?.owner_player_id === state.currentPlayer?.id;
@@ -8799,10 +9271,43 @@ function renderMovements() {
     });
   }
 
-  // Remove icons for movements that are no longer active
+  // Remove icons and cache entries for movements that are no longer active
   el.markerLayer.querySelectorAll('.movement-icon').forEach(n => {
     if (!handledIds.has(Number(n.dataset.movId))) n.remove();
   });
+  _movDataCache.forEach((_, id) => { if (!handledIds.has(id)) _movDataCache.delete(id); });
+  _startMovAnimation();
+}
+
+// ── Commander sub-tick animation (RAF-based smooth movement) ─────────────────
+let _movAnimRAF = null;
+const _movDataCache = new Map();
+
+function _getSubTickFraction() {
+  const game = state.activeGame;
+  if (!game || !game.last_tick_processed_at || game.tick_speed === 'turn_based') return 0;
+  const secsPerTick = tickIntervalHours(game.tick_speed) * 3600;
+  if (secsPerTick <= 0) return 0;
+  const elapsed = (Date.now() - new Date(game.last_tick_processed_at).getTime()) / 1000;
+  return Math.max(0, Math.min(0.99, elapsed / secsPerTick));
+}
+
+function _startMovAnimation() {
+  if (_movAnimRAF) { cancelAnimationFrame(_movAnimRAF); _movAnimRAF = null; }
+  if (!state.movements?.length) return;
+  function frame() {
+    const sub = _getSubTickFraction();
+    _movDataCache.forEach(({ fx, fy, tx, ty, elapsed, total }, movId) => {
+      const t = total > 0 ? Math.min(1, (elapsed + sub) / total) : 0;
+      const icon = el.markerLayer.querySelector(`.movement-icon[data-mov-id="${movId}"]`);
+      if (icon) {
+        icon.style.left = (fx + (tx - fx) * t) + 'px';
+        icon.style.top  = (fy + (ty - fy) * t) + 'px';
+      }
+    });
+    _movAnimRAF = requestAnimationFrame(frame);
+  }
+  _movAnimRAF = requestAnimationFrame(frame);
 }
 
 function renderEntityPicker(entities) {
@@ -9930,6 +10435,14 @@ window.abortRoute             = abortRoute;
 window.showMovementMiniBar    = showMovementMiniBar;
 window.showMovementDetail     = showMovementDetail;
 window.showRouteEditor        = showRouteEditor;
+window.toggleWhisperRead      = toggleWhisperRead;
+window.deleteWhisper          = deleteWhisper;
+window.markAllWhispersRead    = markAllWhispersRead;
+window.dismissReadWhispers    = dismissReadWhispers;
+window.dismissAllWhispers     = dismissAllWhispers;
+window.openTurnStatusModal    = openTurnStatusModal;
+window.closeTurnStatusModal   = closeTurnStatusModal;
+window.submitTurn             = submitTurn;
 const NAV_ICONS = {
   rookery:      _svg('<path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/>'),
   leaderboard:  _svg('<path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>'),
@@ -10436,12 +10949,38 @@ function buildLeaderboardHtml() {
   const totalCastles = state.castles.filter(c => c.map_x != null).length;
   const winAt = Math.ceil(totalCastles * (state.activeGame?.victory_pct || 0.5));
 
+  const me = state.currentPlayer;
+
   const rowHtml = ({ player, house, castleCount }) => {
     const isYou = player.user_id === state.user.id;
     const elim  = player.eliminated_at_tick != null;
     const color = house?.color || 'var(--border)';
     const rank  = rankMap.get(player.id);
     const pct   = Math.min(1, winAt > 0 ? castleCount / winAt : 0);
+
+    let dipBtns = '';
+    if (!isYou && !elim && me && me.eliminated_at_tick == null) {
+      const dipRow = state.diplomacy?.find(d =>
+        (d.player_a_id === me.id && d.player_b_id === player.id) ||
+        (d.player_b_id === me.id && d.player_a_id === player.id)
+      );
+      const status     = dipRow?.status || 'neutral';
+      const theyProposed = status === 'proposed' && dipRow?.proposed_by_player_id !== me.id;
+      const iProposed    = status === 'proposed' && dipRow?.proposed_by_player_id === me.id;
+      const btnStyle = 'border:none;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;cursor:pointer;';
+      if (status === 'neutral') {
+        dipBtns = `<button class="lb-dip-btn lb-dip-ally" data-target="${player.id}" style="${btnStyle}background:rgba(201,168,76,.15);color:var(--accent);border:1px solid var(--accent)44;" title="Propose Alliance"><i class="ti ti-handshake"></i></button>`;
+      } else if (theyProposed) {
+        dipBtns = `<button class="lb-dip-btn lb-dip-accept" data-target="${player.id}" style="${btnStyle}background:rgba(58,122,58,.2);color:#5cb85c;border:1px solid #5cb85c44;" title="Accept Alliance"><i class="ti ti-check"></i></button>`;
+      } else if (iProposed) {
+        dipBtns = `<span style="font-size:10px;color:var(--text-muted);font-style:italic;">Pending…</span>`;
+      } else if (status === 'ally') {
+        dipBtns = `<button class="lb-dip-btn lb-dip-break" data-target="${player.id}" style="${btnStyle}background:rgba(180,50,50,.15);color:var(--error);border:1px solid var(--error)44;" title="Break Alliance"><i class="ti ti-sword"></i></button>`;
+      } else if (status === 'enemy' || status === 'grace_period') {
+        dipBtns = `<span style="font-size:10px;color:var(--error);font-weight:700;"><i class="ti ti-shield-x"></i></span>`;
+      }
+    }
+
     return `
       <div class="scoreboard-row${isYou ? ' is-you' : ''}${player.is_ai ? ' is-ai' : ''}${elim ? ' eliminated' : ''}"
         style="--row-color:${color}"
@@ -10460,6 +10999,7 @@ function buildLeaderboardHtml() {
             <span class="lb-stat-val" style="color:#9d8fee">${fmtStat(player.prestige)}</span><span class="lb-stat-label">prestige</span>
           </div>
         </div>
+        ${dipBtns ? `<div style="display:flex;align-items:center;padding-left:8px;">${dipBtns}</div>` : ''}
       </div>`;
   };
 
@@ -10471,7 +11011,6 @@ function buildLeaderboardHtml() {
     </div>
     ${elimRows.map(rowHtml).join('')}`;
 
-  const me = state.currentPlayer;
   const canConcede = me && me.eliminated_at_tick == null && state.activeGame?.status === 'active';
   const concedeHtml = canConcede ? `
     <div id="concedeWrap" style="padding:16px 0 4px;">
@@ -10505,10 +11044,56 @@ function buildLeaderboardHtml() {
 
 function wireLeaderboardButtons() {
   el.sidebarContent.querySelectorAll('.scoreboard-row[data-clickable-player-id]').forEach(row => {
-    row.addEventListener('click', () => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.lb-dip-btn')) return;
       state.viewingPlayerId = parseInt(row.dataset.clickablePlayerId);
       _sidebarSection = 'player_detail';
       renderSidebarSection('player_detail');
+    });
+  });
+
+  const _reloadLb = async () => {
+    const [{ data }] = await Promise.all([
+      supabase.from('diplomacy').select('*').or(`player_a_id.eq.${state.currentPlayer.id},player_b_id.eq.${state.currentPlayer.id}`).eq('game_id', state.activeGame.id),
+    ]);
+    state.diplomacy = data || state.diplomacy;
+    renderSidebarSection('leaderboard');
+  };
+
+  el.sidebarContent.querySelectorAll('.lb-dip-btn.lb-dip-ally').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const tid = parseInt(btn.dataset.target);
+      btn.disabled = true;
+      const { error } = await supabase.rpc('propose_alliance', { p_game_id: state.activeGame.id, p_target_player_id: tid });
+      if (error) { toast('Failed: ' + error.message, true); btn.disabled = false; return; }
+      toast('Alliance proposed');
+      await _reloadLb();
+    });
+  });
+
+  el.sidebarContent.querySelectorAll('.lb-dip-btn.lb-dip-accept').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const tid = parseInt(btn.dataset.target);
+      btn.disabled = true;
+      const { error } = await supabase.rpc('accept_alliance', { p_game_id: state.activeGame.id, p_target_player_id: tid });
+      if (error) { toast('Failed: ' + error.message, true); btn.disabled = false; return; }
+      toast('Alliance accepted');
+      await _reloadLb();
+    });
+  });
+
+  el.sidebarContent.querySelectorAll('.lb-dip-btn.lb-dip-break').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const tid = parseInt(btn.dataset.target);
+      if (!confirm('Break alliance and declare war?')) return;
+      btn.disabled = true;
+      const { error } = await supabase.rpc('break_alliance', { p_game_id: state.activeGame.id, p_target_player_id: tid });
+      if (error) { toast('Failed: ' + error.message, true); btn.disabled = false; return; }
+      toast('War declared — 24-tick grace period begins', true);
+      await _reloadLb();
     });
   });
   el.sidebarContent.querySelectorAll('.lb-sort-tab').forEach(tab => {
@@ -11174,7 +11759,7 @@ function buildCouncilSidebarHtml() {
     seatOrder.map(seat => {
       const meta = COUNCIL_META[seat];
       const lv   = state.councilSeats.find(s => s.seat === seat)?.level || 1;
-      return `<option value="${seat}" ${currentSeat === seat ? 'selected' : ''}>${meta.icon} ${meta.title} \u2014 Lv ${lv}</option>`;
+      return `<option value="${seat}" ${currentSeat === seat ? 'selected' : ''}>${meta.title} \u2014 Lv ${lv}</option>`;
     }).join('');
 
   // Next focus options
@@ -11182,7 +11767,7 @@ function buildCouncilSidebarHtml() {
     seatOrder.map(seat => {
       const meta = COUNCIL_META[seat];
       const lv   = state.councilSeats.find(s => s.seat === seat)?.level || 1;
-      return `<option value="${seat}" ${nextSeat === seat ? 'selected' : ''}>${meta.icon} ${meta.title} \u2014 Lv ${lv}</option>`;
+      return `<option value="${seat}" ${nextSeat === seat ? 'selected' : ''}>${meta.title} \u2014 Lv ${lv}</option>`;
     }).join('');
 
   // Seat cards
@@ -12428,7 +13013,9 @@ function wireAnalysisSection() {
 
 function buildOptionsHtml() {
   if (!state.activeGame) return '';
-  const speeds = { slow: '2 hr/tick', normal: '1 hr/tick', fast: '30 min/tick', quad: '15 min/tick', turn_based: '24 hr/tick' };
+  const tbDeadline = state.activeGame?.turn_timeout_minutes;
+  const tbLabel = tbDeadline < 60 ? `${tbDeadline}min deadline` : `${Math.round(tbDeadline/60)}hr deadline`;
+  const speeds = { slow: '2 hr/tick', normal: '1 hr/tick', fast: '30 min/tick', quad: '15 min/tick', turn_based: `Turn-based · ${tbLabel}` };
   const diffLabels = { 1:'Craven', 2:'Bannerman', 3:'Lord', 4:'Hand', 5:'Small Council' };
   const tick = state.activeGame.current_tick;
   const year = Math.floor(tick / 12);
@@ -12476,7 +13063,7 @@ function buildOptionsHtml() {
         <div><strong style="color:var(--text);">Commander Speed:</strong> ${state.activeGame.commander_speed_mult || 1}× (${(17.5 * (state.activeGame.commander_speed_mult || 1)).toFixed(1)} px/tick)</div>
         <div><strong style="color:var(--text);">Infrastructure Costs:</strong> ${state.activeGame.infra_cost_mult === 0.5 ? 'Cheap ½×' : state.activeGame.infra_cost_mult === 2.0 ? 'Expensive 2×' : 'Standard 1×'}</div>
         <div><strong style="color:var(--text);">Council Costs:</strong> ${state.activeGame.council_cost_mult === 0.5 ? 'Cheap ½×' : state.activeGame.council_cost_mult === 2.0 ? 'Expensive 2×' : 'Standard 1×'}</div>
-        <div><strong style="color:var(--text);">Fog of War:</strong> ${state.activeGame.fog_of_war ? '🌫 Enabled' : 'Disabled'}</div>
+        <div><strong style="color:var(--text);">Fog of War:</strong> ${state.activeGame.fog_of_war ? 'Enabled' : 'Disabled'}</div>
       </div>`)}
 
     ${optSect('Map Display', (() => {
@@ -12556,14 +13143,23 @@ function wireOptionsSidebar() {
       if (data.combat_events?.length) {
         const myId = state.currentPlayer?.id;
         data.combat_events.forEach((ev, i) => {
-          setTimeout(() => {
-            const castle = state.castles.find(c => c.slug === ev.castle);
-            const name = castle ? castle.name : ev.castle;
-            if (ev.result === 'attacker_won' && ev.attacker === myId) toast(`⚔ Victory! ${name} conquered (${ev.atk_remain} remain)`);
-            else if (ev.result === 'attacker_won' && ev.defender === myId) toast(`💀 ${name} was conquered!`, true);
-            else if (ev.result === 'defender_won' && ev.defender === myId) toast(`🛡 Assault on ${name} repelled (${ev.def_remain} survive)`);
-            else if (ev.result === 'defender_won' && ev.attacker === myId) toast(`⚔ Assault on ${name} failed`, true);
-          }, i * 600);
+          const involved = ev.attacker === myId || ev.defender === myId;
+          if (involved) {
+            setTimeout(() => showCombatResult(ev), i * 400);
+          } else {
+            setTimeout(() => {
+              const castle = state.castles.find(c => c.slug === ev.castle);
+              const name = castle ? castle.name : ev.castle;
+              const atkP = state.gamePlayers.find(p => p.id === ev.attacker);
+              const defP = state.gamePlayers.find(p => p.id === ev.defender);
+              const atkH = state.houses.find(h => h.slug === atkP?.house_slug)?.name ?? 'Unknown';
+              const defH = state.houses.find(h => h.slug === defP?.house_slug)?.name ?? 'Unknown';
+              if (ev.result === 'attacker_won')
+                toast(`${atkH} conquered ${name} from ${defH}`);
+              else
+                toast(`${defH} repelled ${atkH} at ${name}`);
+            }, i * 600);
+          }
         });
       }
       if ((data.cycles_fired || 0) > 0) supabase.rpc('record_intel_snapshot', { p_game_id: state.activeGame.id }).then(null, () => {});
@@ -13126,27 +13722,112 @@ function showGameOver(data) {
   const myId     = state.currentPlayer?.id;
   const isWinner = data.winner_id === myId;
   const house    = state.houses.find(h => h.slug === data.winner);
+  const myHouse  = state.houses.find(h => h.slug === state.currentPlayer?.house_slug);
+  const tick     = state.activeGame?.current_tick || 0;
+  const cycleLen = state.activeGame?.production_cycle_ticks ?? 24;
+  const year     = Math.floor(tick / cycleLen) + 1;
 
-  el.gameOverIcon.textContent  = isWinner ? '👑' : '☠';
+  el.gameOverIcon.innerHTML    = isWinner
+    ? `<i class="ti ti-crown" style="color:var(--accent);"></i>`
+    : `<i class="ti ti-skull" style="color:var(--error);"></i>`;
   el.gameOverTitle.textContent = isWinner ? 'Victory' : 'Defeat';
   el.gameOverSub.textContent   = isWinner
     ? 'The Iron Throne is yours. Westeros bends the knee.'
     : `${house?.name || data.winner} has conquered the realm.`;
-  el.gameOverStats.innerHTML   = `
-    <div><strong>${data.castles}</strong> of ${data.total} castles controlled</div>
-    <div>Win threshold: <strong>${data.win_at}</strong> castles</div>
-    <div>Tick <strong>${state.activeGame?.current_tick || '—'}</strong></div>`;
-  if (isWinner) {
-    el.gameOverCard.style.borderColor = 'var(--accent)';
-    el.gameOverCard.style.boxShadow   = '0 0 60px rgba(201,168,76,0.35)';
-  } else {
-    el.gameOverCard.style.borderColor = 'var(--error)';
-    el.gameOverCard.style.boxShadow   = '0 0 60px rgba(180,50,50,0.3)';
-    el.gameOverTitle.style.color      = 'var(--error)';
-  }
+
+  el.gameOverStats.innerHTML = `
+    <div><strong>${data.castles}</strong> of ${data.total} castles held</div>
+    <div>Year <strong>${year}</strong> · Tick <strong>${tick}</strong></div>`;
+
+  const myGold     = state.currentPlayer?.gold ?? 0;
+  const myCastles  = state.gameCastles.filter(gc => gc.owner_player_id === myId);
+  const myGarrison = myCastles.reduce((s, c) => s + (c.troops ?? 0), 0);
+  const lcLv       = state.councilSeats?.find(s => s.seat === 'lord_commander')?.level ?? 0;
+  const troopRate  = myCastles.reduce((s, c) => s + c.industry_level, 0) * (lcLv + 4);
+
+  el.gameOverDetail.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-top:12px;font-size:13px;color:var(--text-muted);">
+      <div><i class="ti ti-coin" style="color:var(--accent);margin-right:4px;"></i>Gold: <strong style="color:var(--text);">${myGold}</strong></div>
+      <div><i class="ti ti-shield-chevron" style="margin-right:4px;"></i>Garrison: <strong style="color:var(--text);">${myGarrison}</strong></div>
+      <div><i class="ti ti-sword" style="margin-right:4px;"></i>Troops/cycle: <strong style="color:var(--text);">${troopRate}</strong></div>
+      <div><i class="ti ti-building-castle" style="margin-right:4px;"></i>Win at: <strong style="color:var(--text);">${data.win_at}</strong></div>
+    </div>`;
+
+  const color = isWinner ? 'var(--accent)' : 'var(--error)';
+  const glow  = isWinner ? 'rgba(201,168,76,0.35)' : 'rgba(180,50,50,0.3)';
+  el.gameOverCard.style.borderColor = color;
+  el.gameOverCard.style.boxShadow   = `0 0 80px ${glow}`;
+  el.gameOverTitle.style.color      = isWinner ? 'var(--accent)' : 'var(--error)';
   el.gameOverOverlay.classList.remove('hidden');
+  if (isWinner) SFX.victory(); else SFX.defeat();
 }
 
+
+// ── Combat resolution screen queue ───────────────────────────────────────────
+const _combatQueue = [];
+let _combatShowing = false;
+
+function _showNextCombat() {
+  if (_combatQueue.length === 0) { _combatShowing = false; return; }
+  _combatShowing = true;
+  const ev = _combatQueue.shift();
+  const myId = state.currentPlayer?.id;
+  const castle = state.castles.find(c => c.slug === ev.castle);
+  const castleName = castle?.name ?? ev.castle;
+  const atkPlayer = state.gamePlayers.find(p => p.id === ev.attacker);
+  const defPlayer = state.gamePlayers.find(p => p.id === ev.defender);
+  const atkHouse  = state.houses.find(h => h.slug === atkPlayer?.house_slug);
+  const defHouse  = state.houses.find(h => h.slug === defPlayer?.house_slug);
+  const iAttack   = ev.attacker === myId;
+  const iWon      = (ev.result === 'attacker_won' && iAttack) || (ev.result === 'defender_won' && !iAttack);
+
+  document.getElementById('combatScreenBanner').innerHTML =
+    `<div style="font-family:'Cinzel Decorative','Cinzel',Georgia,serif;font-size:22px;font-weight:700;color:${iWon ? 'var(--accent)' : 'var(--error)'};">${iWon ? 'Victory' : 'Defeat'}</div>
+     <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-top:4px;">${escapeHtml(castleName)}</div>`;
+
+  document.getElementById('combatScreenVs').innerHTML =
+    `<div class="combat-screen-house">
+       <div style="color:${atkHouse?.color ?? '#888'};font-size:28px;margin-bottom:6px;"><i class="ti ti-sword"></i></div>
+       <div class="combat-screen-house-name" style="color:${atkHouse?.color ?? 'var(--text)'}">${escapeHtml(atkHouse?.name ?? 'Unknown')}</div>
+       <div class="combat-screen-house-role">Attacker</div>
+     </div>
+     <div class="combat-screen-divider">vs</div>
+     <div class="combat-screen-house">
+       <div style="color:${defHouse?.color ?? '#888'};font-size:28px;margin-bottom:6px;"><i class="ti ti-shield"></i></div>
+       <div class="combat-screen-house-name" style="color:${defHouse?.color ?? 'var(--text)'}">${escapeHtml(defHouse?.name ?? 'Unknown')}</div>
+       <div class="combat-screen-house-role">Defender</div>
+     </div>`;
+
+  document.getElementById('combatScreenStats').innerHTML =
+    `<div class="combat-screen-stat">
+       <div class="combat-screen-stat-label">Attacker Remaining</div>
+       <div class="combat-screen-stat-val">${ev.atk_remain ?? '—'}</div>
+     </div>
+     <div class="combat-screen-stat">
+       <div class="combat-screen-stat-label">Defender Remaining</div>
+       <div class="combat-screen-stat-val">${ev.def_remain ?? '—'}</div>
+     </div>`;
+
+  const resultEl = document.getElementById('combatScreenResult');
+  const resultText = iWon
+    ? (iAttack ? `${escapeHtml(castleName)} has fallen to your forces` : `The assault on ${escapeHtml(castleName)} is repelled`)
+    : (iAttack ? `The assault on ${escapeHtml(castleName)} has failed` : `${escapeHtml(castleName)} has fallen to the enemy`);
+  resultEl.className = `combat-screen-result ${iWon ? 'won' : 'lost'}`;
+  resultEl.textContent = resultText;
+
+  el.combatScreenOverlay.classList.remove('hidden');
+  if (iWon) SFX.captured(); else SFX.defeat();
+}
+
+function showCombatResult(ev) {
+  _combatQueue.push(ev);
+  if (!_combatShowing) _showNextCombat();
+}
+
+document.getElementById('combatScreenDismiss')?.addEventListener('click', () => {
+  el.combatScreenOverlay.classList.add('hidden');
+  setTimeout(_showNextCombat, 200);
+});
 
 el.gameOverCloseBtn?.addEventListener('click', () => {
   el.gameOverOverlay.classList.add('hidden');
@@ -13238,6 +13919,7 @@ function subscribeRealtime(gameId) {
         if (_activeThreadId === msg.thread_id && _sidebarSection === 'rookery') {
           renderThreadMessages(thread);
         } else if (msg.player_id !== myId) {
+          SFX.raven();
           // New message in a thread I'm not currently viewing
           state.unreadThreadIds.add(msg.thread_id);
           renderInboxBadge();
@@ -13246,6 +13928,7 @@ function subscribeRealtime(gameId) {
         // New thread — reload thread data
         refreshThreads().then(() => {
           if (msg.player_id !== myId) {
+            SFX.raven();
             state.unreadThreadIds.add(msg.thread_id);
             renderInboxBadge();
           }
@@ -13279,6 +13962,17 @@ function subscribeRealtime(gameId) {
       else state.whispers.unshift(payload.new);
       if (_rookActiveTab === 'whispers' && _sidebarSection === 'rookery') renderWhispersPane();
     })
+    // game_players changes → update turn submission status
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'game_players',
+      filter: `game_id=eq.${gameId}`,
+    }, payload => {
+      const updated = payload.new;
+      const idx = (state.gamePlayers || []).findIndex(p => p.id === updated.id);
+      if (idx >= 0) state.gamePlayers[idx] = { ...state.gamePlayers[idx], ...updated };
+      renderTurnBar();
+      if (document.getElementById('turnStatusModal')?.style.display !== 'none') renderTurnStatusContent();
+    })
     .subscribe(status => {
       if (status === 'SUBSCRIBED') console.log('Realtime connected for game', gameId);
     });
@@ -13294,6 +13988,124 @@ function unsubscribeRealtime() {
 }
 
 
+
+let _turnClockInterval = null;
+
+function renderTurnBar() {
+  const game = state.activeGame;
+  if (!el.gameRight) return;
+  if (!game || game.tick_speed !== 'turn_based') {
+    el.gameRight.innerHTML = '';
+    clearInterval(_turnClockInterval);
+    _turnClockInterval = null;
+    return;
+  }
+
+  const me = state.currentPlayer ? (state.gamePlayers || []).find(p => p.id === state.currentPlayer.id) : null;
+  const submitted = me?.turn_submitted ?? false;
+  const humanPlayers = (state.gamePlayers || []).filter(p => !p.is_ai && !p.eliminated_at_tick);
+  const readyCount = humanPlayers.filter(p => p.turn_submitted).length;
+  const totalCount = humanPlayers.length;
+
+  el.gameRight.innerHTML = `
+    <button id="endTurnBtn" onclick="submitTurn()" ${submitted ? 'disabled' : ''}
+      style="font-size:12px;padding:5px 13px;background:${submitted ? 'transparent' : 'var(--accent)'};color:${submitted ? 'var(--text-muted)' : '#fff'};border:1px solid ${submitted ? 'var(--border)' : 'var(--accent)'};border-radius:4px;cursor:${submitted ? 'default' : 'pointer'};">
+      ${submitted ? 'Waiting...' : 'End Turn'}
+    </button>
+    <button onclick="openTurnStatusModal()"
+      style="font-size:11px;color:var(--text-muted);background:none;border:1px solid var(--border);border-radius:4px;padding:4px 9px;cursor:pointer;" id="turnReadyChip">
+      ${readyCount}/${totalCount} ready
+    </button>
+  `;
+
+  if (!_turnClockInterval) {
+    _turnClockInterval = setInterval(updateTurnDeadline, 1000);
+  }
+  updateTurnDeadline();
+}
+
+function updateTurnDeadline() {
+  const game = state.activeGame;
+  if (!game?.current_turn_ends_at) return;
+  const msLeft = Math.max(0, new Date(game.current_turn_ends_at) - Date.now());
+  const h = Math.floor(msLeft / 3600000);
+  const m = Math.floor((msLeft % 3600000) / 60000);
+  const s = Math.floor((msLeft % 60000) / 1000);
+  const str = h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`;
+  const chip = document.getElementById('turnReadyChip');
+  if (chip) {
+    const humanPlayers = (state.gamePlayers || []).filter(p => !p.is_ai && !p.eliminated_at_tick);
+    const readyCount = humanPlayers.filter(p => p.turn_submitted).length;
+    chip.textContent = `${readyCount}/${humanPlayers.length} ready · ${str}`;
+  }
+  if (document.getElementById('turnStatusModal')?.style.display !== 'none') renderTurnStatusContent();
+}
+
+async function submitTurn() {
+  const btn = document.getElementById('endTurnBtn');
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  const { data, error } = await supabase.rpc('submit_turn', { p_game_id: state.activeGame.id });
+  if (error) {
+    toast(`Error: ${error.message}`, true);
+    btn.disabled = false;
+    btn.textContent = 'End Turn';
+    return;
+  }
+  if (state.currentPlayer) {
+    const idx = (state.gamePlayers || []).findIndex(p => p.id === state.currentPlayer.id);
+    if (idx >= 0) state.gamePlayers[idx].turn_submitted = true;
+  }
+  renderTurnBar();
+  if (data?.all_submitted) {
+    await refreshGameState(state.activeGame.id);
+  }
+}
+
+function openTurnStatusModal() {
+  const modal = document.getElementById('turnStatusModal');
+  if (modal) { modal.style.display = 'flex'; renderTurnStatusContent(); }
+}
+
+function closeTurnStatusModal() {
+  const modal = document.getElementById('turnStatusModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function renderTurnStatusContent() {
+  const game = state.activeGame;
+  const container = document.getElementById('turnStatusContent');
+  if (!container || !game) return;
+
+  const humanPlayers = (state.gamePlayers || []).filter(p => !p.is_ai && !p.eliminated_at_tick);
+  const deadline = game.current_turn_ends_at ? new Date(game.current_turn_ends_at) : null;
+  const msLeft = deadline ? Math.max(0, deadline - Date.now()) : null;
+
+  let deadlineStr = 'No deadline set';
+  if (msLeft !== null) {
+    const h = Math.floor(msLeft / 3600000);
+    const m = Math.floor((msLeft % 3600000) / 60000);
+    const s = Math.floor((msLeft % 60000) / 1000);
+    deadlineStr = h > 0 ? `${h}h ${m}m remaining` : m > 0 ? `${m}m ${s}s remaining` : `${s}s remaining`;
+  }
+
+  const rows = humanPlayers.map(p => {
+    const house = (state.houses || []).find(h => h.slug === p.house_slug);
+    const name = escapeHtml(p.display_name || house?.name || p.house_slug);
+    const color = p.turn_submitted ? 'var(--accent)' : 'var(--text-muted)';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">
+      <span style="color:${color};font-size:15px;width:18px;text-align:center;">${p.turn_submitted ? '✓' : '○'}</span>
+      <span style="font-size:13px;">${name}</span>
+      <span style="font-size:11px;color:${color};margin-left:auto;">${p.turn_submitted ? 'Ready' : 'Waiting'}</span>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Turn ${game.current_tick} — ${deadlineStr}</div>
+    ${rows || '<div style="color:var(--text-muted);font-size:13px;">No human players found.</div>'}
+  `;
+}
 
 function getPrimaryCastle() {
   const myPlayer = state.currentPlayer;

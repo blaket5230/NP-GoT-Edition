@@ -236,6 +236,7 @@ All of these are explicitly out of scope for V1 but logged for future developmen
 | Mediation | A third-party house mediates peace between two houses at war. Complex multi-party state machine. |
 | Formal trade agreements | Recurring trade routes with set gold flows per cycle, beyond ad-hoc gold gifts. Separate from the existing Ledger system. |
 | Diplomatic reputation score | A prestige-derived trust rating visible to other players — reflects history of broken agreements, honored debts, and diplomatic consistency. |
+| Small Council meeting mechanic | Chat-based session where each filled seat responds in character using live game state as context. The Hand advises on strategy, Master of Coin on economics, Master of Whisperers on intelligence, Grand Maester on broader counsel. Recommended design: per-seat AI responses (not one synthesized voice), but capped to filled seats only and the 3–4 most strategically relevant seats to keep output readable. Pairs naturally with the Named Council Member Characters item — once seats have named characters, their personality can be injected into the prompt. Best suited for turn-based mode but works in async too. |
 | Shadow Paths | Retired entirely. Not planned for any version. |
 
 ---
