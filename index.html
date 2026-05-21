@@ -541,7 +541,88 @@
     padding: 0 14px;
     gap: 14px;
     min-height: 64px;
+    position: relative;
+    overflow: hidden;
   }
+  /* Tick progress bar */
+  #tickProgressBar {
+    position: absolute; bottom: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), #e8c84a);
+    border-radius: 0 2px 2px 0;
+    transition: none;
+    pointer-events: none;
+    opacity: 0.85;
+  }
+
+  /* Sidebar section fade-in */
+  @keyframes sb-fade { from { opacity:0; transform:translateX(7px); } to { opacity:1; transform:none; } }
+  .sidebar-nav-list, .section-content { animation: sb-fade 0.18s ease; }
+
+  /* Map search */
+  #mapSearchWrap {
+    position: absolute; top: 10px; right: 10px; z-index: 120;
+    display: flex; align-items: center; gap: 0;
+  }
+  #mapSearchInput {
+    width: 0; opacity: 0; pointer-events: none;
+    background: rgba(10,11,22,0.92); border: 1px solid var(--border-gold);
+    border-right: none; border-radius: 4px 0 0 4px;
+    color: var(--text); font-family: 'EB Garamond', Georgia, serif;
+    font-size: 13px; padding: 6px 10px;
+    transition: width 0.2s, opacity 0.2s;
+  }
+  #mapSearchInput.open { width: 160px; opacity: 1; pointer-events: all; }
+  #mapSearchToggle {
+    background: rgba(10,11,22,0.88); border: 1px solid var(--border-gold);
+    border-radius: 4px; color: var(--accent); cursor: pointer;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    font-size: 15px; transition: background 0.15s;
+  }
+  #mapSearchInput.open + #mapSearchToggle { border-radius: 0 4px 4px 0; border-left: none; }
+  #mapSearchToggle:hover { background: rgba(30,28,50,0.95); }
+  #mapSearchResults {
+    position: absolute; top: 38px; right: 0; min-width: 200px;
+    background: rgba(10,11,22,0.96); border: 1px solid var(--border-gold);
+    border-radius: 4px; max-height: 200px; overflow-y: auto; display: none; z-index: 130;
+  }
+  .map-search-result {
+    padding: 7px 12px; font-size: 12px; cursor: pointer; color: var(--text);
+    border-bottom: 1px solid var(--border); transition: background 0.1s;
+  }
+  .map-search-result:last-child { border-bottom: none; }
+  .map-search-result:hover { background: rgba(201,168,76,0.1); color: var(--accent); }
+  .map-search-highlight { animation: castle-ping 0.9s ease-out; }
+  @keyframes castle-ping {
+    0%  { box-shadow: 0 0 0 0 rgba(201,168,76,0.9), var(--marker-shadow,none); }
+    60% { box-shadow: 0 0 0 16px rgba(201,168,76,0.2), var(--marker-shadow,none); }
+    100%{ box-shadow: 0 0 0 24px rgba(201,168,76,0), var(--marker-shadow,none); }
+  }
+
+  /* Castle capture flash */
+  @keyframes capture-ripple {
+    0%  { box-shadow: 0 0 0 0 rgba(201,168,76,0.85), var(--marker-shadow,none); }
+    50% { box-shadow: 0 0 0 14px rgba(201,168,76,0.25), var(--marker-shadow,none); }
+    100%{ box-shadow: 0 0 0 22px rgba(201,168,76,0), var(--marker-shadow,none); }
+  }
+  .castle-marker.capture-flash { animation: capture-ripple 1.1s ease-out; }
+
+  /* Council XP ring */
+  .council-ring-wrap { position:relative; width:54px; height:54px; flex-shrink:0; }
+  .council-ring-wrap svg { width:54px; height:54px; transform:rotate(-90deg); }
+  .council-ring-label {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:'Cinzel',Georgia,serif; font-size:12px; font-weight:700; color:var(--accent);
+  }
+
+  /* Sparkline bars */
+  .lb-sparkline { display:inline-flex; align-items:flex-end; gap:1px; height:18px; margin-left:6px; vertical-align:middle; }
+  .lb-spark-bar { width:3px; background:var(--accent); border-radius:1px 1px 0 0; opacity:0.7; min-height:1px; }
+
+  /* Analysis chart */
+  .analysis-chart { width:100%; height:70px; margin-bottom:12px; }
+  .analysis-chart-wrap { margin-bottom:10px; }
+  .analysis-chart-label { font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:4px; }
+
   .header-brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .header .title {
     font-family: 'Georgia', serif;
@@ -1109,20 +1190,32 @@
   /* Toast */
   .toast {
     position: fixed;
-    bottom: 24px;
+    bottom: 28px;
     left: 50%;
-    transform: translateX(-50%);
-    background: rgba(20,20,42,0.95);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 8px 16px;
-    border-radius: 4px;
+    transform: translateX(-50%) translateY(4px);
+    background: linear-gradient(160deg, #12111e, #0d0c18);
+    border: 1px solid var(--border-gold);
+    border-left: 3px solid var(--accent);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 5px;
     font-size: 13px;
+    font-family: 'EB Garamond', Georgia, serif;
+    letter-spacing: .02em;
     z-index: 2000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s;
+    transition: opacity 0.22s, transform 0.22s;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    max-width: min(420px, 90vw);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { border-left-color: var(--error); }
+  .toast.error .toast-icon { color: var(--error); }
+  .toast-icon { color: var(--accent); margin-right: 8px; font-size: 12px; }
   /* Combat Resolution Screen */
   .combat-screen-overlay {
     position: fixed; inset: 0; z-index: 9995;
@@ -3352,6 +3445,9 @@
       </div>
     </div>
 
+    <!-- Tick progress bar -->
+    <div id="tickProgressBar" style="width:0%;"></div>
+
     <div class="spacer"></div>
 
     <!-- Right side -->
@@ -3454,6 +3550,11 @@
         <img id="mapImage" alt="Westeros">
       </div>
       <div class="marker-overlay" id="markerLayer"></div>
+      <div id="mapSearchWrap">
+        <input type="text" id="mapSearchInput" placeholder="Search castles…" autocomplete="off">
+        <button id="mapSearchToggle" title="Search castles"><i class="ti ti-search"></i></button>
+        <div id="mapSearchResults"></div>
+      </div>
       <svg class="movements-overlay" id="movementsOverlay" preserveAspectRatio="none"></svg>
       <div class="map-loading" id="mapLoading">Loading castles from database...</div>
       <div class="destination-banner" id="destinationBanner">
@@ -4313,6 +4414,7 @@ const state = {
   allCouncilSeats: [],
   diplomacy: [],
   realmEvents: [],       // game_events for realm news feed (castle captures, war declarations)
+  intelSnapshots: [],    // intel_snapshots for sparklines and analysis charts
   ledger: [],            // ledger rows involving current player         // diplomacy rows for current player (fetched in refreshGameState)
   viewingPlayerId: null,   // player being inspected in Houses/detail view              // player_inbox messages for this game
   currentPlayer: null,
@@ -4501,10 +4603,11 @@ const el = {
 // =====================================================
 let toastTimer;
 function toast(msg, isError = false) {
-  el.toast.textContent = msg;
+  const icon = isError ? '<i class="ti ti-alert-triangle toast-icon"></i>' : '<i class="ti ti-scroll toast-icon"></i>';
+  el.toast.innerHTML = icon + escapeHtml(msg);
   el.toast.className = 'toast show' + (isError ? ' error' : '');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.toast.classList.remove('show'), 2500);
+  toastTimer = setTimeout(() => el.toast.classList.remove('show'), 3000);
 }
 function escapeHtml(s) {
   if (s == null) return '';
@@ -6433,6 +6536,7 @@ async function enterGameMode(gameId, { reload = true } = {}) {
     _sidebarSection = null;
     // Subscribe to live updates for this game
     subscribeRealtime(state.activeGame.id);
+    _startTickBar();
     document.querySelector('.map-area').classList.add('game-mode');
     enterGamePanelMode();
     el.stageLabel.textContent = `v2.0 · Playing`;
@@ -6502,7 +6606,7 @@ async function refreshGameState(gameId) {
 
   if (state.currentPlayer) {
     const pid = state.currentPlayer.id;
-    const [seatsResult, ledgerResult, dipResult, whispersResult, eventsResult] = await Promise.all([
+    const [seatsResult, ledgerResult, dipResult, whispersResult, eventsResult, snapshotsResult] = await Promise.all([
       supabase.from('council_seats').select('*').eq('game_id', gameId),
       supabase.from('ledger').select('*').eq('game_id', gameId)
         .or(`payer_player_id.eq.${pid},receiver_player_id.eq.${pid}`)
@@ -6514,6 +6618,8 @@ async function refreshGameState(gameId) {
       supabase.from('game_events').select('*').eq('game_id', gameId)
         .in('event_type', ['castle_captured', 'war_declared'])
         .order('created_at', { ascending: false }).limit(60),
+      supabase.from('intel_snapshots').select('*').eq('game_id', gameId)
+        .order('tick', { ascending: true }),
     ]);
     state.allCouncilSeats = seatsResult.data || [];
     state.councilSeats    = state.allCouncilSeats.filter(s => s.player_id === pid);
@@ -6521,6 +6627,7 @@ async function refreshGameState(gameId) {
     state.diplomacy       = dipResult.data || [];
     state.whispers        = whispersResult.data || [];
     state.realmEvents     = eventsResult.data || [];
+    state.intelSnapshots  = snapshotsResult.data || [];
     // Trigger AI generation for any whispers that arrived while client was offline
     state.whispers.filter(w => w.text === null).forEach(w => triggerMowWhisper(w.id));
   }
@@ -6557,10 +6664,12 @@ async function processTicks(gameId, { quiet = false } = {}) {
             const defP = state.gamePlayers.find(p => p.id === ev.defender);
             const atkH = state.houses.find(h => h.slug === atkP?.house_slug)?.name ?? 'Unknown';
             const defH = state.houses.find(h => h.slug === defP?.house_slug)?.name ?? 'Unknown';
-            if (ev.result === 'attacker_won')
+            if (ev.result === 'attacker_won') {
               toast(`${atkH} conquered ${name} from ${defH}`);
-            else
+              _flashCastleCapture(ev.castle);
+            } else {
               toast(`${defH} repelled ${atkH} at ${name}`);
+            }
           }, i * 600);
         }
       });
@@ -9446,9 +9555,11 @@ function _getSubTickFraction() {
 
 function _startMovAnimation() {
   if (_movAnimRAF) { cancelAnimationFrame(_movAnimRAF); _movAnimRAF = null; }
-  if (!state.movements?.length) return;
+  const tickBar = document.getElementById('tickProgressBar');
   function frame() {
     const sub = _getSubTickFraction();
+    // Tick progress bar — fills left-to-right within each tick cycle
+    if (tickBar) tickBar.style.width = (sub * 100).toFixed(2) + '%';
     _movDataCache.forEach(({ fx, fy, tx, ty, elapsed, total }, movId) => {
       const t = total > 0 ? Math.min(1, (elapsed + sub) / total) : 0;
       const icon = el.markerLayer.querySelector(`.movement-icon[data-mov-id="${movId}"]`);
@@ -9460,6 +9571,102 @@ function _startMovAnimation() {
     _movAnimRAF = requestAnimationFrame(frame);
   }
   _movAnimRAF = requestAnimationFrame(frame);
+}
+
+// Castle capture flash
+function _flashCastleCapture(castleSlug) {
+  const marker = el.markerLayer?.querySelector(`[data-slug="${castleSlug}"]`);
+  if (!marker) return;
+  marker.classList.remove('capture-flash');
+  void marker.offsetWidth; // reflow to restart animation
+  marker.classList.add('capture-flash');
+  setTimeout(() => marker.classList.remove('capture-flash'), 1200);
+}
+
+// Map search
+(function initMapSearch() {
+  const input  = document.getElementById('mapSearchInput');
+  const toggle = document.getElementById('mapSearchToggle');
+  const results= document.getElementById('mapSearchResults');
+  if (!input || !toggle || !results) return;
+
+  toggle.addEventListener('click', () => {
+    const open = input.classList.toggle('open');
+    if (open) { input.focus(); } else { input.value = ''; results.style.display = 'none'; }
+  });
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    results.style.display = 'none';
+    if (!q || q.length < 2) return;
+    const matches = (state.castles || [])
+      .filter(c => c.name.toLowerCase().includes(q) && c.map_x != null)
+      .slice(0, 10);
+    if (!matches.length) return;
+    results.innerHTML = matches.map(c =>
+      `<div class="map-search-result" data-slug="${c.slug}">${escapeHtml(c.name)}</div>`
+    ).join('');
+    results.style.display = 'block';
+    results.querySelectorAll('.map-search-result').forEach(row => {
+      row.addEventListener('click', () => {
+        const castle = state.castles.find(c => c.slug === row.dataset.slug);
+        if (!castle) return;
+        // Pan map to castle
+        _panMapToCastle(castle);
+        input.value = '';
+        input.classList.remove('open');
+        results.style.display = 'none';
+      });
+    });
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#mapSearchWrap')) {
+      results.style.display = 'none';
+    }
+  });
+})();
+
+function _panMapToCastle(castle) {
+  const img = document.getElementById('mapImage');
+  const container = document.getElementById('mapContainer');
+  if (!img || !container) return;
+  const iw = img.naturalWidth  || img.clientWidth  || 1;
+  const ih = img.naturalHeight || img.clientHeight || 1;
+  const cw = container.clientWidth;
+  const ch = container.clientHeight;
+  const scale = Math.min(cw / iw, ch / ih);
+  const ox = (cw - iw * scale) / 2;
+  const oy = (ch - ih * scale) / 2;
+  const px = ox + castle.map_x * scale;
+  const py = oy + castle.map_y * scale;
+  // Scroll the mapInner to center on the castle
+  const inner = document.getElementById('mapInner');
+  if (inner) {
+    inner.scrollIntoView && inner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  // Highlight the marker
+  setTimeout(() => {
+    const marker = el.markerLayer?.querySelector(`[data-slug="${castle.slug}"]`);
+    if (marker) {
+      marker.classList.add('map-search-highlight');
+      setTimeout(() => marker.classList.remove('map-search-highlight'), 1000);
+    }
+  }, 100);
+}
+
+// Tick bar fallback — runs even with no movements active
+let _tickBarRAF = null;
+function _startTickBar() {
+  if (_tickBarRAF) { cancelAnimationFrame(_tickBarRAF); _tickBarRAF = null; }
+  const bar = document.getElementById('tickProgressBar');
+  if (!bar) return;
+  function frame() {
+    const sub = _getSubTickFraction();
+    bar.style.width = (sub * 100).toFixed(2) + '%';
+    _tickBarRAF = requestAnimationFrame(frame);
+  }
+  _tickBarRAF = requestAnimationFrame(frame);
 }
 
 function renderEntityPicker(entities) {
@@ -11103,6 +11310,27 @@ function buildLeaderboardHtml() {
   const totalCastles = state.castles.filter(c => c.map_x != null).length;
   const winAt = Math.ceil(totalCastles * (state.activeGame?.victory_pct || 0.5));
 
+  // Sparklines from intel_snapshots
+  const snapsByPlayer = new Map();
+  const SPARK_N = 10;
+  if (state.intelSnapshots?.length) {
+    for (const snap of state.intelSnapshots) {
+      if (!snapsByPlayer.has(snap.player_id)) snapsByPlayer.set(snap.player_id, []);
+      snapsByPlayer.get(snap.player_id).push(snap.castles);
+    }
+  }
+  const sparkMaxCastles = Math.max(1, ...([...snapsByPlayer.values()].flat()));
+
+  const buildSparkline = (playerId, color) => {
+    const data = (snapsByPlayer.get(playerId) || []).slice(-SPARK_N);
+    if (data.length < 2) return '';
+    const bars = data.map(v => {
+      const h = Math.max(1, Math.round((v / sparkMaxCastles) * 18));
+      return `<div class="lb-spark-bar" style="height:${h}px;background:${color};"></div>`;
+    }).join('');
+    return `<span class="lb-sparkline" title="Castle count trend">${bars}</span>`;
+  };
+
   const me = state.currentPlayer;
 
   const rowHtml = ({ player, house, castleCount }) => {
@@ -11147,6 +11375,7 @@ function buildLeaderboardHtml() {
           <div class="castle-bar-track"><div class="castle-bar-fill" style="width:${Math.round(pct * 100)}%"></div></div>
           <div class="lb-stats">
             <span class="lb-stat-val">${castleCount}</span><span class="lb-stat-label">castles</span>
+            ${buildSparkline(player.id, color)}
             <span class="lb-sep">·</span>
             <span class="lb-stat-val" style="color:var(--accent)">${fmtStat(player.gold)}</span><span class="lb-stat-label">gold</span>
             <span class="lb-sep">·</span>
@@ -11941,24 +12170,30 @@ function buildCouncilSidebarHtml() {
     if (isStrength)  badges.push(`<span style="font-size:10px;color:var(--success);border:1px solid rgba(70,160,100,.5);padding:2px 7px;border-radius:3px;">STRENGTH</span>`);
     if (isWeakness)  badges.push(`<span style="font-size:10px;color:var(--error);border:1px solid rgba(180,50,50,.5);padding:2px 7px;border-radius:3px;">WEAKNESS</span>`);
 
+    const ringColor  = active ? 'var(--accent)' : 'color-mix(in srgb,var(--accent) 45%,transparent)';
+    const trackColor = 'var(--border-strong)';
+    const dash = pct.toFixed(1);
+    const ring = `<div class="council-ring-wrap">
+      <svg viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r="15.9155" fill="none" stroke="${trackColor}" stroke-width="3.2"/>
+        <circle cx="18" cy="18" r="15.9155" fill="none" stroke="${ringColor}" stroke-width="3.2"
+          stroke-dasharray="${dash} ${(100-pct).toFixed(1)}" stroke-dashoffset="25" stroke-linecap="round"/>
+      </svg>
+      <div class="council-ring-label">${lv}</div>
+    </div>`;
+
     return `<div class="council-seat-card" data-seat="${seat}" style="
         border:2px solid ${active ? 'var(--accent)' : 'var(--border-strong)'};
         background:${active ? 'color-mix(in srgb,var(--accent) 7%,var(--bg-elevated))' : 'var(--bg-elevated)'};
-        border-radius:8px;padding:16px;margin-bottom:10px;cursor:default;
+        border-radius:8px;padding:14px 16px;margin-bottom:10px;cursor:default;
         transition:border-color .15s,background .15s;
       ">
       <div style="display:flex;gap:14px;align-items:flex-start;">
-        <div style="font-size:28px;line-height:1;flex-shrink:0;margin-top:2px;">${meta.icon}</div>
+        ${ring}
         <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-            <span style="font-family:'Cinzel',Georgia,serif;font-size:15px;font-weight:700;color:var(--text);">${meta.title}</span>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px;">
+            <span style="font-family:'Cinzel',Georgia,serif;font-size:15px;font-weight:700;color:var(--text);">${meta.icon} ${meta.title}</span>
             ${badges.join('')}
-          </div>
-          <div style="margin-bottom:8px;">
-            <span style="font-size:12px;font-weight:600;color:var(--accent);">Level ${lv}</span>
-          </div>
-          <div style="height:7px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:5px;">
-            <div style="height:100%;width:${pct}%;background:${active ? 'var(--accent)' : 'color-mix(in srgb,var(--accent) 40%,transparent)'};border-radius:4px;"></div>
           </div>
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">${prog} / ${cost} prestige${active && pct > 0 ? ` \u00b7 ${pct}%` : ''}</div>
           <div style="font-size:13px;color:var(--text);line-height:1.65;border-top:1px solid var(--border);padding-top:10px;">${COUNCIL_DESC[seat]}</div>
@@ -13127,6 +13362,44 @@ function buildAnalysisHtml() {
     row('Laws',           'laws',           'laws',          v => v, true,  false),
   ].join('');
 
+  // Chart data from intel_snapshots
+  const snapA = (state.intelSnapshots || []).filter(s => s.player_id === _analysisA);
+  const snapB = (state.intelSnapshots || []).filter(s => s.player_id === _analysisB);
+
+  const buildChart = (label, field, colorA, colorB) => {
+    const valA = snapA.map(s => s[field] || 0);
+    const valB = snapB.map(s => s[field] || 0);
+    const allVals = [...valA, ...valB];
+    if (!allVals.length) return '';
+    const maxV = Math.max(1, ...allVals);
+    const W = 240; const H = 60; const PAD = 4;
+    const allTicks = [...new Set([...snapA.map(s=>s.tick), ...snapB.map(s=>s.tick)])].sort((a,b)=>a-b);
+    if (allTicks.length < 2) return '';
+    const tMin = allTicks[0]; const tMax = allTicks[allTicks.length-1];
+    const px = tick => PAD + ((tick - tMin) / (tMax - tMin)) * (W - PAD*2);
+    const py = v    => (H - PAD) - ((v / maxV) * (H - PAD*2));
+    const line = (snaps, field, color) => {
+      if (!snaps.length) return '';
+      const pts = snaps.map(s => `${px(s.tick).toFixed(1)},${py(s[field]||0).toFixed(1)}`).join(' ');
+      return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>`;
+    };
+    return `<div class="analysis-chart-wrap">
+      <div class="analysis-chart-label">${label}</div>
+      <svg class="analysis-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible;">
+        <line x1="${PAD}" y1="${py(0)}" x2="${W-PAD}" y2="${py(0)}" stroke="var(--border)" stroke-width="1"/>
+        ${line(snapA, field, colorA)}
+        ${line(snapB, field, colorB)}
+      </svg>
+    </div>`;
+  };
+
+  const colorA = sA?.house?.color || 'var(--accent)';
+  const colorB = sB?.house?.color || 'var(--text-muted)';
+  const charts = [
+    buildChart('Castles', 'castles', colorA, colorB),
+    buildChart('Troops',  'troops',  colorA, colorB),
+  ].filter(Boolean).join('');
+
   return `
     <div style="display:flex;gap:6px;margin-bottom:10px;">
       ${sel('A', _analysisA)}
@@ -13134,13 +13407,14 @@ function buildAnalysisHtml() {
     </div>
     <div style="display:flex;margin-bottom:10px;padding:6px 0;border-bottom:1px solid var(--border);">
       <div style="flex:1.8;"></div>
-      <div style="flex:1;text-align:right;font-size:13px;font-weight:700;color:${sA?.house?.color||'var(--accent)'};">
+      <div style="flex:1;text-align:right;font-size:13px;font-weight:700;color:${colorA};">
         ${sA?.house?.name || '—'}
       </div>
-      <div style="flex:1;text-align:right;font-size:13px;font-weight:700;color:${sB?.house?.color||'var(--text-muted)'};">
+      <div style="flex:1;text-align:right;font-size:13px;font-weight:700;color:${colorB};">
         ${sB?.house?.name || '—'}
       </div>
     </div>
+    ${charts}
     <table style="width:100%;border-collapse:collapse;">
       <tbody>${tableBody}</tbody>
     </table>
