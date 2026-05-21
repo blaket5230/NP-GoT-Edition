@@ -3017,6 +3017,22 @@
     color:var(--accent) !important;
   }
 
+  .sp-preset-btn {
+    font-family:'Cinzel',Georgia,serif;
+    font-size:12px;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+    padding:7px 18px;
+    border-radius:3px;
+    border:1px solid var(--border-gold);
+    background:none;
+    color:var(--text-muted);
+    cursor:pointer;
+    transition:all .15s;
+  }
+  .sp-preset-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .sp-preset-btn.active { background:rgba(201,168,76,.12); border-color:var(--accent); color:var(--accent); }
+
   /* ── INFO PANEL wrapper ──────────────────────────── */
   .info-panel { border-left:1px solid var(--border-gold) !important; background:linear-gradient(180deg,#0a0c18,#06070e) !important; }
   .info-panel-body { padding:12px !important; }
@@ -3547,6 +3563,7 @@
 
   <!-- CHAT PANE -->
   <div class="rook-pane" id="rookChatPane" style="display:none;">
+    <div id="realmNewsSection" style="border-bottom:1px solid var(--border);flex-shrink:0;overflow-y:auto;max-height:38%;"></div>
     <div class="chat-messages" id="chatMessages">
       <div class="inbox-empty">Loading...</div>
     </div>
@@ -3872,6 +3889,16 @@
   <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto;">
     <h2>Single Player — New Game</h2>
     <form id="spCreateForm">
+
+      <!-- Presets -->
+      <div class="settings-section" style="padding-bottom:14px;">
+        <div class="settings-section-title">Preset</div>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="sp-preset-btn" data-preset="quick" title="Fast speed, low victory threshold, cheap upgrades">Quick</button>
+          <button type="button" class="sp-preset-btn active" data-preset="standard" title="Balanced defaults">Standard</button>
+          <button type="button" class="sp-preset-btn" data-preset="epic" title="Slow speed, high victory threshold, expensive upgrades">Epic</button>
+        </div>
+      </div>
 
       <!-- House picker -->
       <div class="settings-section">
@@ -4285,6 +4312,7 @@ const state = {
   councilSeats: [],
   allCouncilSeats: [],
   diplomacy: [],
+  realmEvents: [],       // game_events for realm news feed (castle captures, war declarations)
   ledger: [],            // ledger rows involving current player         // diplomacy rows for current player (fetched in refreshGameState)
   viewingPlayerId: null,   // player being inspected in Houses/detail view              // player_inbox messages for this game
   currentPlayer: null,
@@ -6133,6 +6161,46 @@ document.getElementById('spTickSpeed')?.addEventListener('change', e => {
   if (opts) opts.style.display = e.target.value === 'turn_based' ? '' : 'none';
 });
 
+const _SP_PRESETS = {
+  quick: {
+    spTickSpeed: 'quad', spCycleTicks: '16', spVictoryPct: '0.25',
+    spStartGold: '1000', spStartGarrison: '25',
+    spStartGoldLevel: '10', spStartIndustryLevel: '5', spStartPrestigeLevel: '2',
+    spInfraCost: '0.5', spCouncilCost: '0.5', spAIDifficulty: '2', spCmdSpeed: '2.0',
+    spFogOfWar: false,
+  },
+  standard: {
+    spTickSpeed: 'normal', spCycleTicks: '24', spVictoryPct: '0.50',
+    spStartGold: '500', spStartGarrison: '10',
+    spStartGoldLevel: '10', spStartIndustryLevel: '5', spStartPrestigeLevel: '2',
+    spInfraCost: '1.0', spCouncilCost: '1.0', spAIDifficulty: '3', spCmdSpeed: '1.0',
+    spFogOfWar: false,
+  },
+  epic: {
+    spTickSpeed: 'slow', spCycleTicks: '36', spVictoryPct: '0.66',
+    spStartGold: '500', spStartGarrison: '10',
+    spStartGoldLevel: '5', spStartIndustryLevel: '3', spStartPrestigeLevel: '1',
+    spInfraCost: '2.0', spCouncilCost: '2.0', spAIDifficulty: '4', spCmdSpeed: '0.5',
+    spFogOfWar: true,
+  },
+};
+
+document.querySelectorAll('.sp-preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const preset = _SP_PRESETS[btn.dataset.preset];
+    if (!preset) return;
+    Object.entries(preset).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (el.type === 'checkbox') el.checked = val;
+      else el.value = val;
+    });
+    document.getElementById('spTickSpeed')?.dispatchEvent(new Event('change'));
+    document.querySelectorAll('.sp-preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
 el.createGameForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const name         = document.getElementById('newGameName').value.trim();
@@ -6434,7 +6502,7 @@ async function refreshGameState(gameId) {
 
   if (state.currentPlayer) {
     const pid = state.currentPlayer.id;
-    const [seatsResult, ledgerResult, dipResult, whispersResult] = await Promise.all([
+    const [seatsResult, ledgerResult, dipResult, whispersResult, eventsResult] = await Promise.all([
       supabase.from('council_seats').select('*').eq('game_id', gameId),
       supabase.from('ledger').select('*').eq('game_id', gameId)
         .or(`payer_player_id.eq.${pid},receiver_player_id.eq.${pid}`)
@@ -6443,12 +6511,16 @@ async function refreshGameState(gameId) {
         .or(`player_a_id.eq.${pid},player_b_id.eq.${pid}`),
       supabase.from('whispers').select('*').eq('game_id', gameId).eq('player_id', pid)
         .order('tick', { ascending: false }).limit(100),
+      supabase.from('game_events').select('*').eq('game_id', gameId)
+        .in('event_type', ['castle_captured', 'war_declared'])
+        .order('created_at', { ascending: false }).limit(60),
     ]);
     state.allCouncilSeats = seatsResult.data || [];
     state.councilSeats    = state.allCouncilSeats.filter(s => s.player_id === pid);
     state.ledger          = ledgerResult.data || [];
     state.diplomacy       = dipResult.data || [];
     state.whispers        = whispersResult.data || [];
+    state.realmEvents     = eventsResult.data || [];
     // Trigger AI generation for any whispers that arrived while client was offline
     state.whispers.filter(w => w.text === null).forEach(w => triggerMowWhisper(w.id));
   }
@@ -6545,6 +6617,28 @@ function renderInboxBadge() {
   _updateTabBadge('notifications', unreadNotifs);
   _updateTabBadge('messages', unreadThreads);
   _updateTabBadge('whispers', unreadWhispers);
+
+  // Diplomacy badge — pending alliance proposals from other players
+  const pendingProposals = (state.diplomacy || []).filter(d =>
+    d.status === 'proposed' &&
+    d.proposed_by_player_id !== myPlayer.id &&
+    (d.player_a_id === myPlayer.id || d.player_b_id === myPlayer.id)
+  ).length;
+  const dipNavItem = el.sidebarContent?.querySelector('[data-section="diplomacy"]');
+  if (dipNavItem) {
+    let dipDot = dipNavItem.querySelector('.dip-badge-dot');
+    if (pendingProposals > 0) {
+      if (!dipDot) {
+        dipDot = document.createElement('span');
+        dipDot.className = 'dip-badge-dot';
+        dipNavItem.appendChild(dipDot);
+      }
+      dipDot.style.cssText = 'margin-left:auto;min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:var(--bg-deep);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;';
+      dipDot.textContent = pendingProposals;
+    } else if (dipDot) {
+      dipDot.remove();
+    }
+  }
 }
 
 function _updateTabBadge(tabKey, count) {
@@ -7106,7 +7200,7 @@ async function markMessageUnread(id) {
 let _rookActiveTab = 'notifications';
 let _rookeryVisited = false;
 let _mapInsertMode = null; // textarea/input currently in map-click-to-insert mode
-let _leaderboardSort = 'castles'; // 'castles' | 'gold' | 'prestige'
+let _leaderboardSort = 'castles'; // 'castles' | 'gold' | 'troops'
 let _housesSortCol = null;        // active sort column key for Houses page
 let _housesSortDir = 1;           // 1 = descending, -1 = ascending
 function _rookeryVisitedKey() { return `rook_visited_${state.activeGame?.id ?? ''}`; }
@@ -7135,8 +7229,61 @@ function _isSoloGame() {
   return humans.length <= 1;
 }
 
+function renderRealmNews() {
+  const el_news = document.getElementById('realmNewsSection');
+  if (!el_news) return;
+  const events = state.realmEvents || [];
+  if (!events.length) { el_news.innerHTML = ''; return; }
+
+  const playerMap = new Map((state.gamePlayers || []).map(p => [p.id, p]));
+  const houseMap  = new Map((state.houses || []).map(h => [h.slug, h]));
+  const castleMap = new Map((state.castles || []).map(c => [c.slug, c]));
+
+  const houseName = id => {
+    const p = playerMap.get(id);
+    return houseMap.get(p?.house_slug)?.name || 'Unknown';
+  };
+  const houseColor = id => {
+    const p = playerMap.get(id);
+    return houseMap.get(p?.house_slug)?.color || 'var(--text-muted)';
+  };
+
+  const rows = events.map(ev => {
+    const d = ev.data || {};
+    let icon, text;
+    if (ev.event_type === 'castle_captured') {
+      const castle = castleMap.get(d.castle_slug);
+      const newOwner = d.new_owner_player_id;
+      const prevOwner = d.prev_owner_player_id;
+      icon = `<i class="ti ti-flag" style="color:var(--accent);font-size:13px;"></i>`;
+      if (prevOwner) {
+        text = `<span style="color:${houseColor(newOwner)};font-weight:600;">${escapeHtml(houseName(newOwner))}</span> seized <strong>${escapeHtml(castle?.name || d.castle_slug)}</strong> from <span style="color:${houseColor(prevOwner)};">${escapeHtml(houseName(prevOwner))}</span>`;
+      } else {
+        text = `<span style="color:${houseColor(newOwner)};font-weight:600;">${escapeHtml(houseName(newOwner))}</span> claimed <strong>${escapeHtml(castle?.name || d.castle_slug)}</strong>`;
+      }
+    } else if (ev.event_type === 'war_declared') {
+      const decl = d.declarer_player_id;
+      const tgt  = d.target_player_id;
+      icon = `<i class="ti ti-sword" style="color:var(--error);font-size:13px;"></i>`;
+      text = `<span style="color:${houseColor(decl)};font-weight:600;">${escapeHtml(houseName(decl))}</span> declared war on <span style="color:${houseColor(tgt)};font-weight:600;">${escapeHtml(houseName(tgt))}</span>`;
+    } else {
+      return '';
+    }
+    return `<div style="display:flex;align-items:baseline;gap:7px;padding:5px 12px;border-bottom:1px solid var(--border);font-size:12px;line-height:1.4;">
+      ${icon}
+      <span style="flex:1;">${text}</span>
+      <span style="color:var(--text-muted);font-size:10px;white-space:nowrap;">T${ev.tick}</span>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  el_news.innerHTML = `
+    <div style="padding:5px 12px 4px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);font-family:'Cinzel',Georgia,serif;border-bottom:1px solid var(--border);">Realm News</div>
+    ${rows || '<div style="padding:8px 12px;font-size:12px;color:var(--text-muted);">No events yet.</div>'}`;
+}
+
 function renderChatPane() {
   const myId = state.currentPlayer?.id;
+  renderRealmNews();
 
   if (_isSoloGame()) {
     el.chatMessages.innerHTML = `
@@ -10926,8 +11073,10 @@ function buildLeaderboardHtml() {
 
   const allRows = [...state.gamePlayers].map(player => {
     const house = state.houses.find(h => h.slug === player.house_slug);
-    const castleCount = state.gameCastles.filter(gc => gc.owner_player_id === player.id).length;
-    return { player, house, castleCount };
+    const myCastles = state.gameCastles.filter(gc => gc.owner_player_id === player.id);
+    const castleCount = myCastles.length;
+    const troopCount = myCastles.reduce((s, gc) => s + (gc.troops ?? 0), 0);
+    return { player, house, castleCount, troopCount };
   });
 
   const activeRows = allRows.filter(r => r.player.eliminated_at_tick == null);
@@ -10935,8 +11084,8 @@ function buildLeaderboardHtml() {
 
   const hName = r => r.house?.name || r.player.house_slug;
   const sortFn = (a, b) => {
-    if (_leaderboardSort === 'gold')     { const d = (b.player.gold || 0) - (a.player.gold || 0);     if (d) return d; }
-    if (_leaderboardSort === 'prestige') { const d = (b.player.prestige || 0) - (a.player.prestige || 0); if (d) return d; }
+    if (_leaderboardSort === 'gold')   { const d = (b.player.gold || 0) - (a.player.gold || 0);   if (d) return d; }
+    if (_leaderboardSort === 'troops') { const d = (b.troopCount || 0) - (a.troopCount || 0);     if (d) return d; }
     if (_leaderboardSort === 'castles' || !_leaderboardSort) {
       if (a.castleCount !== b.castleCount) return b.castleCount - a.castleCount;
     }
@@ -11038,9 +11187,9 @@ function buildLeaderboardHtml() {
       First to <strong style="color:var(--accent)">${winAt}</strong> of ${totalCastles} castles wins
     </div>
     <div class="lb-sort-tabs">
-      <button class="lb-sort-tab${_leaderboardSort === 'castles'  ? ' active' : ''}" data-sort="castles">Castles</button>
-      <button class="lb-sort-tab${_leaderboardSort === 'gold'     ? ' active' : ''}" data-sort="gold">Gold</button>
-      <button class="lb-sort-tab${_leaderboardSort === 'prestige' ? ' active' : ''}" data-sort="prestige">Prestige</button>
+      <button class="lb-sort-tab${_leaderboardSort === 'castles' ? ' active' : ''}" data-sort="castles">Castles</button>
+      <button class="lb-sort-tab${_leaderboardSort === 'troops'  ? ' active' : ''}" data-sort="troops">Troops</button>
+      <button class="lb-sort-tab${_leaderboardSort === 'gold'    ? ' active' : ''}" data-sort="gold">Gold</button>
     </div>
     ${activeRows.map(rowHtml).join('')}
     ${elimSection}
