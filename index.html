@@ -9162,14 +9162,24 @@ function _aiWhisperCtx(aiPlayerId) {
   const houseMap    = new Map(state.houses.map(h => [h.slug, h]));
   const aiHouse     = houseMap.get(aiPlayer?.house_slug) || { name: 'Unknown House' };
   const humanHouse  = houseMap.get(humanPlayer?.house_slug) || { name: 'Unknown House' };
-  const aiCastles   = (state.gameCastles || []).filter(c => c.ruling_house_slug === aiPlayer?.house_slug).length;
-  const humanCastles = (state.gameCastles || []).filter(c => c.ruling_house_slug === humanPlayer?.house_slug).length;
+  const aiCastles    = (state.gameCastles || []).filter(c => c.owner_player_id === aiPlayer?.id).length;
+  const humanCastles = (state.gameCastles || []).filter(c => c.owner_player_id === humanPlayer?.id).length;
+  const myId    = humanPlayer?.id;
+  const theirId = aiPlayerId;
+  const dipRow  = (state.diplomacy || []).find(d =>
+    (d.player_a_id === myId && d.player_b_id === theirId) ||
+    (d.player_a_id === theirId && d.player_b_id === myId)
+  );
   return {
     ai_house_name:      aiHouse.name,
+    ai_house_slug:      aiPlayer?.house_slug  || '',
     human_house_name:   humanHouse.name,
+    human_house_slug:   humanPlayer?.house_slug || '',
     current_tick:       state.activeGame?.current_tick ?? 0,
     ai_castle_count:    aiCastles,
     human_castle_count: humanCastles,
+    diplomatic_state:   dipRow?.status || 'neutral',
+    scenario_slug:      state.scenario?._slug || null,
   };
 }
 
