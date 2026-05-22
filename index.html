@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Westeros</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3524,6 +3524,29 @@
 
   /* ===== MOBILE (≤768px) ===== */
   @media (max-width: 768px) {
+    /* Safe area: header bleeds behind status bar */
+    .header {
+      padding-top: env(safe-area-inset-top);
+      height: calc(48px + env(safe-area-inset-top));
+    }
+    .main-screen.game-mode {
+      grid-template-rows: calc(48px + env(safe-area-inset-top)) 1fr;
+    }
+    .main-screen:not(.game-mode) {
+      padding-top: env(safe-area-inset-top);
+    }
+    /* Panels and menu sheet clear the home indicator */
+    .main-screen.game-mode .sidebar.mobile-open {
+      top: calc(48px + env(safe-area-inset-top));
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    #mobileMenuSheet {
+      top: calc(48px + env(safe-area-inset-top));
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .modal-backdrop .modal {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
     /* Full-screen map — no sidebar column */
     .main-screen.game-mode {
       grid-template-rows: 48px 1fr;
