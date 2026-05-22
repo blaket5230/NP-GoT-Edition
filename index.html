@@ -3587,6 +3587,30 @@
     /* Show mobile Rookery button */
     #mobileRookeryBtn { display: flex !important; }
 
+    /* Rookery panes: let content expand naturally, sidebar scrolls */
+    .sidebar.mobile-open .inbox-panel {
+      position: static !important;
+      height: auto !important;
+      width: 100% !important;
+      transform: none !important;
+      box-shadow: none !important;
+      border-left: none !important;
+      flex: none !important;
+    }
+    .sidebar.mobile-open .rook-pane {
+      flex: none !important;
+      height: auto !important;
+      overflow: visible !important;
+      min-height: 0;
+    }
+    .sidebar.mobile-open .inbox-list,
+    .sidebar.mobile-open .chat-messages {
+      flex: none !important;
+      height: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
     /* Mobile menu sheet — slides down from under the header */
     #mobileMenuSheet {
       position: fixed;
