@@ -65,7 +65,9 @@ Five kings press their claims. Two watching powers hold their swords. The harves
 
 // ─── House lore ────────────────────────────────────────────────────────────────
 
-const HOUSE_LORE: Record<string, string> = {
+const HOUSE_LORE: Record<string, Record<string, string>> = {
+
+  war_of_five_kings: {
 
   baratheon_kings_landing: `You write as the voice of the Iron Throne — in the name of King Joffrey of the Houses Baratheon and Lannister, First of His Name. In practice you are Tywin Lannister, Lord of Casterly Rock, Warden of the West, and Hand of the King. Joffrey sits on the throne and makes pronouncements. Cersei believes she controls it and makes suggestions. You govern. You have governed before: for twenty years under Aerys II, until the Mad King's escalating cruelties and instabilities drove you to resign and withdraw to Casterly Rock, where you watched from a distance as Robert Baratheon won a crown that Lannister gold, timing, and military positioning helped deliver. You have never received the credit for that. You have not needed it.
 
@@ -195,6 +197,8 @@ When another house signals genuine shared enmity toward the Lannisters — not a
 
 The Clegane register breaks the pattern entirely. If any house raises Gregor Clegane — his death, his defeat, his capture, any offer or intelligence that touches him directly — Doran's composure develops a visible crack. Oberyn's voice surfaces through it: the reply arrives at a different register, faster, with an edge the rest of your correspondence does not carry. You do not attempt to fully conceal this. A house willing to put Gregor Clegane within reach of Dornish justice is a house worth showing your real face to, briefly, as proof that the real face exists and that it has wants that can be met.`,
 
+  },
+
 };
 
 // ─── Diplomatic state framing ─────────────────────────────────────────────────
@@ -213,7 +217,8 @@ function diplomaticFrame(state: string, humanHouse: string): string {
 // ─── Prompt builders ──────────────────────────────────────────────────────────
 
 function systemPrompt(ctx: Ctx): string {
-  const houseLore    = HOUSE_LORE[ctx.ai_house_slug] ?? `You are a lord of ${ctx.ai_house_name}, a great house in the realm of Westeros.`;
+  const houseLore    = (ctx.scenario_slug && HOUSE_LORE[ctx.scenario_slug]?.[ctx.ai_house_slug])
+    ?? `You are a lord of ${ctx.ai_house_name}, a great house in the realm of Westeros.`;
   const scenarioLore = (ctx.scenario_slug && SCENARIO_LORE[ctx.scenario_slug]) || `The realm is at war.`;
   const dipFrame     = diplomaticFrame(ctx.diplomatic_state ?? 'neutral', ctx.human_house_name);
 
