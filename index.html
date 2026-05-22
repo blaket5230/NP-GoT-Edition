@@ -3598,20 +3598,22 @@
 
     /* ── Lobby / main menu (non-game-mode) ── */
     .main-screen:not(.game-mode) {
-      grid-template-rows: 52px 1fr 30vh;
+      grid-template-rows: 52px auto 1fr;
       grid-template-columns: 1fr;
       grid-template-areas: "header" "sidebar" "map";
     }
     .main-screen:not(.game-mode) .ticker-bar { display: none !important; }
-    /* Map decorative — no interaction in lobby */
-    .main-screen:not(.game-mode) .map-area { pointer-events: none; }
+    /* Map decorative — fills remaining space, no interaction */
+    .main-screen:not(.game-mode) .map-area { pointer-events: none; min-height: 120px; }
     /* Show the scrolling logo over the map */
     .main-screen:not(.game-mode) .home-logo-overlay { display: flex !important; }
-    /* Sidebar goes full width */
+    /* Sidebar goes full width, scrolls internally if needed */
     .main-screen:not(.game-mode) .sidebar {
       width: 100%;
       border-right: none;
       padding: 0;
+      overflow-y: auto;
+      min-height: 0;
     }
     /* Header compact in lobby */
     .user-email { display: none !important; }
