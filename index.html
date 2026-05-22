@@ -3598,14 +3598,15 @@
 
     /* ── Lobby / main menu (non-game-mode) ── */
     .main-screen:not(.game-mode) {
-      grid-template-rows: 52px 1fr;
+      grid-template-rows: 52px 1fr 30vh;
       grid-template-columns: 1fr;
-      grid-template-areas: "header" "sidebar";
+      grid-template-areas: "header" "sidebar" "map";
     }
-    /* Hide map and ticker in lobby on mobile */
-    .main-screen:not(.game-mode) .map-area { display: none !important; }
     .main-screen:not(.game-mode) .ticker-bar { display: none !important; }
-    .main-screen:not(.game-mode) .home-logo-overlay { display: none !important; }
+    /* Map decorative — no interaction in lobby */
+    .main-screen:not(.game-mode) .map-area { pointer-events: none; }
+    /* Show the scrolling logo over the map */
+    .main-screen:not(.game-mode) .home-logo-overlay { display: flex !important; }
     /* Sidebar goes full width */
     .main-screen:not(.game-mode) .sidebar {
       width: 100%;
