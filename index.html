@@ -4415,7 +4415,7 @@
     <form id="spCreateForm">
 
       <!-- Presets -->
-      <div class="settings-section" style="padding-bottom:14px;">
+      <div class="settings-section" id="spPresetSection" style="padding-bottom:14px;">
         <div class="settings-section-title">Preset</div>
         <div style="display:flex;gap:8px;">
           <button type="button" class="sp-preset-btn" data-preset="quick" title="Fast speed, low victory threshold, cheap upgrades">Quick</button>
@@ -4434,7 +4434,7 @@
       <div id="spHouseDetail" style="display:none;"></div>
 
       <!-- Basics -->
-      <div class="settings-section">
+      <div class="settings-section" id="spGameBasicsSection">
         <div class="settings-section-title">Game Basics</div>
         <div class="form-row">
           <div class="form-group" style="flex:1;">
@@ -4443,7 +4443,7 @@
           </div>
           <div class="form-group" style="flex:2;">
             <label>Game Name</label>
-            <input type="text" id="spGameName" required placeholder="e.g. Solo — House Stark">
+            <input type="text" id="spGameName" placeholder="e.g. Solo — House Stark">
           </div>
         </div>
         <div class="form-row">
@@ -4507,7 +4507,7 @@
       </div>
 
       <!-- Win condition -->
-      <div class="settings-section">
+      <div class="settings-section" id="spWinSection">
         <div class="settings-section-title">Win Condition</div>
         <div class="form-row">
           <div class="form-group" style="flex:1;">
@@ -4529,7 +4529,7 @@
       </div>
 
       <!-- Starting conditions -->
-      <div class="settings-section">
+      <div class="settings-section" id="spStartingSection">
         <div class="settings-section-title">Starting Conditions</div>
         <div class="form-row">
           <div class="form-group" style="flex:1;">
@@ -4586,7 +4586,7 @@
       </div>
 
       <!-- Costs -->
-      <div class="settings-section">
+      <div class="settings-section" id="spCostsSection">
         <div class="settings-section-title">Costs</div>
         <div class="form-row">
           <div class="form-group" style="flex:1;">
@@ -4609,7 +4609,7 @@
       </div>
 
       <!-- AI -->
-      <div class="settings-section">
+      <div class="settings-section" id="spAISection">
         <div class="settings-section-title">AI Players</div>
         <div class="form-group">
           <label>AI Difficulty</label>
@@ -5038,6 +5038,12 @@ function toast(msg, isError = false) {
 function escapeHtml(s) {
   if (s == null) return '';
   return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+}
+function _isLightColor(hex) {
+  const h = hex.replace('#', '');
+  if (h.length < 6) return false;
+  const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 160;
 }
 function showAuthScreen() {
   el.authScreen.classList.remove('hidden');
@@ -6471,13 +6477,10 @@ function setLobbyView(view) {
     _lobbyNavMode = 'join';
     renderLobbyJoinView(gamesList);
 
-  } else if (view === 'sp-create') {
-    openSpHousePicker();
-    return;
-
   } else if (view.endsWith('-create')) {
     hideGames();
     showStatic();
+    _lobbyNavMode = view.startsWith('sp-') ? 'sp-my' : 'mp-my';
     renderLobbyCreateView(staticView);
 
   } else if (view.endsWith('-coop')) {
@@ -6508,13 +6511,15 @@ function setLobbyView(view) {
 }
 
 function renderLobbyCreateView(container) {
+  const isSP = _lobbyNavMode === 'sp-my';
   container.innerHTML = `
-    <div class="lview-section-title" style="margin-bottom:12px;">Choose Game Mode</div>
+    <div class="lview-section-title" style="margin-bottom:4px;">Create Game</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">${isSP ? 'Single Player — you vs AI houses' : 'Multiplayer — invite others or fill with AI'}</div>
     <div class="lview-mode-grid">
-      <div class="lview-mode-card" id="modePickStandard">
+      <div class="lview-mode-card" id="modePickBaseGame">
         <div class="lview-mode-icon">⚔</div>
-        <div class="lview-mode-name">Standard</div>
-        <div class="lview-mode-desc">9 great houses compete to control all of Westeros</div>
+        <div class="lview-mode-name">Base Game</div>
+        <div class="lview-mode-desc">All 9 houses start equal and compete for territory</div>
       </div>
       <div class="lview-mode-card" id="modePickScenarios">
         <div class="lview-mode-icon">📜</div>
@@ -6522,8 +6527,8 @@ function renderLobbyCreateView(container) {
         <div class="lview-mode-desc">Historical moments with preset territories and objectives</div>
       </div>
     </div>`;
-  document.getElementById('modePickStandard').addEventListener('click', () => {
-    if (_lobbyNavMode === 'sp-my') { openSpHousePicker(); return; }
+  document.getElementById('modePickBaseGame').addEventListener('click', () => {
+    if (isSP) { openSpHousePicker(); return; }
     el.createGameBtn.click();
   });
   document.getElementById('modePickScenarios').addEventListener('click', () => {
@@ -6535,7 +6540,7 @@ function renderLobbyScenarioPicker(container) {
   container.innerHTML = `
     <button class="lview-filter-tab active" id="scenarioPickerBack" style="margin-bottom:14px;font-size:12px;">← Back</button>
     <div class="lview-section-title" style="margin-bottom:10px;">Choose a Scenario</div>
-    <div class="lview-mode-card" id="modePickWOTFK" style="width:100%;box-sizing:border-box;text-align:left;padding:16px 18px;">
+    <div class="lview-mode-card" id="modePickWOTFK" style="width:100%;box-sizing:border-box;text-align:left;padding:16px 18px;margin-bottom:10px;">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
         <div class="lview-mode-icon" style="margin:0;font-size:28px;">👑</div>
         <div>
@@ -6549,22 +6554,59 @@ function renderLobbyScenarioPicker(container) {
           `<span style="font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:3px;color:var(--text-muted);">${h}</span>`
         ).join('')}
       </div>
+    </div>
+    <div class="lview-mode-card" id="modePickFiveClaimants" style="width:100%;box-sizing:border-box;text-align:left;padding:16px 18px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <div class="lview-mode-icon" style="margin:0;font-size:28px;">⚔️</div>
+        <div>
+          <div class="lview-mode-name" style="font-size:12px;">Five Claimants</div>
+          <div style="font-size:10px;color:var(--accent);letter-spacing:0.04em;text-transform:uppercase;margin-top:2px;">5 Factions · ~45% Unclaimed · Red Keep Required to Win</div>
+        </div>
+      </div>
+      <div class="lview-mode-desc" style="line-height:1.6;">Joffrey holds the capital. Robb rides south. Stannis marshals his fleet. Renly feasts with Tyrell gold at his back. Balon prepares to reave. Every claimant must seize the Red Keep — but each needs something more.</div>
+      <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">
+        ${[
+          { label: "King's Landing", color: '#a01a2e' },
+          { label: 'Stark',          color: '#7c9a7c' },
+          { label: 'Dragonstone',    color: '#5c7282' },
+          { label: "Storm's End",    color: '#1a6e2a' },
+          { label: 'Greyjoy',        color: '#607080' },
+        ].map(f =>
+          `<span style="font-size:10px;padding:2px 8px;border:1px solid ${f.color}77;border-radius:3px;color:${f.color};">${f.label}</span>`
+        ).join('')}
+        <span style="font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:3px;color:var(--text-faint);">Arryn (AI)</span>
+        <span style="font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:3px;color:var(--text-faint);">Martell (AI)</span>
+      </div>
     </div>`;
 
   document.getElementById('scenarioPickerBack').addEventListener('click', () => renderLobbyCreateView(container));
   document.getElementById('modePickWOTFK').addEventListener('click', () => {
     renderLobbyScenarioCreate(container, 'war_of_five_kings');
   });
+  document.getElementById('modePickFiveClaimants').addEventListener('click', () => {
+    renderLobbyScenarioCreate(container, 'five_claimants');
+  });
 }
 
 function renderLobbyScenarioCreate(container, scenarioSlug) {
+  const isSP = _lobbyNavMode === 'sp-my';
+  const isFiveClaimants = scenarioSlug === 'five_claimants';
+  const title       = isFiveClaimants ? 'Five Claimants' : 'War of the Five Kings';
+  const defaultName = isFiveClaimants ? 'Five Claimants' : 'War of the Five Kings';
+  const aiNote      = isFiveClaimants
+    ? (isSP ? 'Choose one of five playable factions. House Arryn and House Martell are AI-controlled neutrals.'
+             : 'Open slots are filled with AI. Arryn and Martell are AI-only — players choose from the five claimants.')
+    : (isSP ? 'Single Player — choose your house on the next screen.'
+             : 'All 9 houses will be filled with AI for unoccupied slots.');
+  const btnLabel    = isSP ? 'Choose Your House →' : 'Create Scenario Game';
+
   container.innerHTML = `
     <button class="lview-filter-tab active" id="scenarioCreateBack" style="margin-bottom:14px;font-size:12px;">← Back</button>
-    <div class="lview-section-title" style="margin-bottom:4px;">War of the Five Kings</div>
-    <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;">All 9 houses will be filled with AI for unoccupied slots.</div>
+    <div class="lview-section-title" style="margin-bottom:4px;">${title}</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;">${aiNote}</div>
     <div class="lview-form-row" style="margin-bottom:12px;">
       <label>Game Name</label>
-      <input type="text" id="scenarioGameName" placeholder="War of the Five Kings" maxlength="40" value="War of the Five Kings">
+      <input type="text" id="scenarioGameName" placeholder="${defaultName}" maxlength="40" value="${defaultName}">
     </div>
     <div class="lview-form-row" style="margin-bottom:16px;">
       <label>Tick Speed</label>
@@ -6574,39 +6616,55 @@ function renderLobbyScenarioCreate(container, scenarioSlug) {
         <option value="slow">Slow</option>
       </select>
     </div>
-    <button class="lview-save-btn" id="scenarioCreateBtn" style="width:100%;">Create Scenario Game</button>
+    <button class="lview-save-btn" id="scenarioCreateBtn" style="width:100%;">${btnLabel}</button>
     <div id="scenarioCreateError" style="color:var(--error);font-size:12px;margin-top:8px;"></div>`;
 
   document.getElementById('scenarioCreateBack').addEventListener('click', () => renderLobbyScenarioPicker(container));
   document.getElementById('scenarioCreateBtn').addEventListener('click', async () => {
-    const btn = document.getElementById('scenarioCreateBtn');
-    const errEl = document.getElementById('scenarioCreateError');
-    const name = document.getElementById('scenarioGameName').value.trim() || 'War of the Five Kings';
+    const btn    = document.getElementById('scenarioCreateBtn');
+    const errEl  = document.getElementById('scenarioCreateError');
+    const name   = document.getElementById('scenarioGameName').value.trim() || defaultName;
     const tickSpeed = document.getElementById('scenarioTickSpeed').value;
     btn.disabled = true;
     btn.textContent = 'Creating…';
     errEl.textContent = '';
     try {
-      // Fetch scenario id
-      const { data: scenario } = await supabase.from('scenarios').select('id').eq('slug', scenarioSlug).single();
+      const { data: scenario } = await supabase.from('scenarios').select('id, config').eq('slug', scenarioSlug).single();
       if (!scenario) throw new Error('Scenario not found');
+      const maxPlayers = isFiveClaimants ? 7 : 9;
       const { data: game, error } = await supabase.from('games').insert({
         name,
         tick_speed: tickSpeed,
-        max_players: 9,
+        max_players: maxPlayers,
         fill_with_ai: true,
         scenario_id: scenario.id,
         created_by: state.user.id,
         status: 'lobby',
       }).select().single();
       if (error) throw error;
-      // Join as creator
+      const aiOnly = scenario.config?.ai_only_houses || [];
+      if (aiOnly.length > 0) {
+        const aiRows = aiOnly.map(slug => ({
+          game_id: game.id,
+          user_id: null,
+          is_ai: true,
+          ai_profile: 'standard',
+          house_slug: slug,
+          display_name: 'AI ' + (state.houses.find(h => h.slug === slug)?.name || slug),
+        }));
+        const { error: aiErr } = await supabase.from('game_players').insert(aiRows);
+        if (aiErr) throw aiErr;
+      }
       await loadGames();
-      openJoinGameModal(game.id);
+      if (isSP) {
+        openSpHousePicker(game.id, scenario.config);
+      } else {
+        openJoinGameModal(game.id);
+      }
     } catch (err) {
       errEl.textContent = err.message;
       btn.disabled = false;
-      btn.textContent = 'Create Scenario Game';
+      btn.textContent = btnLabel;
     }
   });
 }
@@ -6893,9 +6951,13 @@ function renderLobbyHelp(container) {
 // SINGLE PLAYER — HOUSE PICKER
 // =====================================================
 let _spSelectedHouse = null;
+let _spPrebuiltGameId = null;
+let _spScenarioConfig = null;
 
-function openSpHousePicker() {
-  _spSelectedHouse = null;
+function openSpHousePicker(prebuiltGameId = null, scenarioConfig = null) {
+  _spSelectedHouse  = null;
+  _spPrebuiltGameId = prebuiltGameId || null;
+  _spScenarioConfig = scenarioConfig || null;
   const nameInput  = document.getElementById('spGameName');
   const startBtn   = document.getElementById('spStartBtn');
   const detailPane = document.getElementById('spHouseDetail');
@@ -6903,7 +6965,33 @@ function openSpHousePicker() {
   if (startBtn)    { startBtn.disabled = true; startBtn.textContent = 'Choose a House to Begin'; }
   if (detailPane)  { detailPane.style.display = 'none'; detailPane.innerHTML = ''; }
 
-  el.spHouseGrid.innerHTML = state.houses.map(house => `
+  const scenarioSections = ['spPresetSection','spGameBasicsSection','spWinSection','spStartingSection','spCostsSection','spAISection'];
+  const isScenario = !!prebuiltGameId;
+  scenarioSections.forEach(id => {
+    const el2 = document.getElementById(id);
+    if (el2) el2.style.display = isScenario ? 'none' : '';
+  });
+
+  const aiOnly   = new Set(scenarioConfig?.ai_only_houses || []);
+  const playable = scenarioConfig?.playable_houses ? new Set(scenarioConfig.playable_houses) : null;
+  const hasFiveClaimants = aiOnly.size > 0;
+
+  const modalTitle = el.spHousePickerModal.querySelector('h2');
+  if (modalTitle) {
+    modalTitle.textContent = hasFiveClaimants
+      ? 'Five Claimants — Choose Your Faction'
+      : isScenario ? 'War of the Five Kings — Choose Your House'
+      : 'Single Player — New Game';
+  }
+
+  const visibleHouses = state.houses.filter(h => {
+    if (!playable && SUBFACTION_HOUSES.has(h.slug)) return false;
+    if (playable && !playable.has(h.slug)) return false;
+    if (aiOnly.has(h.slug)) return false;
+    return true;
+  });
+
+  el.spHouseGrid.innerHTML = visibleHouses.map(house => `
     <div class="house-option" data-house="${house.slug}"
          style="--hb-color:${house.color};--hb-glow:${house.color}44;border-left:3px solid ${house.color}88;">
       <div class="house-sigil-badge" style="color:${house.color};padding:6px;">
@@ -6963,11 +7051,36 @@ function _renderSpHouseDetail(slug, house) {
        <span style="font-size:13px;color:var(--text);line-height:1.45;">${escapeHtml(c)}</span>
      </div>`
   ).join('');
-  const cmdsHtml = data.commanders.map((name, i) =>
+  const cmdList = (_spScenarioConfig && data.commanders_5k) ? data.commanders_5k : data.commanders;
+  const cmdsHtml = cmdList.map((name, i) =>
     `<div style="font-size:12px;color:${i === 0 ? 'var(--accent)' : 'var(--text-muted)'};padding:4px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
        <span>${escapeHtml(name)}</span>${i === 0 ? `<span style="font-size:10px;background:var(--accent);color:var(--bg-deep);padding:1px 6px;border-radius:3px;font-weight:700;">HEAD</span>` : ''}
      </div>`
   ).join('');
+
+  let objBlock = '';
+  if (_spScenarioConfig) {
+    const objCfg = _spScenarioConfig.objectives?.[slug];
+    if (objCfg) {
+      const holdCycles = _spScenarioConfig.hold_cycles || 8;
+      const condLines = (objCfg.conditions || []).map(cond => {
+        if (cond.type === 'hold_castle') {
+          const cname = state.castles?.find(c => c.slug === cond.castle)?.name || cond.castle;
+          return `<div style="font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;margin-bottom:3px;"><span style="color:${house.color};font-size:10px;flex-shrink:0;">▸</span>Hold <strong style="color:var(--text);">${escapeHtml(cname)}</strong></div>`;
+        } else if (cond.type === 'castle_pct') {
+          return `<div style="font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;margin-bottom:3px;"><span style="color:${house.color};font-size:10px;flex-shrink:0;">▸</span>Control <strong style="color:var(--text);">${Math.round(cond.pct * 100)}%</strong> of all castles</div>`;
+        }
+        return '';
+      }).filter(Boolean).join('');
+      objBlock = `
+      <div style="background:color-mix(in srgb,${house.color} 10%,var(--bg-deep));border-left:3px solid ${house.color};border-radius:4px;padding:12px 14px;margin-bottom:16px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:${house.color};margin-bottom:3px;">Win Condition — ${escapeHtml(objCfg.description)}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;font-style:italic;">${escapeHtml(objCfg.flavor)}</div>
+        ${condLines}
+        <div style="font-size:11px;color:var(--text-faint);margin-top:8px;border-top:1px solid ${house.color}33;padding-top:7px;">Hold all conditions for ${holdCycles} consecutive production cycles to win.</div>
+      </div>`;
+    }
+  }
 
   panel.style.display = 'block';
   panel.innerHTML = `
@@ -6981,6 +7094,7 @@ function _renderSpHouseDetail(slug, house) {
           <div style="font-size:12px;color:var(--text-muted);margin-top:2px;font-style:italic;">"${escapeHtml(house.words)}"</div>
         </div>
       </div>
+      ${objBlock}
       <div style="font-size:13px;color:var(--text);line-height:1.65;margin-bottom:16px;">${escapeHtml(data.bio)}</div>
 
       <div style="display:flex;gap:10px;margin-bottom:16px;">
@@ -7020,7 +7134,11 @@ document.getElementById('spCreateForm').addEventListener('submit', async (e) => 
   const startBtn = document.getElementById('spStartBtn');
   startBtn.disabled = true;
   startBtn.textContent = 'Starting…';
-  await startSinglePlayerGame(_spSelectedHouse);
+  if (_spPrebuiltGameId) {
+    await startScenarioSpGame(_spPrebuiltGameId, _spSelectedHouse);
+  } else {
+    await startSinglePlayerGame(_spSelectedHouse);
+  }
   startBtn.disabled = false;
   startBtn.textContent = 'Start Game';
 });
@@ -7099,8 +7217,35 @@ async function startSinglePlayerGame(houseSlug) {
   }
 }
 
+async function startScenarioSpGame(gameId, houseSlug) {
+  const house = state.houses.find(h => h.slug === houseSlug);
+  if (!house) return;
+  const v = id => document.getElementById(id)?.value;
+  const playerName = (v('spPlayerName') || '').trim() || state.profile?.display_name || state.user.email.split('@')[0];
+  try {
+    const { error: joinErr } = await supabase.from('game_players').insert({
+      game_id: gameId,
+      user_id: state.user.id,
+      house_slug: houseSlug,
+      is_ai: false,
+      display_name: playerName,
+    });
+    if (joinErr) throw joinErr;
+    const { error: startErr } = await supabase.rpc('start_game', { p_game_id: gameId });
+    if (startErr) throw startErr;
+    el.spHousePickerModal.classList.remove('open');
+    await loadGames();
+    await enterGameMode(gameId);
+    supabase.rpc('record_intel_snapshot', { p_game_id: gameId }).then(null, () => {});
+  } catch (err) {
+    toast(`Failed to start scenario: ${err.message}`, true);
+  }
+}
+
 document.getElementById('cancelSpHousePicker').addEventListener('click', () => {
   el.spHousePickerModal.classList.remove('open');
+  _spPrebuiltGameId = null;
+  _spScenarioConfig = null;
 });
 
 el.createGameBtn.addEventListener('click', () => {
@@ -7244,7 +7389,11 @@ function openJoinGameModal(gameId) {
   }
 
   // Render house grid with player names for taken houses
-  el.joinHouseGrid.innerHTML = state.houses.map(house => {
+  // Sub-faction houses (baratheon_*) are hidden unless they already appear in this game's player list
+  const joinVisibleHouses = state.houses.filter(h =>
+    !SUBFACTION_HOUSES.has(h.slug) || takenHouses.has(h.slug)
+  );
+  el.joinHouseGrid.innerHTML = joinVisibleHouses.map(house => {
     const taken = takenHouses.has(house.slug);
     const owner = players.find(p => p.house_slug === house.slug);
     const isYours = userPlayer && userPlayer.house_slug === house.slug;
@@ -7401,6 +7550,7 @@ async function enterGameMode(gameId, { reload = true } = {}) {
     el.gameRight?.classList.remove('hidden');
     el.lobbyRight?.classList.add('hidden');
     _sidebarSection = null;
+    _leaderboardSort = game.scenario_id ? 'objectives' : 'castles';
     // Subscribe to live updates for this game
     subscribeRealtime(state.activeGame.id);
     _startTickBar();
@@ -7435,12 +7585,91 @@ async function enterGameMode(gameId, { reload = true } = {}) {
 function _showFtueIfFirst(gameId) {
   const key = `westeros_ftue_${gameId}`;
   if (localStorage.getItem(key)) return;
+
+  if (state.activeGame?.scenario_id && state.scenario) {
+    _showScenarioIntro(gameId);
+    return;
+  }
+
   const overlay = document.getElementById('ftueOverlay');
   if (!overlay) return;
   overlay.style.display = 'flex';
   document.getElementById('ftueCloseBtn')?.addEventListener('click', () => {
     overlay.style.display = 'none';
     localStorage.setItem(key, '1');
+  }, { once: true });
+}
+
+function _showScenarioIntro(gameId) {
+  const key = `westeros_ftue_${gameId}`;
+  const houseSlug = state.currentPlayer?.house_slug;
+  const house     = state.houses?.find(h => h.slug === houseSlug);
+  const scCfg     = state.scenario;
+  const myObj     = state.objectives?.find(o => o.house_slug === houseSlug);
+  const objCfg    = scCfg?.objectives?.[houseSlug];
+  const color     = house?.color || 'var(--accent)';
+
+  // Diplomacy summary at game start
+  const dipRows   = state.diplomacy || [];
+  const myPlayer  = state.currentPlayer;
+  const allies    = state.gamePlayers.filter(p => p.id !== myPlayer.id && (() => {
+    const d = dipRows.find(r => (r.player_a_id === myPlayer.id && r.player_b_id === p.id) || (r.player_b_id === myPlayer.id && r.player_a_id === p.id));
+    return d?.status === 'ally';
+  })()).map(p => state.houses.find(h => h.slug === p.house_slug)?.name).filter(Boolean);
+  const enemies   = state.gamePlayers.filter(p => p.id !== myPlayer.id && (() => {
+    const d = dipRows.find(r => (r.player_a_id === myPlayer.id && r.player_b_id === p.id) || (r.player_b_id === myPlayer.id && r.player_a_id === p.id));
+    return d?.status === 'enemy';
+  })()).map(p => state.houses.find(h => h.slug === p.house_slug)?.name).filter(Boolean);
+
+  const dipHtml = (allies.length || enemies.length) ? `
+    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;justify-content:center;">
+      ${allies.length ? `<div style="font-size:11px;padding:4px 12px;border-radius:4px;background:rgba(58,122,58,.2);border:1px solid #5cb85c44;color:#5cb85c;">
+        Allies: ${allies.join(', ')}</div>` : ''}
+      ${enemies.length ? `<div style="font-size:11px;padding:4px 12px;border-radius:4px;background:rgba(180,50,50,.2);border:1px solid var(--error)44;color:var(--error);">
+        At War: ${enemies.join(', ')}</div>` : ''}
+    </div>` : '';
+
+  const existing = document.getElementById('scenarioIntroOverlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'scenarioIntroOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9990;background:rgba(6,7,14,.88);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:var(--bg-panel);border:1px solid ${color}55;border-top:3px solid ${color};border-radius:12px;padding:0;max-width:520px;width:92%;box-shadow:0 0 80px ${color}22;overflow:hidden;max-height:90vh;overflow-y:auto;">
+      <div style="background:linear-gradient(135deg,${color}18,${color}06);padding:28px 32px 20px;text-align:center;border-bottom:1px solid var(--border);">
+        <div style="font-family:'Cinzel Decorative','Cinzel',Georgia,serif;font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:${color}99;margin-bottom:6px;">Scenario</div>
+        <div style="font-family:'Cinzel Decorative','Cinzel',Georgia,serif;font-size:22px;font-weight:700;color:var(--accent);letter-spacing:0.06em;line-height:1.2;margin-bottom:16px;">${escapeHtml(scCfg?._name || 'War of the Five Kings')}</div>
+        <div style="width:64px;height:64px;margin:0 auto 10px;">
+          <img src="${shieldSrc(houseSlug)}" style="width:100%;height:100%;object-fit:contain;" onerror="shieldFallback(this,'${houseSlug}',0)">
+        </div>
+        <div style="font-family:'Cinzel',Georgia,serif;font-size:18px;font-weight:700;color:${color};margin-bottom:4px;">${escapeHtml(house?.name || '')}</div>
+        <div style="font-size:12px;color:var(--text-muted);font-style:italic;">"${escapeHtml(house?.words || '')}"</div>
+        ${dipHtml}
+      </div>
+      <div style="padding:24px 32px;">
+        ${objCfg ? `
+        <div style="background:${color}0d;border:1px solid ${color}33;border-left:3px solid ${color};border-radius:6px;padding:14px 16px;margin-bottom:16px;">
+          <div style="font-family:'Cinzel',serif;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:${color};margin-bottom:4px;">Your Objective</div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">${escapeHtml(objCfg.description)}</div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">${escapeHtml(objCfg.flavor)}</div>
+          <div style="margin-top:8px;font-size:11px;color:${color}bb;">Hold conditions for <strong style="color:${color};">${scCfg.hold_cycles || 8} consecutive production cycles</strong> to claim victory.</div>
+        </div>` : ''}
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:20px;">
+          ${scCfg?._slug === 'five_claimants'
+            ? 'Five claimants press their claims upon the Iron Throne. The Red Keep must be seized before any victory is possible — but each faction needs something more to sit the throne.'
+            : 'Five kings press their claims upon the Iron Throne. Each house controls its historical realm and pursues a unique victory condition. Hold your objective long enough and the realm bends the knee.'}
+        </div>
+        <button id="scenarioIntroCloseBtn" style="width:100%;padding:13px;background:${color};color:${_isLightColor(color) ? 'var(--bg-deep)' : '#fff'};border:none;border-radius:6px;font-family:'Cinzel',Georgia,serif;font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;">Begin the War</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#scenarioIntroCloseBtn').addEventListener('click', () => {
+    overlay.remove();
+    localStorage.setItem(key, '1');
+    _sidebarSection = 'objectives';
+    renderSidebarSection('objectives');
   }, { once: true });
 }
 
@@ -7503,10 +7732,10 @@ async function refreshGameState(gameId) {
   if (state.activeGame?.scenario_id) {
     const [objResult, scResult] = await Promise.all([
       supabase.from('game_objectives').select('*').eq('game_id', gameId),
-      supabase.from('scenarios').select('config').eq('id', state.activeGame.scenario_id).single(),
+      supabase.from('scenarios').select('slug, name, config').eq('id', state.activeGame.scenario_id).single(),
     ]);
     state.objectives = objResult.data || [];
-    state.scenario   = scResult.data?.config || null;
+    state.scenario   = scResult.data ? { ...scResult.data.config, _slug: scResult.data.slug, _name: scResult.data.name } : null;
   } else {
     state.objectives = [];
     state.scenario   = null;
@@ -11667,29 +11896,42 @@ const CASTLE_ICONS = {
 
 
 // ── House shields — marker for armies on the map ─────────────────────────────
+const SUBFACTION_HOUSES = new Set(['baratheon_kings_landing', 'baratheon_stannis', 'baratheon_renly']);
+
 // Files should be in /Shields/{slug}.png on GitHub
 // Tries lowercase first, then Title case, as a fallback
 const SHIELD_FILENAME_MAP = {
-  stark:     ['stark', 'Stark', 'House Stark'],
-  lannister: ['Lannister', 'lannister', 'House Lannister'],
-  baratheon: ['baratheon', 'Baratheon'],
-  targaryen: ['targaryen', 'Targaryen'],
-  greyjoy:   ['greyjoy', 'Greyjoy'],
-  tully:     ['tully', 'Tully'],
-  arryn:     ['arryn', 'Arryn'],
-  tyrell:    ['tyrell', 'Tyrell'],
-  martell:   ['martell', 'Martell'],
+  stark:                  ['stark', 'Stark'],
+  lannister:              ['Lannister', 'lannister'],
+  baratheon:              ['baratheon', 'Baratheon'],
+  targaryen:              ['targaryen', 'Targaryen'],
+  greyjoy:                ['greyjoy', 'Greyjoy'],
+  tully:                  ['tully', 'Tully'],
+  arryn:                  ['arryn', 'Arryn'],
+  tyrell:                 ['tyrell', 'Tyrell'],
+  martell:                ['martell', 'Martell'],
+  baratheon_stannis:      ['baratheon_stannis'],
+  baratheon_renly:        ['baratheon_renly'],
+  baratheon_kings_landing:['baratheon_kings_landing'],
 };
+
+// Prefer .webp; fall back through .png variants
 function shieldSrc(slug) {
   const name = (SHIELD_FILENAME_MAP[slug] || [slug])[0];
-  return `./Shields/${name}.png`;
+  return `./Shields/${name}.webp`;
 }
 function shieldFallback(img, slug, idx) {
   const names = SHIELD_FILENAME_MAP[slug] || [slug];
-  const next = (idx || 0) + 1;
-  if (next < names.length) {
-    img.src = `./Shields/${names[next]}.png`;
+  // idx encodes both the name index and format: even = .webp, odd = .png
+  const nameIdx = Math.floor((idx || 0) / 2);
+  const tryPng  = ((idx || 0) % 2) === 0;
+  const next    = (idx || 0) + 1;
+  if (tryPng && nameIdx < names.length) {
+    img.src = `./Shields/${names[nameIdx]}.png`;
     img.onerror = () => shieldFallback(img, slug, next);
+  } else if (nameIdx + 1 < names.length) {
+    img.src = `./Shields/${names[nameIdx + 1]}.webp`;
+    img.onerror = () => shieldFallback(img, slug, next + 1);
   } else {
     // Final fallback: use the inline house sigil SVG
     const svgHtml = HOUSE_SIGIL_SVGS[slug];
@@ -12468,6 +12710,14 @@ function buildLeaderboardHtml() {
   const sortFn = (a, b) => {
     if (_leaderboardSort === 'gold')   { const d = (b.player.gold || 0) - (a.player.gold || 0);   if (d) return d; }
     if (_leaderboardSort === 'troops') { const d = (b.troopCount || 0) - (a.troopCount || 0);     if (d) return d; }
+    if (_leaderboardSort === 'objectives' && isScenario) {
+      const oa = state.objectives?.find(o => o.house_slug === a.player.house_slug);
+      const ob = state.objectives?.find(o => o.house_slug === b.player.house_slug);
+      const ca = oa?.consecutive_cycles || 0, cb = ob?.consecutive_cycles || 0;
+      const ma = oa?.objective_met ? 1 : 0,   mb = ob?.objective_met ? 1 : 0;
+      if (ma !== mb) return mb - ma;
+      if (ca !== cb) return cb - ca;
+    }
     if (_leaderboardSort === 'castles' || !_leaderboardSort) {
       if (a.castleCount !== b.castleCount) return b.castleCount - a.castleCount;
     }
@@ -12482,8 +12732,10 @@ function buildLeaderboardHtml() {
   );
   const rankMap = new Map(rankOrder.map((r, i) => [r.player.id, i + 1]));
 
+  const isScenario   = !!state.activeGame?.scenario_id;
   const totalCastles = state.castles.filter(c => c.map_x != null).length;
-  const winAt = Math.ceil(totalCastles * (state.activeGame?.victory_pct || 0.5));
+  const winAt        = Math.ceil(totalCastles * (state.activeGame?.victory_pct || 0.5));
+  const holdCycles   = state.scenario?.hold_cycles || 8;
 
   const me = state.currentPlayer;
 
@@ -12493,6 +12745,14 @@ function buildLeaderboardHtml() {
     const color = house?.color || 'var(--border)';
     const rank  = rankMap.get(player.id);
     const pct   = Math.min(1, winAt > 0 ? castleCount / winAt : 0);
+
+    // Scenario objective progress
+    const objRow      = isScenario ? state.objectives?.find(o => o.house_slug === player.house_slug) : null;
+    const objCfg      = isScenario ? state.scenario?.objectives?.[player.house_slug] : null;
+    const cyclesHeld  = objRow?.consecutive_cycles || 0;
+    const objMet      = objRow?.objective_met || false;
+    const objComplete = !!objRow?.completed_at;
+    const objPct      = Math.min(1, holdCycles > 0 ? cyclesHeld / holdCycles : 0);
 
     let dipBtns = '';
     if (!isYou && !elim && me && me.eliminated_at_tick == null) {
@@ -12517,6 +12777,19 @@ function buildLeaderboardHtml() {
       }
     }
 
+    // Objective progress bar (scenario) or castle progress bar (standard)
+    let progressHtml = '';
+    if (isScenario && objCfg) {
+      const statusColor = objComplete ? '#f0c040' : objMet ? '#5cb85c' : 'var(--text-muted)';
+      const statusText  = objComplete ? 'Victory' : objMet ? `Holding — ${cyclesHeld}/${holdCycles} cycles` : cyclesHeld > 0 ? `${cyclesHeld} cycle${cyclesHeld !== 1 ? 's' : ''} held` : 'Objective not met';
+      progressHtml = `
+        <div style="font-size:10px;color:var(--text-muted);margin:3px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(objCfg.description)}</div>
+        <div class="castle-bar-track" style="background:var(--bg-deep);"><div class="castle-bar-fill" style="width:${Math.round(objPct * 100)}%;background:${objComplete ? '#f0c040' : objMet ? '#5cb85c' : color};"></div></div>
+        <div style="font-size:10px;color:${statusColor};margin-top:2px;">${statusText}</div>`;
+    } else {
+      progressHtml = `<div class="castle-bar-track"><div class="castle-bar-fill" style="width:${Math.round(pct * 100)}%"></div></div>`;
+    }
+
     return `
       <div class="scoreboard-row${isYou ? ' is-you' : ''}${player.is_ai ? ' is-ai' : ''}${elim ? ' eliminated' : ''}"
         style="--row-color:${color}"
@@ -12526,7 +12799,7 @@ function buildLeaderboardHtml() {
         <div style="flex:1;min-width:0;">
           <div class="name" style="color:${color};">${escapeHtml(house ? house.name : player.house_slug)}${isYou ? ' <span style="color:var(--text-muted);font-size:12px;font-weight:400;">(you)</span>' : ''}</div>
           <div class="meta">${escapeHtml(player.display_name || (player.is_ai ? 'AI' : 'Player'))}</div>
-          <div class="castle-bar-track"><div class="castle-bar-fill" style="width:${Math.round(pct * 100)}%"></div></div>
+          ${progressHtml}
           <div class="lb-stats">
             <span class="lb-stat-val">${castleCount}</span><span class="lb-stat-label">castles</span>
             <span class="lb-sep">·</span>
@@ -12564,11 +12837,18 @@ function buildLeaderboardHtml() {
       </div>
     </div>` : '';
 
+  const headerHtml = isScenario
+    ? `<div style="font-size:13px;color:var(--text-muted);text-align:center;padding:12px 0 4px;line-height:1.5;">
+        Hold your objective for <strong style="color:var(--accent)">${holdCycles}</strong> consecutive cycles to win
+       </div>`
+    : `<div style="font-size:14px;color:var(--text-muted);text-align:center;padding:14px 0 10px;">
+        First to <strong style="color:var(--accent)">${winAt}</strong> of ${totalCastles} castles wins
+       </div>`;
+
   return `
-    <div style="font-size:14px;color:var(--text-muted);text-align:center;padding:14px 0 10px;">
-      First to <strong style="color:var(--accent)">${winAt}</strong> of ${totalCastles} castles wins
-    </div>
+    ${headerHtml}
     <div class="lb-sort-tabs">
+      ${isScenario ? `<button class="lb-sort-tab${_leaderboardSort === 'objectives' ? ' active' : ''}" data-sort="objectives">Objectives</button>` : ''}
       <button class="lb-sort-tab${_leaderboardSort === 'castles' ? ' active' : ''}" data-sort="castles">Castles</button>
       <button class="lb-sort-tab${_leaderboardSort === 'gold'    ? ' active' : ''}" data-sort="gold">Gold</button>
       <button class="lb-sort-tab${_leaderboardSort === 'troops'  ? ' active' : ''}" data-sort="troops">Troops</button>
@@ -13153,15 +13433,18 @@ function trainingCost(currentLevel) {
 }
 
 const HOUSE_TRAITS = {
-  stark:     { strength: { label: 'Warriors of the North',   seat: 'lord_commander' }, weakness: { label: 'Honor above Gold',        seat: 'coin'          } },
-  lannister: { strength: { label: 'Casterly Rock Gold',      seat: 'coin'           }, weakness: { label: 'Blind to Their Enemies',  seat: 'whisperers'    } },
-  tyrell:    { strength: { label: 'The Reach Provides',      seat: 'coin'           }, weakness: { label: 'Schemers, Not Warriors',  seat: 'hand'          } },
-  baratheon: { strength: { label: "Robert's War Hammer",     seat: 'hand'           }, weakness: { label: 'No Time for Subtlety',   seat: 'whisperers'    } },
-  targaryen: { strength: { label: 'Ancient Valyrian Legacy', seat: 'grand_maester'  }, weakness: { label: 'Above the Law',          seat: 'laws'          } },
-  martell:   { strength: { label: "Doran's Long Game",       seat: 'whisperers'     }, weakness: { label: 'Dorne Will Not Fight',   seat: 'hand'          } },
-  greyjoy:   { strength: { label: 'The Iron Price',          seat: 'lord_commander' }, weakness: { label: 'We Do Not Bow',          seat: 'laws'          } },
-  arryn:     { strength: { label: 'As High as Honor',        seat: 'laws'           }, weakness: { label: 'Vale Isolation',         seat: 'coin'          } },
-  tully:     { strength: { label: 'Rivers of Information',   seat: 'whisperers'     }, weakness: { label: 'Practical, Not Scholarly', seat: 'grand_maester' } },
+  stark:                   { strength: { label: 'Warriors of the North',         seat: 'lord_commander' }, weakness: { label: 'Honor above Gold',            seat: 'coin'          } },
+  lannister:               { strength: { label: 'Casterly Rock Gold',            seat: 'coin'           }, weakness: { label: 'Blind to Their Enemies',      seat: 'whisperers'    } },
+  tyrell:                  { strength: { label: 'The Reach Provides',            seat: 'coin'           }, weakness: { label: 'Schemers, Not Warriors',      seat: 'hand'          } },
+  baratheon:               { strength: { label: "Robert's War Hammer",           seat: 'hand'           }, weakness: { label: 'No Time for Subtlety',        seat: 'whisperers'    } },
+  targaryen:               { strength: { label: 'Ancient Valyrian Legacy',       seat: 'grand_maester'  }, weakness: { label: 'Above the Law',               seat: 'laws'          } },
+  martell:                 { strength: { label: "Doran's Long Game",             seat: 'whisperers'     }, weakness: { label: 'Dorne Will Not Fight',        seat: 'hand'          } },
+  greyjoy:                 { strength: { label: 'The Iron Price',                seat: 'lord_commander' }, weakness: { label: 'We Do Not Bow',               seat: 'laws'          } },
+  arryn:                   { strength: { label: 'As High as Honor',              seat: 'laws'           }, weakness: { label: 'Vale Isolation',              seat: 'coin'          } },
+  tully:                   { strength: { label: 'Rivers of Information',         seat: 'whisperers'     }, weakness: { label: 'Practical, Not Scholarly',    seat: 'grand_maester' } },
+  baratheon_kings_landing: { strength: { label: 'Lannister Gold Holds the Throne', seat: 'coin'        }, weakness: { label: 'The Whole Realm is Your Enemy', seat: 'whisperers'  } },
+  baratheon_stannis:       { strength: { label: 'Iron Discipline, Iron Will',   seat: 'lord_commander' }, weakness: { label: 'No Friends, No Gold',          seat: 'coin'          } },
+  baratheon_renly:         { strength: { label: 'The Reach Feeds an Army',      seat: 'coin'           }, weakness: { label: 'Numbers Without Hardening',   seat: 'hand'          } },
 };
 
 const HOUSE_DATA = {
@@ -13170,6 +13453,7 @@ const HOUSE_DATA = {
     pros: ["Strongest military — Lord Commander compounds across every castle", "Bannermen loyalty means high morale and reliable commanders", "Winter events reduce enemy movement while you hold the North"],
     cons: ["Weakest economy — Honor above Gold leaves you cash-starved", "Isolated geography slows expansion toward the south", "No spy network; you rarely see threats coming"],
     commanders: ["Eddard Stark", "Robb Stark", "Jon Snow", "Greatjon Umber", "Roose Bolton"],
+    commanders_5k: ["Robb Stark", "Brynden Tully", "Greatjon Umber", "Roose Bolton", "Edmure Tully"],
   },
   lannister: {
     bio: "The wealthiest house in Westeros, the Lannisters can outspend any rival and buy armies when their own bleed out. Gold buys loyalty, second chances, and eventually the Iron Throne — but it does not buy wisdom.",
@@ -13218,6 +13502,24 @@ const HOUSE_DATA = {
     pros: ["Master of Whisperers strength — wide scan range, early fog advantage", "Central map position — project power toward any border", "Natural broker of peace; high alliance value with all houses"],
     cons: ["Practical, Not Scholarly — Grand Maester weakness, slowest research growth", "Surrounded position means multi-front wars are common", "Politically obligated; hard to stay neutral when neighbors clash"],
     commanders: ["Hoster Tully", "Brynden Tully", "Edmure Tully", "Jason Mallister", "Tytos Blackwood"],
+  },
+  baratheon_kings_landing: {
+    bio: "The Iron Throne sits in King's Landing, and the real power behind it is Tywin Lannister. The Westerlands pour gold into the crown's coffers, and Lannister armies are the most feared on the continent. You begin with the widest territorial base and the deepest treasury — and three claimants marching against you on every flank.",
+    pros: ["Richest starting position — Lannister treasury and King's Landing trade income", "Tywin Lannister starts as your head commander, the realm's most feared general", "11 castles from day one; widest territorial base of any faction"],
+    cons: ["Every other claimant is your enemy from the start — the most isolated faction diplomatically", "Whisperers weakness leaves you blind to enemy movements across a very wide front", "Hardest win condition: must hold Red Keep, Casterly Rock, and 35% of the realm simultaneously"],
+    commanders: ["Tywin Lannister", "Jaime Lannister", "Gregor Clegane", "Sandor Clegane", "Tyrion Lannister"],
+  },
+  baratheon_stannis: {
+    bio: "Stannis Baratheon holds the strongest legal claim and the coldest resolve. Dragonstone gives him a defensible sea fortress and a small but fanatically disciplined army. He has no wealth, few friends, and enemies on every side — but Stannis does not know how to quit, and the law is on his side.",
+    pros: ["Disciplined army — Lord Commander strength makes each soldier count for more", "Tight, defensible starting position on Dragonstone; difficult to siege from sea", "Eastern start gives first access to unclaimed Crownlands castles near the Narrow Sea"],
+    cons: ["Weakest economy of any claimant — Dragonstone produces stone, not gold", "At war with both King's Landing and Renly from the start; no natural allies", "Simple but demanding win condition — must seize the Red Keep away from heavily defended King's Landing"],
+    commanders: ["Stannis Baratheon", "Davos Seaworth", "Melisandre", "Axell Florent", "Salladhor Saan"],
+  },
+  baratheon_renly: {
+    bio: "Renly Baratheon declared himself king and backed it with the largest army Westeros had seen in a generation. The Reach stands behind him — the most populous and wealthy region of the continent, with the Tyrell family and their gold bound to his cause. He has numbers, charm, and a crown. What he lacks is time.",
+    pros: ["Reach wealth behind him — strongest economy among the southern claimants", "Largest potential garrison; overwhelming numbers make up for inexperience", "At war only with Stannis; best diplomatic starting hand of any claimant"],
+    cons: ["Hand weakness — vast armies without hardened commanders mean slow combat power scaling", "Win condition requires both Storm's End and Highgarden held alongside the Red Keep; wide geography to defend", "Delay is fatal — every tick spent feasting lets the other claimants consolidate"],
+    commanders: ["Renly Baratheon", "Loras Tyrell", "Randyll Tarly", "Brienne of Tarth", "Garlan Tyrell"],
   },
 };
 
