@@ -7635,6 +7635,14 @@ function _showScenarioIntro(gameId) {
         </div>` : ''}
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:20px;">
           Five kings press their claims upon the Iron Throne. The Red Keep must be seized before any victory is possible — but each claimant needs something more to rule.
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
+            <div style="font-size:11px;padding:6px 10px;background:rgba(180,50,50,.08);border-left:2px solid #a01a2e88;border-radius:3px;color:var(--text-muted);">
+              <span style="color:#c8952b;font-weight:600;">House Arryn</span> holds 30,000 uncommitted knights in the Vale. They are at war with King's Landing — but their alliance is a prize every claimant should compete for.
+            </div>
+            <div style="font-size:11px;padding:6px 10px;background:rgba(180,50,50,.08);border-left:2px solid #b8451888;border-radius:3px;color:var(--text-muted);">
+              <span style="color:#e8732a;font-weight:600;">House Martell</span> has a grudge against King's Landing that will never heal. They will raid Lannister territory from the south all game. Any enemy of the Lannisters is a potential partner.
+            </div>
+          </div>
         </div>
         <button id="scenarioIntroCloseBtn" style="width:100%;padding:13px;background:${color};color:${_isLightColor(color) ? 'var(--bg-deep)' : '#fff'};border:none;border-radius:6px;font-family:'Cinzel',Georgia,serif;font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;">Begin the War</button>
       </div>
