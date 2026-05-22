@@ -3533,11 +3533,16 @@
     .main-screen.game-mode .sidebar.mobile-open {
       display: flex;
       position: fixed;
-      inset: 0;
-      z-index: 450;
+      top: 48px;
+      left: 0;
       width: 100%;
-      height: 100%;
+      height: auto;
+      max-height: 75vh;
+      overflow-y: auto;
+      z-index: 450;
       border-right: none;
+      border-bottom: 2px solid var(--border-gold);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
     }
     /* Show hamburger, override .hidden */
     .main-screen.game-mode #menuBtn {
@@ -5475,6 +5480,11 @@ function openPanel(title, showBack = false) {
   const sidebar = document.querySelector('.sidebar');
   sidebar.classList.add('panel-open');
   sidebar.classList.toggle('panel-menu', title === 'Menu' && !showBack);
+  if (window.innerWidth <= 768) {
+    closeMobileMenu();
+    sidebar.classList.add('mobile-open');
+    el.npPanelHeader?.classList.remove('hidden');
+  }
 }
 
 function closePanel() {
@@ -5483,6 +5493,7 @@ function closePanel() {
   const sidebar = document.querySelector('.sidebar');
   sidebar.classList.remove('panel-open');
   sidebar.classList.remove('panel-menu');
+  if (window.innerWidth <= 768) sidebar.classList.remove('mobile-open');
   // Clear selection
   state.selectedCastle = null;
   state.selectedMovementId = null;
