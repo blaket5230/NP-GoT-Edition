@@ -6540,26 +6540,11 @@ function renderLobbyScenarioPicker(container) {
   container.innerHTML = `
     <button class="lview-filter-tab active" id="scenarioPickerBack" style="margin-bottom:14px;font-size:12px;">← Back</button>
     <div class="lview-section-title" style="margin-bottom:10px;">Choose a Scenario</div>
-    <div class="lview-mode-card" id="modePickWOTFK" style="width:100%;box-sizing:border-box;text-align:left;padding:16px 18px;margin-bottom:10px;">
+    <div class="lview-mode-card" id="modePickWOTFK" style="width:100%;box-sizing:border-box;text-align:left;padding:16px 18px;">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
         <div class="lview-mode-icon" style="margin:0;font-size:28px;">👑</div>
         <div>
           <div class="lview-mode-name" style="font-size:12px;">War of the Five Kings</div>
-          <div style="font-size:10px;color:var(--accent);letter-spacing:0.04em;text-transform:uppercase;margin-top:2px;">9 Houses · Preset Territories · House Objectives</div>
-        </div>
-      </div>
-      <div class="lview-mode-desc" style="line-height:1.6;">Five kings claim the Iron Throne. Each house begins with their historical realm and must fulfil a unique objective — holding conditions for 8 production cycles wins.</div>
-      <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">
-        ${['Stark','Lannister','Baratheon','Tyrell','Tully','Arryn','Greyjoy','Martell','Targaryen'].map(h =>
-          `<span style="font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:3px;color:var(--text-muted);">${h}</span>`
-        ).join('')}
-      </div>
-    </div>
-    <div class="lview-mode-card" id="modePickFiveClaimants" style="width:100%;box-sizing:border-box;text-align:left;padding:16px 18px;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-        <div class="lview-mode-icon" style="margin:0;font-size:28px;">⚔️</div>
-        <div>
-          <div class="lview-mode-name" style="font-size:12px;">Five Claimants</div>
           <div style="font-size:10px;color:var(--accent);letter-spacing:0.04em;text-transform:uppercase;margin-top:2px;">5 Factions · ~45% Unclaimed · Red Keep Required to Win</div>
         </div>
       </div>
@@ -6568,11 +6553,11 @@ function renderLobbyScenarioPicker(container) {
         ${[
           { label: "King's Landing", color: '#a01a2e' },
           { label: 'Stark',          color: '#7c9a7c' },
-          { label: 'Dragonstone',    color: '#5c7282' },
-          { label: "Storm's End",    color: '#1a6e2a' },
+          { label: 'Stannis',        color: '#2A3A4A' },
+          { label: 'Renly',          color: '#1C5E3C' },
           { label: 'Greyjoy',        color: '#607080' },
         ].map(f =>
-          `<span style="font-size:10px;padding:2px 8px;border:1px solid ${f.color}77;border-radius:3px;color:${f.color};">${f.label}</span>`
+          `<span style="font-size:10px;padding:2px 8px;border:1px solid ${f.color}99;border-radius:3px;color:${f.color};">${f.label}</span>`
         ).join('')}
         <span style="font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:3px;color:var(--text-faint);">Arryn (AI)</span>
         <span style="font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:3px;color:var(--text-faint);">Martell (AI)</span>
@@ -6583,21 +6568,15 @@ function renderLobbyScenarioPicker(container) {
   document.getElementById('modePickWOTFK').addEventListener('click', () => {
     renderLobbyScenarioCreate(container, 'war_of_five_kings');
   });
-  document.getElementById('modePickFiveClaimants').addEventListener('click', () => {
-    renderLobbyScenarioCreate(container, 'five_claimants');
-  });
 }
 
 function renderLobbyScenarioCreate(container, scenarioSlug) {
-  const isSP = _lobbyNavMode === 'sp-my';
-  const isFiveClaimants = scenarioSlug === 'five_claimants';
-  const title       = isFiveClaimants ? 'Five Claimants' : 'War of the Five Kings';
-  const defaultName = isFiveClaimants ? 'Five Claimants' : 'War of the Five Kings';
-  const aiNote      = isFiveClaimants
-    ? (isSP ? 'Choose one of five playable factions. House Arryn and House Martell are AI-controlled neutrals.'
-             : 'Open slots are filled with AI. Arryn and Martell are AI-only — players choose from the five claimants.')
-    : (isSP ? 'Single Player — choose your house on the next screen.'
-             : 'All 9 houses will be filled with AI for unoccupied slots.');
+  const isSP        = _lobbyNavMode === 'sp-my';
+  const title       = 'War of the Five Kings';
+  const defaultName = 'War of the Five Kings';
+  const aiNote      = isSP
+    ? 'Choose one of five playable factions. House Arryn and House Martell are AI-controlled neutrals.'
+    : 'Open slots are filled with AI. Arryn and Martell are AI-only — players choose from the five claimants.';
   const btnLabel    = isSP ? 'Choose Your House →' : 'Create Scenario Game';
 
   container.innerHTML = `
@@ -6631,7 +6610,7 @@ function renderLobbyScenarioCreate(container, scenarioSlug) {
     try {
       const { data: scenario } = await supabase.from('scenarios').select('id, config').eq('slug', scenarioSlug).single();
       if (!scenario) throw new Error('Scenario not found');
-      const maxPlayers = isFiveClaimants ? 7 : 9;
+      const maxPlayers = 7;
       const { data: game, error } = await supabase.from('games').insert({
         name,
         tick_speed: tickSpeed,
@@ -6978,9 +6957,8 @@ function openSpHousePicker(prebuiltGameId = null, scenarioConfig = null) {
 
   const modalTitle = el.spHousePickerModal.querySelector('h2');
   if (modalTitle) {
-    modalTitle.textContent = hasFiveClaimants
-      ? 'Five Claimants — Choose Your Faction'
-      : isScenario ? 'War of the Five Kings — Choose Your House'
+    modalTitle.textContent = isScenario
+      ? 'War of the Five Kings — Choose Your House'
       : 'Single Player — New Game';
   }
 
@@ -7656,9 +7634,7 @@ function _showScenarioIntro(gameId) {
           <div style="margin-top:8px;font-size:11px;color:${color}bb;">Hold conditions for <strong style="color:${color};">${scCfg.hold_cycles || 8} consecutive production cycles</strong> to claim victory.</div>
         </div>` : ''}
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:20px;">
-          ${scCfg?._slug === 'five_claimants'
-            ? 'Five claimants press their claims upon the Iron Throne. The Red Keep must be seized before any victory is possible — but each faction needs something more to sit the throne.'
-            : 'Five kings press their claims upon the Iron Throne. Each house controls its historical realm and pursues a unique victory condition. Hold your objective long enough and the realm bends the knee.'}
+          Five kings press their claims upon the Iron Throne. The Red Keep must be seized before any victory is possible — but each claimant needs something more to rule.
         </div>
         <button id="scenarioIntroCloseBtn" style="width:100%;padding:13px;background:${color};color:${_isLightColor(color) ? 'var(--bg-deep)' : '#fff'};border:none;border-radius:6px;font-family:'Cinzel',Georgia,serif;font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;">Begin the War</button>
       </div>
