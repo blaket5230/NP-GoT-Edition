@@ -3529,6 +3529,69 @@
   .guide-table tr:last-child td { border-bottom: none; }
   .guide-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
 
+  /* ── Objectives panel ──────────────────────────────────────────── */
+  .obj-row {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .obj-row:last-child { border-bottom: none; }
+  .obj-row-holding { background: rgba(255,255,255,0.02); border-radius: 6px; padding: 10px 8px; margin: 0 -8px; }
+  .obj-row-complete { opacity: 0.7; }
+  .obj-row-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .obj-sigil-wrap { flex-shrink: 0; }
+  .obj-row-info { flex: 1; min-width: 0; }
+  .obj-house-name { font-family: 'Cinzel', Georgia, serif; font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+  .obj-desc { font-size: 11px; color: var(--text); font-weight: 600; margin-bottom: 2px; }
+  .obj-flavor { font-size: 10px; color: var(--text-muted); line-height: 1.4; }
+  .obj-progress-wrap { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 5px; }
+  .obj-progress-bar { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+  .obj-status { font-size: 10px; color: var(--text-muted); letter-spacing: 0.03em; }
+
+  /* Pulsing dot for active holds */
+  .obj-pulse-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    animation: obj-pulse 1.4s ease-in-out infinite;
+  }
+  .sidebar-nav-item.obj-holding { background: rgba(201,168,76,0.06); }
+  @keyframes obj-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  /* ── Objective countdown banner ─────────────────────────────────── */
+  #objectiveBanner {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 300;
+    pointer-events: none;
+  }
+  .obj-banner-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(10,8,6,0.88);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 7px 14px;
+    box-shadow: 0 0 24px rgba(201,168,76,0.25), 0 4px 16px rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+    animation: banner-breathe 2s ease-in-out infinite;
+  }
+  @keyframes banner-breathe {
+    0%, 100% { box-shadow: 0 0 24px rgba(201,168,76,0.25), 0 4px 16px rgba(0,0,0,0.6); }
+    50%       { box-shadow: 0 0 40px rgba(201,168,76,0.50), 0 4px 20px rgba(0,0,0,0.7); }
+  }
+  .obj-banner-icon { font-size: 16px; flex-shrink: 0; }
+  .obj-banner-items { display: flex; flex-direction: column; gap: 3px; }
+  .obj-banner-item { display: flex; align-items: center; gap: 6px; font-size: 12px; white-space: nowrap; }
+  .obj-banner-house { font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 12px; }
+  .obj-banner-sep { color: var(--text-muted); }
+  .obj-banner-cycles { color: var(--text-muted); font-size: 11px; }
+
   /* Join filter tabs */
   .lview-filter-tabs {
     display: flex;
@@ -4752,6 +4815,8 @@ const state = {
   castles: [],
   houses: [],
   games: [],
+  objectives: [],   // game_objectives rows for current scenario game
+  scenario: null,   // scenario config object
   selectedCastle: null,
   selectedGame: null,
   selectedHouseToJoin: null,
@@ -6451,16 +6516,98 @@ function renderLobbyCreateView(container) {
         <div class="lview-mode-name">Standard</div>
         <div class="lview-mode-desc">9 great houses compete to control all of Westeros</div>
       </div>
-      <div class="lview-mode-card coming" title="Coming soon">
+      <div class="lview-mode-card" id="modePickScenarios">
         <div class="lview-mode-icon">📜</div>
         <div class="lview-mode-name">Scenarios</div>
-        <div class="lview-mode-desc">Historical moments and alternate timelines</div>
-        <div class="lview-mode-badge">Coming Soon</div>
+        <div class="lview-mode-desc">Historical moments with preset territories and objectives</div>
       </div>
     </div>`;
   document.getElementById('modePickStandard').addEventListener('click', () => {
     if (_lobbyNavMode === 'sp-my') { openSpHousePicker(); return; }
     el.createGameBtn.click();
+  });
+  document.getElementById('modePickScenarios').addEventListener('click', () => {
+    renderLobbyScenarioPicker(container);
+  });
+}
+
+function renderLobbyScenarioPicker(container) {
+  container.innerHTML = `
+    <button class="lview-filter-tab active" id="scenarioPickerBack" style="margin-bottom:14px;font-size:12px;">← Back</button>
+    <div class="lview-section-title" style="margin-bottom:10px;">Choose a Scenario</div>
+    <div class="lview-mode-card" id="modePickWOTFK" style="width:100%;box-sizing:border-box;text-align:left;padding:16px 18px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <div class="lview-mode-icon" style="margin:0;font-size:28px;">👑</div>
+        <div>
+          <div class="lview-mode-name" style="font-size:12px;">War of the Five Kings</div>
+          <div style="font-size:10px;color:var(--accent);letter-spacing:0.04em;text-transform:uppercase;margin-top:2px;">9 Houses · Preset Territories · House Objectives</div>
+        </div>
+      </div>
+      <div class="lview-mode-desc" style="line-height:1.6;">Five kings claim the Iron Throne. Each house begins with their historical realm and must fulfil a unique objective — holding conditions for 8 production cycles wins.</div>
+      <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">
+        ${['Stark','Lannister','Baratheon','Tyrell','Tully','Arryn','Greyjoy','Martell','Targaryen'].map(h =>
+          `<span style="font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:3px;color:var(--text-muted);">${h}</span>`
+        ).join('')}
+      </div>
+    </div>`;
+
+  document.getElementById('scenarioPickerBack').addEventListener('click', () => renderLobbyCreateView(container));
+  document.getElementById('modePickWOTFK').addEventListener('click', () => {
+    renderLobbyScenarioCreate(container, 'war_of_five_kings');
+  });
+}
+
+function renderLobbyScenarioCreate(container, scenarioSlug) {
+  container.innerHTML = `
+    <button class="lview-filter-tab active" id="scenarioCreateBack" style="margin-bottom:14px;font-size:12px;">← Back</button>
+    <div class="lview-section-title" style="margin-bottom:4px;">War of the Five Kings</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;">All 9 houses will be filled with AI for unoccupied slots.</div>
+    <div class="lview-form-row" style="margin-bottom:12px;">
+      <label>Game Name</label>
+      <input type="text" id="scenarioGameName" placeholder="War of the Five Kings" maxlength="40" value="War of the Five Kings">
+    </div>
+    <div class="lview-form-row" style="margin-bottom:16px;">
+      <label>Tick Speed</label>
+      <select id="scenarioTickSpeed">
+        <option value="fast">Fast</option>
+        <option value="normal" selected>Normal</option>
+        <option value="slow">Slow</option>
+      </select>
+    </div>
+    <button class="lview-save-btn" id="scenarioCreateBtn" style="width:100%;">Create Scenario Game</button>
+    <div id="scenarioCreateError" style="color:var(--error);font-size:12px;margin-top:8px;"></div>`;
+
+  document.getElementById('scenarioCreateBack').addEventListener('click', () => renderLobbyScenarioPicker(container));
+  document.getElementById('scenarioCreateBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('scenarioCreateBtn');
+    const errEl = document.getElementById('scenarioCreateError');
+    const name = document.getElementById('scenarioGameName').value.trim() || 'War of the Five Kings';
+    const tickSpeed = document.getElementById('scenarioTickSpeed').value;
+    btn.disabled = true;
+    btn.textContent = 'Creating…';
+    errEl.textContent = '';
+    try {
+      // Fetch scenario id
+      const { data: scenario } = await supabase.from('scenarios').select('id').eq('slug', scenarioSlug).single();
+      if (!scenario) throw new Error('Scenario not found');
+      const { data: game, error } = await supabase.from('games').insert({
+        name,
+        tick_speed: tickSpeed,
+        max_players: 9,
+        fill_with_ai: true,
+        scenario_id: scenario.id,
+        created_by: state.user.id,
+        status: 'lobby',
+      }).select().single();
+      if (error) throw error;
+      // Join as creator
+      await loadGames();
+      openJoinGameModal(game.id);
+    } catch (err) {
+      errEl.textContent = err.message;
+      btn.disabled = false;
+      btn.textContent = 'Create Scenario Game';
+    }
   });
 }
 
@@ -6471,7 +6618,9 @@ function renderLobbyJoinView(container) {
     const filtered = state.games.filter(game => {
       if (game.status !== 'lobby') return false;
       const userIn = (game.game_players || []).some(p => p.user_id === state.user?.id);
-      return !userIn;
+      const isScenario = !!game.scenario_id;
+      if (joinFilter === 'scenarios') return isScenario && !userIn;
+      return !isScenario && !userIn;
     });
 
     container.innerHTML = `
@@ -6479,9 +6628,7 @@ function renderLobbyJoinView(container) {
         <button class="lview-filter-tab${joinFilter === 'standard' ? ' active' : ''}" data-filter="standard">Standard</button>
         <button class="lview-filter-tab${joinFilter === 'scenarios' ? ' active' : ''}" data-filter="scenarios">Scenarios</button>
       </div>
-      ${joinFilter === 'scenarios'
-        ? `<div class="lview-coming-soon"><div class="lview-coming-soon-title">Coming Soon</div><div class="lview-coming-soon-text">Scenario games are not yet available.</div></div>`
-        : filtered.length === 0
+      ${filtered.length === 0
           ? `<div class="empty-state">No open games to join right now.</div>`
           : filtered.map(game => {
               const players = game.game_players || [];
@@ -7352,6 +7499,19 @@ async function refreshGameState(gameId) {
     state.whispers.filter(w => w.text === null).forEach(w => triggerMowWhisper(w.id));
   }
 
+  // Load objectives + scenario config for scenario games
+  if (state.activeGame?.scenario_id) {
+    const [objResult, scResult] = await Promise.all([
+      supabase.from('game_objectives').select('*').eq('game_id', gameId),
+      supabase.from('scenarios').select('config').eq('id', state.activeGame.scenario_id).single(),
+    ]);
+    state.objectives = objResult.data || [];
+    state.scenario   = scResult.data?.config || null;
+  } else {
+    state.objectives = [];
+    state.scenario   = null;
+  }
+
   renderGameResources();
   renderScoreboard();
   renderMarkers();
@@ -7360,6 +7520,7 @@ async function refreshGameState(gameId) {
   renderInboxBadge();
   renderSidebar();
   renderTurnBar();
+  renderObjectiveBanner();
 }
 
 async function processTicks(gameId, { quiet = false } = {}) {
@@ -11576,10 +11737,10 @@ function getDiplomacyLabel(status, graceTick) {
     const rem = graceTick - (state.activeGame?.current_tick || 0);
     return `Grace Period (${Math.max(0,rem)}t remaining)`;
   }
-  return 'No Pact';
+  return 'Neutral';
 }
 function getDiplomacyColor(status) {
-  return { ally:'#62C030', enemy:'#E82040', proposed:'#F5C518', grace_period:'#F5A020', neutral:'#5a5040' }[status] || '#5a5040';
+  return { ally:'#62C030', enemy:'#E82040', proposed:'#F5C518', grace_period:'#F5A020', neutral:'#6a7a8a' }[status] || '#6a7a8a';
 }
 function nameToPortrait(name) {
   return './portraits/' + (name || '').toLowerCase()
@@ -11741,6 +11902,7 @@ const SIDEBAR_SECTIONS = [
   { id: 'houses',      icon: NAV_ICONS.houses,      label: 'Houses',        help: null        },
   { id: 'council',     icon: NAV_ICONS.council,     label: 'Small Council', help: 'council'   },
   { id: 'diplomacy',   icon: NAV_ICONS.intel,       label: 'Diplomacy',     help: null        },
+  { id: 'objectives',  icon: '⚔',                   label: 'Objectives',    help: null, scenarioOnly: true },
   { id: 'realms',      icon: NAV_ICONS.realms,      label: 'Realms',        help: 'castles'   },
   { id: 'ledger',      icon: NAV_ICONS.ledger,      label: 'Ledger',        help: 'trade'     },
   { id: 'intel',       icon: NAV_ICONS.intel,       label: 'Intel',         help: 'intel'     },
@@ -11793,11 +11955,13 @@ function renderSidebarNav() {
   el.sidebarContent.innerHTML = `
     <div class="sidebar-nav-list">
       ${houseTopHtml}
-      ${SIDEBAR_SECTIONS.map(s => {
+      ${SIDEBAR_SECTIONS.filter(s => !s.scenarioOnly || state.activeGame?.scenario_id).map(s => {
         if (s.id === 'divider') return '<div class="sidebar-nav-divider"></div>';
-        return `<div class="sidebar-nav-item" data-section="${s.id}">
+        const holding = s.id === 'objectives' && state.objectives.some(o => o.objective_met && !o.completed_at);
+        return `<div class="sidebar-nav-item${holding ? ' obj-holding' : ''}" data-section="${s.id}">
           <span class="snav-icon">${s.icon}</span>
           <span>${s.label}</span>
+          ${holding ? '<span class="obj-pulse-dot"></span>' : ''}
         </div>`;
       }).join('')}
     </div>`;
@@ -11875,6 +12039,7 @@ function renderSidebarSection(section) {
     case 'houses':      content = buildHousesHtml(); break;
     case 'council':     content = buildCouncilSidebarHtml(); break;
     case 'diplomacy':   content = buildDiplomacyHtml(); break;
+    case 'objectives':  content = buildObjectivesHtml(); break;
     case 'analysis':    content = buildAnalysisHtml(); break;
     case 'help':        content = buildHelpHtml(); break;
     case 'options':     content = buildOptionsHtml(); break;
@@ -11959,6 +12124,95 @@ function buildDipHistory(targetPlayer) {
 }
 
 // ── Diplomacy panel ───────────────────────────────────────────────────────────
+function buildObjectivesHtml() {
+  if (!state.scenario || !state.objectives?.length) {
+    return '<div style="padding:20px;color:var(--text-muted);font-size:13px;">No objectives for this game.</div>';
+  }
+  const objMap = state.scenario.objectives || {};
+  const rows = state.objectives.map(obj => {
+    const def  = objMap[obj.house_slug] || {};
+    const house = state.houses.find(h => h.slug === obj.house_slug);
+    const color = house?.color || '#888';
+    const pct   = obj.required_cycles > 0 ? Math.min(1, obj.consecutive_cycles / obj.required_cycles) : 0;
+    const isHolding  = obj.objective_met && !obj.completed_at;
+    const isComplete = !!obj.completed_at;
+    const cyclesLeft = obj.required_cycles - obj.consecutive_cycles;
+
+    let statusLabel, statusColor;
+    if (isComplete)        { statusLabel = 'Victory';  statusColor = '#C9A84C'; }
+    else if (isHolding)    { statusLabel = `Holding — ${cyclesLeft} cycle${cyclesLeft !== 1 ? 's' : ''} left`; statusColor = color; }
+    else if (obj.consecutive_cycles > 0) { statusLabel = 'Conditions Lost'; statusColor = '#E82040'; }
+    else                   { statusLabel = 'Not started'; statusColor = 'var(--text-muted)'; }
+
+    return `
+    <div class="obj-row${isHolding ? ' obj-row-holding' : ''}${isComplete ? ' obj-row-complete' : ''}"
+         style="--house-color:${color};">
+      <div class="obj-row-header">
+        <div class="obj-sigil-wrap">${shieldBadgeHtml(obj.house_slug, color, 36)}</div>
+        <div class="obj-row-info">
+          <div class="obj-house-name" style="color:${color};">${escapeHtml(house?.name || obj.house_slug)}</div>
+          <div class="obj-desc">${escapeHtml(def.description || '')}</div>
+          <div class="obj-flavor">${escapeHtml(def.flavor || '')}</div>
+        </div>
+      </div>
+      <div class="obj-progress-wrap">
+        <div class="obj-progress-bar" style="width:${Math.round(pct*100)}%;background:${isComplete ? '#C9A84C' : color};"></div>
+      </div>
+      <div class="obj-status" style="color:${statusColor};">
+        ${isHolding ? '<span class="obj-pulse-dot" style="display:inline-block;margin-right:5px;"></span>' : ''}
+        ${escapeHtml(statusLabel)}
+        <span style="float:right;color:var(--text-muted);">${obj.consecutive_cycles}/${obj.required_cycles} cycles</span>
+      </div>
+    </div>`;
+  });
+
+  const holdingCount = state.objectives.filter(o => o.objective_met && !o.completed_at).length;
+  const headerNote = holdingCount > 0
+    ? `<div style="padding:8px 12px;background:rgba(232,32,64,.12);border:1px solid rgba(232,32,64,.3);border-radius:5px;font-size:11px;color:#E82040;margin-bottom:12px;text-align:center;font-weight:600;">
+        ⚠ ${holdingCount} house${holdingCount > 1 ? 's are' : ' is'} currently holding their objective
+       </div>` : '';
+
+  return `<div style="padding:14px 14px 0;">${headerNote}</div>
+    <div style="padding:0 10px 14px;">${rows.join('')}</div>`;
+}
+
+function renderObjectiveBanner() {
+  let banner = document.getElementById('objectiveBanner');
+  if (!state.activeGame?.scenario_id || !state.objectives?.length) {
+    if (banner) banner.remove();
+    return;
+  }
+
+  const holding = state.objectives.filter(o => o.objective_met && !o.completed_at);
+  if (!holding.length) {
+    if (banner) banner.remove();
+    return;
+  }
+
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'objectiveBanner';
+    // Insert into map area so it floats above the map
+    document.querySelector('.map-area')?.appendChild(banner);
+  }
+
+  const items = holding.map(obj => {
+    const house = state.houses.find(h => h.slug === obj.house_slug);
+    const color = house?.color || '#C9A84C';
+    const left  = obj.required_cycles - obj.consecutive_cycles;
+    return `<div class="obj-banner-item" style="--banner-color:${color};">
+      <span class="obj-banner-house" style="color:${color};">${escapeHtml(house?.name || obj.house_slug)}</span>
+      <span class="obj-banner-sep">—</span>
+      <span class="obj-banner-cycles">${left} cycle${left !== 1 ? 's' : ''} remaining</span>
+    </div>`;
+  }).join('');
+
+  banner.innerHTML = `<div class="obj-banner-inner">
+    <span class="obj-banner-icon">⚔</span>
+    <div class="obj-banner-items">${items}</div>
+  </div>`;
+}
+
 function buildDiplomacyHtml() {
   const me = state.currentPlayer;
   if (!me) return '<div style="padding:20px;color:var(--text-muted)">Not in a game.</div>';
