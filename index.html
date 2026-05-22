@@ -292,6 +292,16 @@
   .main-screen.game-mode .tb-vsep:first-of-type { display: none !important; }
   .main-screen.game-mode .user-email    { display: none !important; }
   .main-screen.game-mode .connection-badge { display: none !important; }
+  .main-screen.game-mode .header .spacer { display: none !important; }
+  .main-screen.game-mode #gameResources { flex: 1; min-width: 0; justify-content: space-around; }
+  .main-screen.game-mode .tb-cycle-block { padding: 5px 8px; gap: 5px; }
+  .main-screen.game-mode .tb-cycle-block > i { font-size: 13px; }
+  .main-screen.game-mode .tb-moon-svg { width: 13px; height: 13px; }
+  .main-screen.game-mode .tb-cycle-label { font-size: 9px; letter-spacing: .06em; }
+  .main-screen.game-mode .tb-stack .tb-num { font-size: 13px; }
+  .main-screen.game-mode .tb-stack .tb-rate { font-size: 9px; }
+  .main-screen.game-mode #cycleCountdown { font-size: 13px; }
+  .main-screen.game-mode .tb-vsep { margin: 0 4px; }
 
   /* Home screen: dim the map and show the centered logo */
   .main-screen:not(.game-mode) .map-container::after {
@@ -339,7 +349,7 @@
   .main-screen.game-mode {
     grid-template-rows: 48px 1fr;
     grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
-    grid-template-areas: "header header" "sidebar map";
+    grid-template-areas: "header map" "sidebar map";
   }
   .main-screen.game-mode .header {
     height: 48px;
@@ -507,7 +517,8 @@
   .tb-cycle-block span { font-size: clamp(14px, 1.1vw, 16px); color: var(--text); letter-spacing: .03em; }
   .tb-cycle-label { font-size: clamp(10px, 0.75vw, 11px); color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; line-height: 1; display: block; }
   .tb-stack .tb-num { font-family: 'Cinzel', Georgia, serif; font-size: clamp(15px, 1.3vw, 19px); font-weight: 700; color: var(--accent); line-height: 1.1; display: block; }
-  .tb-stack .tb-rate { font-size: clamp(10px, 0.75vw, 11px); color: var(--text-muted); line-height: 1; display: block; }
+  .tb-stack .tb-rate { font-size: clamp(10px, 0.75vw, 11px); color: var(--text-muted); line-height: 1; }
+  .tb-meta { display: flex; align-items: baseline; gap: 6px; line-height: 1; }
   #cycleCountdown { font-family: 'Cinzel', Georgia, serif; font-size: clamp(14px, 1.2vw, 17px); color: var(--accent); font-weight: 700; line-height: 1.2; display: block; }
   .tb-moon-svg {
     width: clamp(16px, 1.5vw, 22px); height: clamp(16px, 1.5vw, 22px); flex-shrink: 0;
@@ -1483,6 +1494,43 @@
   }
   .inbox-msg.unread .msg-read-dot { background: var(--accent); }
   .msg-read-dot:hover { opacity: 0.7; }
+  .msg-dismiss-btn {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 2px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.15s;
+    font-family: inherit;
+  }
+  .inbox-msg:hover .msg-dismiss-btn { opacity: 0.5; }
+  .msg-dismiss-btn:hover { opacity: 1 !important; color: var(--error); }
+  .rook-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 16px 8px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .rook-toolbar-btn {
+    font-size: 11px;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-family: inherit;
+  }
+  .rook-toolbar-btn:hover { color: var(--text); }
+  .rook-toolbar-btn.danger { color: #b04040; }
+  .rook-toolbar-btn.danger:hover { color: var(--error); }
   .inbox-msg-tick {
     font-size: 13px;
     color: var(--text-muted);
@@ -1726,7 +1774,7 @@
     50%      { border-color: rgba(201,168,76,0.85); box-shadow: 0 0 14px rgba(201,168,76,0.08) inset; }
   }
   .marker.has-kings-road {
-    --kr-glow: drop-shadow(0 0 5px var(--owner-color, #C9A84C)) drop-shadow(0 0 10px color-mix(in srgb, var(--owner-color, #C9A84C) 35%, transparent));
+    --kr-glow: drop-shadow(0 0 4px var(--owner-color, #C9A84C)) drop-shadow(0 0 9px var(--owner-color, #C9A84C)) drop-shadow(0 0 14px var(--owner-color, #C9A84C));
   }
   .kings-road-badge {
     position: absolute;
@@ -1848,6 +1896,35 @@
     border-color: var(--accent);
   }
   .realms-filter-seg { display:flex;background:var(--bg-deep);border:1px solid var(--border);border-radius:5px;padding:3px;gap:2px;margin:8px 0 6px; }
+  .realm-castles-list { display:flex;flex-direction:column;gap:8px;padding:10px 12px; }
+  .realm-castle-card { background:var(--bg-elevated);border:1px solid var(--border);border-left:3px solid var(--row-house-color,var(--border-strong));border-radius:6px;padding:10px 12px;cursor:pointer;transition:background 0.12s; }
+  .realm-castle-card:hover { background:rgba(255,255,255,.04); }
+  .realm-card-header { display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px; }
+  .realm-card-name { font-family:'Cinzel',Georgia,serif;font-size:14px;font-weight:700;color:var(--text);flex:1; }
+  .realm-card-actions { display:flex;align-items:center;gap:6px;flex-shrink:0; }
+  .realm-card-stat { font-size:12px;color:var(--text);white-space:nowrap;display:flex;align-items:center;gap:3px; }
+  .realm-card-stat i { font-size:11px;color:var(--text-muted); }
+  .realm-card-infra { display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px; }
+  .realm-infra-cell { background:var(--bg-deep);border-radius:4px;padding:5px 7px; }
+  .realm-infra-label { font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .realm-infra-body { display:flex;align-items:center;justify-content:space-between;gap:4px; }
+  .realm-infra-level { font-size:16px;font-weight:700;color:var(--text);line-height:1; }
+  .realm-infra-prod { font-size:10px;color:var(--text-muted);margin-top:2px; }
+  .realm-sort-bar { display:flex;align-items:center;gap:8px;padding:6px 12px 2px;font-size:11px;color:var(--text-muted); }
+  .realm-sort-sel { background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;flex:1; }
+  .realm-upg-btn { font-size:10px;padding:2px 5px;border-radius:3px;background:var(--bg-elevated);color:var(--accent);border:1px solid var(--border-strong);cursor:pointer;transition:background 0.1s,border-color 0.1s;white-space:nowrap; }
+  .realm-upg-btn:hover:not(:disabled) { background:rgba(201,168,76,.12);border-color:var(--accent); }
+  .realm-upg-btn:disabled { opacity:0.35;cursor:not-allowed; }
+  .realm-lv-cell { display:flex;align-items:center;justify-content:center;gap:4px; }
+  .realm-house-tag { font-size:10px;color:var(--text-muted);padding:0 8px 1px;display:block;line-height:1.3; }
+  .realm-stat-row { display:flex;gap:5px;margin-top:7px; }
+  .realm-stat-item { flex:1;background:var(--bg-deep);border-radius:4px;padding:5px 6px;text-align:center; }
+  .realm-stat-val { font-size:15px;font-weight:700;color:var(--text);line-height:1; }
+  .realm-stat-lbl { font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-top:2px; }
+  .realm-cmd-loc { font-size:11px;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:4px; }
+  .realm-cmd-loc.marching { color:var(--accent); }
+  .realm-cmd-loc.besieging { color:var(--error); }
+  .realm-section-hdr { font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;padding:10px 12px 2px; }
   .rseg-btn { flex:1;padding:5px 0;border:none;border-radius:3px;background:transparent;color:var(--text-muted);font-family:inherit;font-size:11px;cursor:pointer;transition:all .15s; }
   .rseg-btn.active { background:var(--bg-elevated);color:var(--text);font-weight:600; }
   .rseg-btn:hover:not(.active) { color:var(--text); }
@@ -3444,6 +3521,105 @@
   .lview-filter-tab:hover { color: var(--text); }
   .lview-filter-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
+  /* ===== MOBILE (≤768px) ===== */
+  @media (max-width: 768px) {
+    /* Full-screen map — no sidebar column */
+    .main-screen.game-mode {
+      grid-template-rows: 48px 1fr;
+      grid-template-columns: 1fr;
+      grid-template-areas: "header" "map";
+    }
+    .main-screen.game-mode .sidebar { display: none; }
+    .main-screen.game-mode .sidebar.mobile-open {
+      display: flex;
+      position: fixed;
+      inset: 0;
+      z-index: 450;
+      width: 100%;
+      height: 100%;
+      border-right: none;
+    }
+    /* Show hamburger, override .hidden */
+    .main-screen.game-mode #menuBtn {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      font-size: 20px;
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .main-screen.game-mode .header { padding: 0 2px; gap: 0; }
+    .main-screen.game-mode #gameResources { justify-content: center; gap: 0; padding: 0 4px; }
+    /* Hide Troops on mobile — just Gold + Cycle */
+    .main-screen.game-mode #troopsVsep,
+    .main-screen.game-mode #troopsBlock { display: none !important; }
+    /* Show mobile Rookery button */
+    #mobileRookeryBtn { display: flex !important; }
+
+    /* Mobile menu sheet — slides down from under the header */
+    #mobileMenuSheet {
+      position: fixed;
+      top: 48px;
+      left: 0;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      background: var(--bg-panel);
+      border-bottom: 2px solid var(--border-gold);
+      z-index: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      transform: translateY(-110%);
+      transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
+      pointer-events: none;
+    }
+    #mobileMenuSheet.open {
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    #mobileMenuSheet .sidebar-nav-item { padding: 13px 18px; font-size: 15px; }
+
+    /* Modals slide up from bottom on mobile */
+    .modal-backdrop { align-items: flex-end !important; padding: 0 !important; }
+    .modal-backdrop .modal {
+      width: 100% !important;
+      max-width: 100% !important;
+      border-radius: 14px 14px 0 0 !important;
+      margin: 0 !important;
+      max-height: 88vh !important;
+      overflow-y: auto !important;
+    }
+
+    /* ── Lobby / main menu (non-game-mode) ── */
+    .main-screen:not(.game-mode) {
+      grid-template-rows: 52px 1fr;
+      grid-template-columns: 1fr;
+      grid-template-areas: "header" "sidebar";
+    }
+    /* Hide map and ticker in lobby on mobile */
+    .main-screen:not(.game-mode) .map-area { display: none !important; }
+    .main-screen:not(.game-mode) .ticker-bar { display: none !important; }
+    .main-screen:not(.game-mode) .home-logo-overlay { display: none !important; }
+    /* Sidebar goes full width */
+    .main-screen:not(.game-mode) .sidebar {
+      width: 100%;
+      border-right: none;
+      padding: 0;
+    }
+    /* Header compact in lobby */
+    .user-email { display: none !important; }
+    .header .stage { font-size: 10px; }
+    /* Bigger touch targets for lobby nav */
+    .lnav-hdr { padding: 16px; font-size: 13px; }
+    .lnav-kid { padding: 13px 18px 13px 32px; font-size: 15px; }
+    /* Auth card on small phones */
+    .auth-card { padding: 24px 20px; margin: 0 16px; }
+  }
+
 </style>
 </head>
 <body>
@@ -3486,7 +3662,7 @@
     </div>
 
     <!-- Game stats — readable blocks in game mode -->
-    <div class="game-resources hidden" id="gameResources" style="display:flex;align-items:center;padding:0 clamp(8px,1.1vw,16px);min-width:0;overflow:hidden;">
+    <div class="game-resources hidden" id="gameResources" style="display:flex;align-items:center;padding:0 8px;min-width:0;">
       <div class="tb-game-info">
         <div class="tb-game-name" id="gameName"></div>
         <div class="tb-year-tick" id="gameYearLabel"></div>
@@ -3498,19 +3674,17 @@
         <i class="ti ti-coin" aria-hidden="true"></i>
         <div class="tb-stack">
           <span class="tb-cycle-label">Gold</span>
-          <span class="tb-num" id="resourceGold">0</span>
-          <span class="tb-rate" id="rateGold"></span>
+          <div class="tb-meta"><span class="tb-num" id="resourceGold">0</span><span class="tb-rate" id="rateGold"></span></div>
         </div>
       </div>
 
-      <div class="tb-vsep"></div>
+      <div class="tb-vsep" id="troopsVsep"></div>
 
-      <div class="tb-cycle-block">
+      <div class="tb-cycle-block" id="troopsBlock">
         <i class="ti ti-sword" aria-hidden="true"></i>
         <div class="tb-stack">
           <span class="tb-cycle-label">Troops</span>
-          <span class="tb-num" id="resourceTroops">0</span>
-          <span class="tb-rate" id="rateTroops"></span>
+          <div class="tb-meta"><span class="tb-num" id="resourceTroops">0</span><span class="tb-rate" id="rateTroops"></span></div>
         </div>
       </div>
 
@@ -3543,8 +3717,16 @@
       </div>
       <!-- Game only -->
       <div class="game-right hidden" id="gameRight"></div>
+      <!-- Mobile: Rookery shortcut with unread badge -->
+      <button id="mobileRookeryBtn" aria-label="Rookery" style="display:none;align-items:center;justify-content:center;width:44px;height:44px;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;flex-shrink:0;position:relative;">
+        <i class="ti ti-feather" aria-hidden="true"></i>
+        <span id="mobileRookBadge" style="display:none;position:absolute;top:5px;right:5px;min-width:16px;height:16px;border-radius:8px;background:var(--error);color:#fff;font-size:10px;font-weight:700;align-items:center;justify-content:center;padding:0 3px;"></span>
+      </button>
     </div>
   </div>
+
+  <!-- Mobile hamburger menu sheet -->
+  <div id="mobileMenuSheet"></div>
 
   <div class="ticker-bar" id="tickerBar">
     <div class="ticker-label">Westeros</div>
@@ -3728,10 +3910,7 @@
 <div class="inbox-panel" id="inboxPanel">
   <div class="inbox-header">
     <div class="inbox-title">The Rookery</div>
-    <div style="display:flex;gap:6px;align-items:center;">
-      <button class="inbox-mark-all" id="inboxMarkAll" title="Mark all dispatches as read">Mark all read</button>
-      <button class="inbox-close" id="inboxClose">✕</button>
-    </div>
+    <button class="inbox-close" id="inboxClose">✕</button>
   </div>
   <div class="inbox-tabs">
     <button class="inbox-tab active" data-tab="notifications">Dispatches</button>
@@ -3741,8 +3920,15 @@
   </div>
 
   <!-- DISPATCHES PANE -->
-  <div class="inbox-list" id="inboxList">
-    <div class="inbox-empty">No dispatches yet.</div>
+  <div class="rook-pane" id="dispatchesPane" style="flex-direction:column;overflow:hidden;">
+    <div class="rook-toolbar">
+      <button class="rook-toolbar-btn" onclick="markAllDispatchesRead()">Mark all read</button>
+      <button class="rook-toolbar-btn danger" onclick="dismissReadMessages()">Dismiss read</button>
+      <button class="rook-toolbar-btn danger" onclick="dismissAllMessages()">Dismiss all</button>
+    </div>
+    <div class="inbox-list" id="inboxList">
+      <div class="inbox-empty">No dispatches yet.</div>
+    </div>
   </div>
 
   <!-- CHAT PANE -->
@@ -3761,10 +3947,13 @@
   <div class="rook-pane" id="rookMsgPane" style="display:none;">
     <!-- Thread list view -->
     <div id="threadListView" style="display:flex;flex-direction:column;overflow:hidden;flex:1;min-height:0;">
-      <div class="thread-compose-bar">
-        <button class="inbox-mark-all" id="composeThreadBtn" style="width:100%;text-align:center;">+ Send a Raven</button>
+      <div class="rook-toolbar">
+        <button class="rook-toolbar-btn" onclick="markAllThreadsRead()">Mark all read</button>
+        <button class="rook-toolbar-btn danger" onclick="dismissReadThreads()">Dismiss read</button>
+        <button class="rook-toolbar-btn danger" onclick="dismissAllThreads()">Dismiss all</button>
+        <button id="composeThreadBtn" class="rook-toolbar-btn" style="margin-left:auto;">+ Raven</button>
       </div>
-      <div id="threadList">
+      <div id="threadList" style="flex:1;overflow-y:auto;">
         <div class="inbox-empty">No ravens yet.</div>
       </div>
     </div>
@@ -3802,10 +3991,10 @@
 
   <!-- WHISPERS PANE -->
   <div class="rook-pane" id="rookWhispersPane" style="display:none;flex-direction:column;overflow:hidden;flex:1;min-height:0;">
-    <div id="whispersToolbar" style="display:flex;align-items:center;gap:14px;padding:9px 16px 8px;border-bottom:1px solid var(--border);flex-shrink:0;">
-      <button onclick="markAllWhispersRead()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">Mark all read</button>
-      <button onclick="dismissReadWhispers()" style="font-size:11px;color:#b04040;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">Dismiss read</button>
-      <button onclick="dismissAllWhispers()" style="font-size:11px;color:#b04040;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">Dismiss all</button>
+    <div id="whispersToolbar" class="rook-toolbar">
+      <button class="rook-toolbar-btn" onclick="markAllWhispersRead()">Mark all read</button>
+      <button class="rook-toolbar-btn danger" onclick="dismissReadWhispers()">Dismiss read</button>
+      <button class="rook-toolbar-btn danger" onclick="dismissAllWhispers()">Dismiss all</button>
     </div>
     <div style="flex:1;overflow-y:auto;" id="whispersList"></div>
   </div>
@@ -4617,7 +4806,7 @@ const el = {
   // Rookery (inbox)
   inboxPanel:     document.getElementById('inboxPanel'),
   inboxClose:     document.getElementById('inboxClose'),
-  inboxMarkAll:   document.getElementById('inboxMarkAll'),
+  dispatchesPane: document.getElementById('dispatchesPane'),
   inboxList:      document.getElementById('inboxList'),
   rookChatPane:     document.getElementById('rookChatPane'),
   rookMsgPane:      document.getElementById('rookMsgPane'),
@@ -4686,7 +4875,7 @@ const el = {
 // =====================================================
 let toastTimer;
 function toast(msg, isError = false) {
-  const icon = isError ? '<i class="ti ti-alert-triangle toast-icon"></i>' : '<i class="ti ti-scroll toast-icon"></i>';
+  const icon = isError ? '<i class="ti ti-alert-triangle toast-icon"></i>' : '<i class="ti ti-check toast-icon"></i>';
   el.toast.innerHTML = icon + escapeHtml(msg);
   el.toast.className = 'toast show' + (isError ? ' error' : '');
   clearTimeout(toastTimer);
@@ -5313,20 +5502,97 @@ function panelNav(title) {
   openPanel(title, true);
 }
 
+// ── Mobile menu ──
+function toggleMobileMenu() {
+  const sheet = document.getElementById('mobileMenuSheet');
+  if (!sheet) return;
+  if (sheet.classList.contains('open')) {
+    sheet.classList.remove('open');
+  } else {
+    renderMobileMenuSheet();
+    sheet.classList.add('open');
+  }
+}
+
+function closeMobileMenu() {
+  document.getElementById('mobileMenuSheet')?.classList.remove('open');
+}
+
+function closeMobileSidebar() {
+  document.querySelector('.sidebar')?.classList.remove('mobile-open');
+  _sidebarSection = null;
+}
+
+function openMobileSidebarSection(section) {
+  closeMobileMenu();
+  const sidebar = document.querySelector('.sidebar');
+  sidebar.classList.add('mobile-open');
+  el.npPanelHeader?.classList.remove('hidden');
+  _sidebarSection = section;
+  const sectionDef = SIDEBAR_SECTIONS.find(s => s.id === section);
+  if (el.npPanelTitle && sectionDef) el.npPanelTitle.textContent = sectionDef.label;
+  if (el.npPanelBack) el.npPanelBack.style.display = 'flex';
+  renderSidebarSection(section);
+}
+
+function renderMobileMenuSheet() {
+  const sheet = document.getElementById('mobileMenuSheet');
+  if (!sheet) return;
+  const myPlayer = (state.gamePlayers || []).find(p => p.id === state.currentPlayer?.id);
+  const houseHtml = myPlayer ? `
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 18px 12px;border-bottom:1px solid var(--border);">
+      <img src="${myPlayer.sigil_url || ''}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--border-gold);" onerror="this.style.display='none'">
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--accent);">House ${myPlayer.house_name || ''}</div>
+        <div style="font-size:12px;color:var(--text-muted);font-style:italic;">${myPlayer.words || ''}</div>
+      </div>
+    </div>` : '';
+  const navHtml = SIDEBAR_SECTIONS.map(s => {
+    if (s.id === 'divider') return '<div class="sidebar-nav-divider"></div>';
+    return `<div class="sidebar-nav-item" data-section="${s.id}">
+      <span class="snav-icon">${s.icon}</span>
+      <span>${s.label}</span>
+    </div>`;
+  }).join('');
+  sheet.innerHTML = houseHtml + `<div class="sidebar-nav-list">${navHtml}</div>`;
+  sheet.querySelectorAll('.sidebar-nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const section = item.dataset.section;
+      if (section === 'main_menu') { closeMobileMenu(); exitGameMode(); return; }
+      openMobileSidebarSection(section);
+    });
+  });
+}
+
 // Wire panel controls
 el.npPanelClose?.addEventListener('click', () => {
+  if (window.innerWidth <= 768) { closeMobileSidebar(); return; }
   if (state.mode === 'game') closePanel();
 });
 
 el.npPanelBack?.addEventListener('click', () => {
+  const hadSelection = !!(state.selectedCastle || state.selectedCommanderId || state.selectedMovementId);
   state.selectedCastle = null;
   state.selectedCommanderId = null;
   state.selectedMovementId = null;
   renderMarkers();
   renderMovements();
+  if (window.innerWidth <= 768) {
+    if (_sidebarSection === 'player_detail') {
+      _sidebarSection = 'leaderboard';
+      renderSidebarSection('leaderboard');
+    } else if (hadSelection && _sidebarSection) {
+      renderSidebarSection(_sidebarSection);
+    } else {
+      closeMobileSidebar();
+    }
+    return;
+  }
   if (_sidebarSection === 'player_detail') {
     _sidebarSection = 'leaderboard';
     renderSidebarSection('leaderboard');
+  } else if (hadSelection && _sidebarSection) {
+    renderSidebarSection(_sidebarSection);
   } else {
     _sidebarSection = null;
     renderSidebarNav();
@@ -5338,6 +5604,7 @@ el.panelOverlay?.addEventListener('click', () => {
 });
 
 el.menuBtn?.addEventListener('click', () => {
+  if (window.innerWidth <= 768) { toggleMobileMenu(); return; }
   openPanel('Menu', false);
   renderSidebarNav();
 });
@@ -5345,6 +5612,10 @@ el.menuBtn?.addEventListener('click', () => {
 el.inboxBtn?.addEventListener('click', () => {
   _sidebarSection = 'rookery';
   renderSidebarSection('rookery');
+});
+
+document.getElementById('mobileRookeryBtn')?.addEventListener('click', () => {
+  openMobileSidebarSection('rookery');
 });
 
 function enterGamePanelMode() {
@@ -5457,6 +5728,31 @@ function renderCastleInfo() {
         </div>
       </div>
 
+      ${castleCmds.length > 0 ? `
+        <div style="padding:8px 12px 0;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);"><i class="ti ti-shield-half"></i> Commanders Present</div>
+        <div style="display:flex;flex-direction:column;gap:4px;padding:6px 12px 10px;">
+          ${castleCmds.map(c => {
+            const cp = state.gamePlayers.find(p => p.id === c.owner_player_id);
+            const ch = cp ? state.houses.find(h => h.slug === cp.house_slug) : null;
+            const cc = ch ? ch.color : 'var(--accent)';
+            const clvl = c.level ?? 1;
+            return `<div class="castle-cmd-row" data-cmdid="${c.id}" style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg-elevated);border-radius:4px;border-left:2px solid ${cc};cursor:pointer;transition:background .12s;">
+              <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;border:1.5px solid ${cc};flex-shrink:0;">
+                <img src="${nameToPortrait(c.name)}" style="width:100%;height:100%;object-fit:cover;object-position:center top;" onerror="this.style.display='none'">
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
+                <div style="font-size:10px;color:var(--text-muted);">Lv ${clvl}${ch ? ` · <span style="color:${cc};">${escapeHtml(ch.name)}</span>` : ''}</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0;">
+                <div style="font-size:13px;font-weight:700;color:var(--text);">${c.troops ?? 0}</div>
+                <div style="font-size:10px;color:var(--text-muted);">troops</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      ` : ''}
+
       ${youOwnThis ? (() => {
         const coinLv = state.councilSeats?.find(s => s.seat === 'coin')?.level || 1;
         const lcLv   = state.councilSeats?.find(s => s.seat === 'lord_commander')?.level || 1;
@@ -5556,6 +5852,15 @@ function renderCastleInfo() {
       })() : ''}
     `;
 
+    // Wire commander-present rows
+    el.infoPanelBody.querySelectorAll('.castle-cmd-row[data-cmdid]').forEach(row => {
+      row.addEventListener('click', () => {
+        state.selectedCommanderId = parseInt(row.dataset.cmdid);
+        renderCastleInfo();
+      });
+      row.addEventListener('mouseenter', () => row.style.background = 'rgba(255,255,255,.04)');
+      row.addEventListener('mouseleave', () => row.style.background = 'var(--bg-elevated)');
+    });
     // Wire up upgrade buttons
     el.infoPanelBody.querySelectorAll('[data-action="upgrade"]').forEach(btn => {
       btn.addEventListener('click', () => upgradeInfrastructure(btn.dataset.castle, btn.dataset.type));
@@ -5676,6 +5981,46 @@ el.mapContainer.addEventListener('wheel', (e) => {
   const factor = e.deltaY < 0 ? 1.02 : 1 / 1.02;
   setZoom(state.zoom * factor, e.clientX - rect.left, e.clientY - rect.top);
 }, { passive: false });
+
+// ── Touch: single-finger pan + two-finger pinch-zoom ──
+let _touchPanStart = null;
+let _touchPinchDist = null;
+el.mapContainer.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    _touchPanStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, panX: state.panX, panY: state.panY };
+    _touchPinchDist = null;
+  } else if (e.touches.length === 2) {
+    _touchPanStart = null;
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    _touchPinchDist = Math.hypot(dx, dy);
+  }
+}, { passive: true });
+el.mapContainer.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (e.touches.length === 1 && _touchPanStart) {
+    state.panX = _touchPanStart.panX + (e.touches[0].clientX - _touchPanStart.x);
+    state.panY = _touchPanStart.panY + (e.touches[0].clientY - _touchPanStart.y);
+    applyTransform();
+  } else if (e.touches.length === 2 && _touchPinchDist !== null) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const dist = Math.hypot(dx, dy);
+    const rect = el.mapContainer.getBoundingClientRect();
+    const cx = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+    const cy = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+    setZoom(state.zoom * (dist / _touchPinchDist), cx, cy);
+    _touchPinchDist = dist;
+  }
+}, { passive: false });
+el.mapContainer.addEventListener('touchend', (e) => {
+  if (e.touches.length < 2) _touchPinchDist = null;
+  if (e.touches.length === 0) _touchPanStart = null;
+  else if (e.touches.length === 1) {
+    _touchPanStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, panX: state.panX, panY: state.panY };
+  }
+}, { passive: true });
+
 document.getElementById('zoomIn').addEventListener('click', () => setZoom(state.zoom * 1.3));
 document.getElementById('zoomOut').addEventListener('click', () => setZoom(state.zoom / 1.3));
 document.getElementById('zoomFit').addEventListener('click', fitToScreen);
@@ -6855,6 +7200,17 @@ function renderInboxBadge() {
     }
   }
 
+  // Mobile Rookery button badge
+  const mobBadge = document.getElementById('mobileRookBadge');
+  if (mobBadge) {
+    if (unread > 0) {
+      mobBadge.textContent = unread > 99 ? '99+' : unread;
+      mobBadge.style.display = 'flex';
+    } else {
+      mobBadge.style.display = 'none';
+    }
+  }
+
   // Per-tab badges inside the Rookery panel
   _updateTabBadge('notifications', unreadNotifs);
   _updateTabBadge('messages', unreadThreads);
@@ -6932,6 +7288,12 @@ function renderInboxList() {
       }
     });
   });
+  el.inboxList.querySelectorAll('.msg-dismiss-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      dismissMessage(parseInt(btn.dataset.id));
+    });
+  });
 }
 
 function buildInboxMsgHtml(msg) {
@@ -6943,6 +7305,7 @@ function buildInboxMsgHtml(msg) {
         <button class="msg-read-dot" data-id="${msg.id}" title="${isUnread ? 'Mark as read' : 'Mark as unread'}"></button>
         <div class="inbox-msg-title">${escapeHtml(msg.title)}</div>
         <div class="inbox-msg-tick">Tick ${msg.tick}</div>
+        <button class="msg-dismiss-btn" data-id="${msg.id}" title="Dismiss">✕</button>
       </div>
       <div class="inbox-msg-body">
         ${msg.type === 'production_cycle' ? buildProductionBody(msg.body) : ''}
@@ -7436,6 +7799,46 @@ async function markMessageUnread(id) {
   renderInboxBadge();
 }
 
+async function markAllDispatchesRead() {
+  const myId = state.currentPlayer?.id;
+  if (!myId) return;
+  const unread = state.inbox.filter(m => m.player_id === myId && !m.is_read);
+  if (!unread.length) return;
+  await supabase.from('player_inbox').update({ is_read: true }).in('id', unread.map(m => m.id));
+  unread.forEach(m => { m.is_read = true; });
+  renderInboxBadge();
+  renderInboxList();
+}
+
+async function dismissMessage(id) {
+  await supabase.from('player_inbox').delete().eq('id', id);
+  state.inbox = state.inbox.filter(m => m.id !== id);
+  renderInboxBadge();
+  renderInboxList();
+}
+
+async function dismissReadMessages() {
+  const myId = state.currentPlayer?.id;
+  if (!myId) return;
+  const read = state.inbox.filter(m => m.player_id === myId && m.is_read);
+  if (!read.length) return;
+  await supabase.from('player_inbox').delete().in('id', read.map(m => m.id));
+  state.inbox = state.inbox.filter(m => !(m.player_id === myId && m.is_read));
+  renderInboxBadge();
+  renderInboxList();
+}
+
+async function dismissAllMessages() {
+  const myId = state.currentPlayer?.id;
+  if (!myId) return;
+  const mine = state.inbox.filter(m => m.player_id === myId);
+  if (!mine.length) return;
+  await supabase.from('player_inbox').delete().in('id', mine.map(m => m.id));
+  state.inbox = state.inbox.filter(m => m.player_id !== myId);
+  renderInboxBadge();
+  renderInboxList();
+}
+
 // =====================================================
 // ROOKERY — PANE SWITCHING
 // =====================================================
@@ -7452,11 +7855,10 @@ let _activeThreadId = null;
 
 function showRookPane(tab) {
   _rookActiveTab = tab;
-  el.inboxList.style.display           = tab === 'notifications' ? '' : 'none';
+  el.dispatchesPane.style.display      = tab === 'notifications' ? 'flex' : 'none';
   el.rookChatPane.style.display        = tab === 'chat'          ? 'flex' : 'none';
   el.rookMsgPane.style.display         = tab === 'messages'      ? 'flex' : 'none';
   el.rookWhispersPane.style.display    = tab === 'whispers'      ? 'flex' : 'none';
-  el.inboxMarkAll.style.display        = tab === 'notifications' ? '' : 'none';
   if (tab === 'notifications') renderInboxList();
   if (tab === 'chat')          renderChatPane();
   if (tab === 'messages')      renderMessagesPane();
@@ -7530,9 +7932,10 @@ function renderChatPane() {
   if (_isSoloGame()) {
     el.chatMessages.innerHTML = `
       <div style="padding:32px 20px;text-align:center;color:var(--text-muted);line-height:1.7;font-size:13px;">
-        <div style="font-size:22px;margin-bottom:10px;">🐦‍⬛</div>
-        <div style="color:var(--text);font-size:14px;margin-bottom:8px;">No one to crow at.</div>
-        The Hall and Ravens are for multiplayer. Your AI opponents do not respond here.
+        <div style="font-size:28px;margin-bottom:12px;"><i class="ti ti-feather"></i></div>
+        <div style="color:var(--text);font-size:15px;font-weight:600;margin-bottom:8px;">The Hall is empty.</div>
+        <div style="margin-bottom:16px;">Open chat is for multiplayer. But your AI lords <em>do</em> send ravens — expect word after battles, when houses fall low, and at the turns of each cycle.</div>
+        <button onclick="showRookPane('messages')" style="font-family:inherit;font-size:13px;padding:7px 18px;border-radius:4px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text);cursor:pointer;">Open Ravens</button>
       </div>`;
     el.chatInput.disabled  = true;
     el.chatSendBtn.disabled = true;
@@ -7629,46 +8032,85 @@ function renderThreadList() {
     threadListEl.innerHTML = '<div class="inbox-empty">No ravens yet.</div>';
     return;
   }
-  threadListEl.innerHTML = state.threads.map(t => {
+  threadListEl.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;padding:8px;">` + state.threads.map(t => {
     const participants = t.participants.map(tp => {
       const p = playerMap.get(tp.player_id);
       const h = p ? houseMap.get(p.house_slug) : null;
       return h?.name || 'Unknown';
     }).join(', ');
     const isUnread = state.unreadThreadIds.has(t.id);
-    return `<div class="thread-item ${isUnread ? 'unread' : ''}" onclick="openThread(${t.id})">
-      <div class="thread-item-body">
-        <div class="thread-item-subject">${escapeHtml(t.subject || '(No subject)')}</div>
-        <div class="thread-item-meta">${escapeHtml(participants)} · ${t.messages.length} message${t.messages.length !== 1 ? 's' : ''}</div>
+    const msgCount = t.messages.length;
+    return `<div class="inbox-msg ${isUnread ? 'unread raven-msg' : ''}" data-thread-id="${t.id}">
+      <div class="inbox-msg-header">
+        <button class="msg-read-dot" data-thread-id="${t.id}" title="${isUnread ? 'Mark as read' : 'Mark as unread'}"></button>
+        <div style="flex:1;min-width:0;">
+          <div class="inbox-msg-title">${escapeHtml(t.subject || '(No subject)')}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${escapeHtml(participants)}</div>
+        </div>
+        <div class="inbox-msg-tick">${msgCount} msg${msgCount !== 1 ? 's' : ''}</div>
+        <button class="msg-dismiss-btn" data-thread-id="${t.id}" title="Delete thread">✕</button>
       </div>
-      <button class="thread-delete-btn" title="Delete thread" onclick="event.stopPropagation();confirmDeleteThread(${t.id},this)">✕</button>
     </div>`;
-  }).join('');
+  }).join('') + `</div>`;
+
+  threadListEl.querySelectorAll('.inbox-msg-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const card = header.closest('.inbox-msg');
+      openThread(parseInt(card.dataset.threadId));
+    });
+  });
+  threadListEl.querySelectorAll('.msg-read-dot').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const threadId = parseInt(btn.dataset.threadId);
+      if (state.unreadThreadIds.has(threadId)) {
+        state.unreadThreadIds.delete(threadId);
+      } else {
+        state.unreadThreadIds.add(threadId);
+      }
+      renderInboxBadge();
+      renderThreadList();
+    });
+  });
+  threadListEl.querySelectorAll('.msg-dismiss-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      deleteThread(parseInt(btn.dataset.threadId));
+    });
+  });
 }
 
-window.confirmDeleteThread = function(threadId, btn) {
-  const item = btn.closest('.thread-item');
-  btn.style.display = 'none';
-  const confirm = document.createElement('div');
-  confirm.className = 'thread-delete-confirm';
-  confirm.innerHTML = `<span>Delete?</span>
-    <button class="tdel-yes">Yes</button>
-    <button class="tdel-no">No</button>`;
-  confirm.querySelector('.tdel-yes').addEventListener('click', async e => {
-    e.stopPropagation();
-    await supabase.from('message_threads').delete().eq('id', threadId);
-    state.threads = state.threads.filter(t => t.id !== threadId);
-    state.unreadThreadIds.delete(threadId);
-    renderInboxBadge();
-    renderThreadList();
-  });
-  confirm.querySelector('.tdel-no').addEventListener('click', e => {
-    e.stopPropagation();
-    confirm.remove();
-    btn.style.display = '';
-  });
-  item.appendChild(confirm);
-};
+async function deleteThread(threadId) {
+  await supabase.from('message_threads').delete().eq('id', threadId);
+  state.threads = state.threads.filter(t => t.id !== threadId);
+  state.unreadThreadIds.delete(threadId);
+  renderInboxBadge();
+  renderThreadList();
+}
+
+function markAllThreadsRead() {
+  state.unreadThreadIds.clear();
+  renderInboxBadge();
+  renderThreadList();
+}
+
+async function dismissReadThreads() {
+  const read = state.threads.filter(t => !state.unreadThreadIds.has(t.id));
+  if (!read.length) return;
+  await Promise.all(read.map(t => supabase.from('message_threads').delete().eq('id', t.id)));
+  state.threads = state.threads.filter(t => state.unreadThreadIds.has(t.id));
+  renderInboxBadge();
+  renderThreadList();
+}
+
+async function dismissAllThreads() {
+  if (!state.threads.length) return;
+  await Promise.all(state.threads.map(t => supabase.from('message_threads').delete().eq('id', t.id)));
+  state.threads = [];
+  state.unreadThreadIds.clear();
+  renderInboxBadge();
+  renderThreadList();
+}
 
 
 window.openThread = function(threadId) {
@@ -7849,46 +8291,75 @@ function renderWhispersPane() {
     return;
   }
 
-  el_list.innerHTML = whispers.map(w => {
+  const CAT_LABELS = {
+    general_briefing: 'Intelligence Briefing', combat_nearby: 'Battle Report',
+    army_movement: 'Army Movement', siege_forming: 'Siege Forming', army_recalled: 'Army Recalled',
+    troop_buildup: 'Troop Buildup', commander_sighted: 'Commander Sighted', commander_absent: 'Commander Absent',
+    alliance_forming: 'Alliance Forming', alliance_strain: 'Alliance Strain', betrayal_signal: 'Betrayal Signal',
+    treasury_depleted: 'Treasury Depleted', production_surge: 'Production Surge', infrastructure_push: 'Infrastructure Push',
+    undefended_castle: 'Undefended Castle', border_exposure: 'Border Exposure', consolidation: 'Consolidation',
+    castle_captured: 'Castle Captured', diplomacy_shift: 'Diplomatic Intelligence',
+  };
+
+  el_list.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;padding:8px;">` + whispers.map(w => {
     const conf = w.confidence ?? 0;
     const confColor = conf >= 80 ? '#62C030' : conf >= 60 ? '#F5C518' : conf >= 40 ? '#F5A020' : '#E82040';
-    const catLabel = {
-      general_briefing: 'Intelligence Briefing', combat_nearby: 'Battle Report',
-      army_movement: 'Army Movement', siege_forming: 'Siege Forming', army_recalled: 'Army Recalled',
-      troop_buildup: 'Troop Buildup', commander_sighted: 'Commander Sighted', commander_absent: 'Commander Absent',
-      alliance_forming: 'Alliance Forming', alliance_strain: 'Alliance Strain', betrayal_signal: 'Betrayal Signal',
-      treasury_depleted: 'Treasury Depleted', production_surge: 'Production Surge', infrastructure_push: 'Infrastructure Push',
-      undefended_castle: 'Undefended Castle', border_exposure: 'Border Exposure', consolidation: 'Consolidation',
-      castle_captured: 'Castle Captured', diplomacy_shift: 'Diplomatic Intelligence',
-    }[w.category] || w.category;
-
-    return `
-      <div style="padding:16px 18px;border-bottom:1px solid var(--border);${!w.is_read ? 'background:rgba(180,140,60,0.04);' : ''}">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-          <span style="width:7px;height:7px;border-radius:50%;flex-shrink:0;${!w.is_read ? 'background:#C9A84C;' : 'opacity:0;'}"></span>
-          <span style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    const catLabel = CAT_LABELS[w.category] || w.category;
+    return `<div class="inbox-msg ${!w.is_read ? 'unread' : ''}" data-whisper-id="${w.id}">
+      <div class="inbox-msg-header">
+        <button class="msg-read-dot" data-whisper-id="${w.id}" title="${!w.is_read ? 'Mark as read' : 'Mark as unread'}"></button>
+        <div class="inbox-msg-title" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
             color:${confColor};border:1px solid ${confColor}44;background:${confColor}14;
-            padding:3px 8px;border-radius:3px;flex-shrink:0;">${conf}% confidence</span>
-          <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">${catLabel}</span>
-          <span style="font-size:11px;color:var(--text-muted);margin-left:auto;flex-shrink:0;">Tick ${w.tick}</span>
+            padding:2px 6px;border-radius:3px;flex-shrink:0;">${conf}%</span>
+          <span>${catLabel}</span>
         </div>
+        <div class="inbox-msg-tick">Tick ${w.tick}</div>
+        <button class="msg-dismiss-btn" data-whisper-id="${w.id}" title="Dismiss">✕</button>
+      </div>
+      <div class="inbox-msg-body">
         <div style="font-size:15px;line-height:1.7;color:${w.text ? 'var(--text)' : 'var(--text-muted)'};font-style:${w.text ? 'normal' : 'italic'};">
-          ${w.text ? w.text : 'Your agent\'s report is being transcribed…'}
+          ${w.text ? escapeHtml(w.text) : 'Your agent\'s report is being transcribed…'}
         </div>
         ${w.verified !== null && w.verified !== undefined ? `
           <div style="font-size:13px;margin-top:8px;color:${w.verified ? '#62C030' : '#E82040'};">
             ${w.verified ? '✓ Intelligence confirmed' : '✗ Intelligence proved incorrect'}
           </div>` : ''}
-        <div style="display:flex;gap:14px;margin-top:10px;">
-          <button onclick="toggleWhisperRead(${w.id})" style="font-size:12px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">
-            ${w.is_read ? 'Mark unread' : 'Mark read'}
-          </button>
-          <button onclick="deleteWhisper(${w.id})" style="font-size:12px;color:#b04040;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;">
-            Dismiss
-          </button>
-        </div>
-      </div>`;
-  }).join('');
+      </div>
+    </div>`;
+  }).join('') + `</div>`;
+
+  el_list.querySelectorAll('.inbox-msg-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const card = header.closest('.inbox-msg');
+      card.classList.toggle('expanded');
+      if (!card.classList.contains('_marked')) {
+        card.classList.add('_marked');
+        card.classList.remove('unread');
+        markWhisperRead(parseInt(card.dataset.whisperId));
+      }
+    });
+  });
+  el_list.querySelectorAll('.msg-read-dot').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleWhisperRead(parseInt(btn.dataset.whisperId));
+    });
+  });
+  el_list.querySelectorAll('.msg-dismiss-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      deleteWhisper(parseInt(btn.dataset.whisperId));
+    });
+  });
+}
+
+async function markWhisperRead(id) {
+  const w = state.whispers?.find(w => Number(w.id) === Number(id));
+  if (!w || w.is_read) return;
+  await supabase.rpc('mark_whisper_read', { p_whisper_id: Number(id), p_is_read: true });
+  w.is_read = true;
+  renderInboxBadge();
 }
 
 async function toggleWhisperRead(id) {
@@ -7988,15 +8459,6 @@ el.inboxClose.addEventListener('click', () => {
   _reclaimInboxPanel();
   _sidebarSection = null;
   renderSidebarNav();
-});
-el.inboxMarkAll.addEventListener('click', async () => {
-  const myId = state.currentPlayer?.id;
-  if (!myId) return;
-  const unread = state.inbox.filter(m => m.player_id === myId && !m.is_read);
-  await supabase.from('player_inbox').update({ is_read: true }).in('id', unread.map(m => m.id));
-  unread.forEach(m => { m.is_read = true; });
-  renderInboxBadge();
-  renderInboxList();
 });
 document.querySelectorAll('.inbox-tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -9089,18 +9551,22 @@ function updateTransferDisplay(panel, cmdTroops, garrTroops) {
   if (garrEl)  garrEl.textContent  = Math.max(0, garrTroops);
   if (cmdEl)   cmdEl.textContent   = Math.max(0, cmdTroops);
   if (amtInput) amtInput.value     = Math.max(0, cmdTroops);
-  // Update arrow button states
   const toCmd  = panel.querySelector('.transfer-to-cmd');
   const toGarr = panel.querySelector('.transfer-to-garr');
   if (toCmd)  toCmd.disabled  = garrTroops <= 0;
   if (toGarr) toGarr.disabled = cmdTroops  <= 0;
-  // Update march button
-  const marchBtn = panel.querySelector('.cmd-march-btn');
+  // Dirty check — disable march until transfer is applied
+  const committed = parseInt(panel.dataset.committed ?? '-1');
+  const dirty = committed >= 0 && cmdTroops !== committed;
+  const marchBtn = document.getElementById('cmdDetailMarchBtn');
   if (marchBtn) {
-    const marchable = cmdTroops > 0 ? cmdTroops : garrTroops;
-    marchBtn.disabled = marchable <= 0;
-    marchBtn.innerHTML = `<i class="ti ti-route"></i> ${marchable > 0 ? `March with ${marchable} troops` : 'No troops available'}`;
-    marchBtn.dataset.preloadedTroops = cmdTroops;
+    const marchable = Math.max(1, cmdTroops);
+    marchBtn.disabled = dirty || marchable <= 0;
+    marchBtn.style.opacity = (dirty || marchable <= 0) ? '0.4' : '1';
+    marchBtn.style.pointerEvents = (dirty || marchable <= 0) ? 'none' : '';
+    marchBtn.innerHTML = dirty
+      ? `<i class="ti ti-lock"></i> Apply transfer before marching`
+      : `<i class="ti ti-route"></i> ${marchable > 0 ? `March with ${marchable} troops` : 'No troops available'}`;
   }
 }
 
@@ -9957,14 +10423,22 @@ function renderCommanderDetail(commanderId) {
 
   if (state.mode === 'game') openPanel(cmd.name, _sidebarSection !== null);
 
+  // Focus map on commander's current location
+  if (state.mode === 'game') {
+    const focusCastle = cmd.current_castle_slug ? state.castles.find(c => c.slug === cmd.current_castle_slug) : null;
+    if (focusCastle) panToCastle(focusCastle);
+  }
+
   const isMarching = cmd.status === 'moving';
   const mov = isMarching ? state.movements.find(m => m.commander_id === cmd.id) : null;
   const route = isMarching ? state.routes?.find(r => r.commander_id === cmd.id && r.status === 'active') : null;
 
   const gc = cmd.current_castle_slug ? state.gameCastles.find(g => g.castle_slug === cmd.current_castle_slug) : null;
   const garr = gc ? gc.troops : 0;
-  const marchable = cmdTroops > 0 ? cmdTroops : garr;
   const total = garr + cmdTroops;
+  const displayCmdTroops = total > 0 ? Math.max(1, cmdTroops) : 0;
+  const displayGarr = total - displayCmdTroops;
+  const marchable = displayCmdTroops;
   const castleName = cmd.current_castle_slug
     ? (state.castles.find(c => c.slug === cmd.current_castle_slug)?.name ?? cmd.current_castle_slug)
     : 'Garrison';
@@ -9994,11 +10468,12 @@ function renderCommanderDetail(commanderId) {
     ? `${fromCastleName} → ${toCastleName}`
     : castleName;
   const troopDisplay = isMarching ? cmdTroops : (cmdTroops > 0 ? cmdTroops : garr);
+  const locIsClickable = !isMarching && !!cmd.current_castle_slug;
   const statsRowHtml = `
     <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);">
       <div style="padding:8px 14px;border-right:1px solid var(--border);min-width:0;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:2px;">Location</div>
-        <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(locationStr)}">${escapeHtml(locationStr)}</div>
+        <div id="cmdLocLink" style="font-size:12px;color:${locIsClickable ? 'var(--accent)' : 'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${locIsClickable ? 'cursor:pointer;text-decoration:underline;text-underline-offset:2px;' : ''}" title="${escapeHtml(locationStr)}">${escapeHtml(locationStr)}</div>
       </div>
       <div style="padding:8px 14px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:2px;">Troops</div>
@@ -10147,26 +10622,26 @@ function renderCommanderDetail(commanderId) {
 
   // Transfer + march button (idle only)
   const transferHtml = isYours && !isMarching ? `
-    <div class="cmd-transfer-panel" id="cmdDetailTransfer">
+    <div class="cmd-transfer-panel" id="cmdDetailTransfer" data-committed="${displayCmdTroops}">
       <div class="cmd-transfer-label">⇄ Troops</div>
       <div class="cmd-transfer-row">
         <div class="cmd-transfer-side you-own">
           <div class="cmd-transfer-side-label">${escapeHtml(castleName)} Garrison</div>
-          <div class="cmd-transfer-count garrison-display">${garr}</div>
+          <div class="cmd-transfer-count garrison-display">${displayGarr}</div>
         </div>
         <div class="cmd-transfer-arrows">
-          <button class="cmd-arrow-btn transfer-to-cmd" data-cmd="${cmd.id}" ${garr <= 0 ? 'disabled' : ''}>→</button>
-          <button class="cmd-arrow-btn transfer-to-garr" data-cmd="${cmd.id}" ${cmdTroops <= 0 ? 'disabled' : ''}>←</button>
+          <button class="cmd-arrow-btn transfer-to-cmd" data-cmd="${cmd.id}" ${displayGarr <= 0 ? 'disabled' : ''}>→</button>
+          <button class="cmd-arrow-btn transfer-to-garr" data-cmd="${cmd.id}" ${displayCmdTroops <= 1 ? 'disabled' : ''}>←</button>
         </div>
         <div class="cmd-transfer-side">
           <div class="cmd-transfer-side-label">${escapeHtml(cmd.name)}</div>
-          <div class="cmd-transfer-count cmd-side cmd-troops-display">${cmdTroops}</div>
+          <div class="cmd-transfer-count cmd-side cmd-troops-display">${displayCmdTroops}</div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Commander</div>
         </div>
       </div>
       <div class="cmd-transfer-controls">
         <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="min">Min</button>
-        <input class="cmd-transfer-amt" type="number" min="0" max="${total}" value="${cmdTroops}" data-cmd="${cmd.id}">
+        <input class="cmd-transfer-amt" type="number" min="1" max="${total}" value="${displayCmdTroops}" data-cmd="${cmd.id}">
         <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="half">Half</button>
         <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="max">Max</button>
         <button class="cmd-transfer-preset" data-cmd="${cmd.id}" data-preset="apply" style="background:var(--accent);color:#06070e;border-color:var(--accent);">Set</button>
@@ -10178,6 +10653,7 @@ function renderCommanderDetail(commanderId) {
         <i class="ti ti-route"></i> ${marchable > 0 ? `March with ${marchable} troops` : 'No troops available'}
       </button>
     </div>` : '';
+
 
   el.infoPanelBody.innerHTML = `
     <div style="height:3px;background:${color};border-radius:2px 2px 0 0;"></div>
@@ -10215,6 +10691,15 @@ function renderCommanderDetail(commanderId) {
       </button>
     </div>`;
 
+  // Wire location link
+  if (locIsClickable) {
+    el.infoPanelBody.querySelector('#cmdLocLink')?.addEventListener('click', () => {
+      const castle = state.castles.find(c => c.slug === cmd.current_castle_slug);
+      if (castle) panToCastle(castle);
+      openCastlePage(cmd.current_castle_slug);
+    });
+  }
+
   // Wire buttons
   el.infoPanelBody.querySelector('#cmdDetailBackBtn')?.addEventListener('click', () => {
     clearTimeout(_cmdActionSaveTimer);
@@ -10234,18 +10719,18 @@ function renderCommanderDetail(commanderId) {
   if (transferPanel) {
     const amtInput = transferPanel.querySelector('.cmd-transfer-amt');
     amtInput?.addEventListener('input', () => {
-      const v = Math.max(0, Math.min(total, parseInt(amtInput.value) || 0));
+      const v = Math.max(1, Math.min(total, parseInt(amtInput.value) || 1));
       updateTransferDisplay(transferPanel, v, total - v);
     });
     transferPanel.querySelectorAll('.cmd-transfer-preset').forEach(btn => {
       btn.addEventListener('click', async () => {
-        let newCmdTroops = parseInt(amtInput?.value) || 0;
+        let newCmdTroops = parseInt(amtInput?.value) || 1;
         const preset = btn.dataset.preset;
-        if (preset === 'min') newCmdTroops = 0;
+        if (preset === 'min') newCmdTroops = 1;
         else if (preset === 'max') newCmdTroops = total;
-        else if (preset === 'half') newCmdTroops = Math.floor(total / 2);
+        else if (preset === 'half') newCmdTroops = Math.max(1, Math.floor(total / 2));
         else if (preset === 'apply') {
-          newCmdTroops = Math.max(0, Math.min(total, parseInt(amtInput?.value) || 0));
+          newCmdTroops = Math.max(1, Math.min(total, parseInt(amtInput?.value) || 1));
           await applyTroopTransfer(cmd.id, newCmdTroops, total);
           return;
         }
@@ -10257,8 +10742,8 @@ function renderCommanderDetail(commanderId) {
       btn.addEventListener('click', () => {
         const isToCmD = btn.classList.contains('transfer-to-cmd');
         const step = Math.max(1, Math.floor(total * 0.1));
-        let cur = parseInt(amtInput?.value) || 0;
-        cur = isToCmD ? Math.min(total, cur + step) : Math.max(0, cur - step);
+        let cur = parseInt(amtInput?.value) || 1;
+        cur = isToCmD ? Math.min(total, cur + step) : Math.max(1, cur - step);
         if (amtInput) amtInput.value = cur;
         updateTransferDisplay(transferPanel, cur, total - cur);
       });
@@ -11195,7 +11680,7 @@ function buildDipHistory(targetPlayer) {
       events.push({ tick: msg.tick, icon: '<i class="ti ti-coins"></i>', label: `+${body.amount} gold received`, color: 'var(--accent)' });
     } else if (body.gift_type === 'council_tech') {
       const meta = COUNCIL_META[body.seat];
-      events.push({ tick: msg.tick, icon: meta?.icon || '<i class="ti ti-scroll"></i>', label: `${meta?.title || body.seat} raised to Lv ${body.new_level}`, color: '#7b6dd9' });
+      events.push({ tick: msg.tick, icon: meta?.icon || '<i class="ti ti-book-2"></i>', label: `${meta?.title || body.seat} raised to Lv ${body.new_level}`, color: '#7b6dd9' });
     } else if (body.gift_type === 'diplomacy') {
       if (body.new_status === 'allied')
         events.push({ tick: msg.tick, icon: '<i class="ti ti-handshake"></i>', label: 'Alliance proposed to you', color: 'var(--accent-warm)' });
@@ -11330,7 +11815,7 @@ function buildDiplomacyHtml() {
       ${primaryBtn ? `<div style="width:100%;">${primaryBtn}</div>` : ''}
       <div class="dip-token-actions">
         <button class="dip-btn send-gold dip-icon-btn" data-target="${p.id}" title="Send Gold"><i class="ti ti-coins"></i></button>
-        <button class="dip-btn send-know dip-icon-btn" data-target="${p.id}" title="Send Council Knowledge"><i class="ti ti-scroll"></i></button>
+        <button class="dip-btn send-know dip-icon-btn" data-target="${p.id}" title="Send Council Knowledge"><i class="ti ti-book-2"></i></button>
         <button class="dip-btn send-raven dip-icon-btn" data-target="${p.id}" title="Send Raven"><i class="ti ti-feather"></i></button>
       </div>
     </div>`;
@@ -11777,7 +12262,7 @@ async function renderPlayerDetailAsync(targetPlayerId) {
       </div>
       <div style="display:flex;gap:6px;">
         <button class="sidebar-tool-btn" id="pdRavenBtn" title="Send a Raven" style="width:32px;height:32px;"><i class="ti ti-feather"></i></button>
-        <button class="sidebar-tool-btn" id="pdLocateBtn" title="Locate on map" style="width:32px;height:32px;${!canLocate?'opacity:0.35;':''}" ${!canLocate?'disabled':''}>📍</button>
+        <button class="sidebar-tool-btn" id="pdLocateBtn" title="Locate on map" style="width:32px;height:32px;${!canLocate?'opacity:0.35;':''}" ${!canLocate?'disabled':''}><i class="ti ti-map-pin"></i></button>
       </div>
     </div>
 
@@ -12451,7 +12936,7 @@ const INTEL_CATEGORIES = [
     { id: 'troops',     label: 'Troops'     },
     { id: 'commanders', label: 'Commanders' },
   ]},
-  { id: 'infrastructure', label: 'Infra', vars: [
+  { id: 'infrastructure', label: 'Infrastructure', vars: [
     { id: 'gold_level',     label: 'Treasury'    },
     { id: 'industry_level', label: 'Recruitment' },
     { id: 'prestige_level', label: 'Prestige'    },
@@ -12470,6 +12955,9 @@ let _realmsTab    = 'castles'; // 'castles' | 'commanders' | 'troops'
 let _ledgerTab    = 'active'; // 'active' | 'history'
 let _ledgerExpanded = new Set(); // player IDs with all transactions expanded
 let _realmsFilter = 'mine';   // 'mine' | 'all' | 'allied'
+let _realmsCastleSort    = 'name';   // sort key for castle cards
+let _realmsCommanderSort = 'troops'; // sort key for commander cards
+let _realmsTroopsSort    = 'troops'; // sort key for troops cards
 
 function buildRealmsHtml() {
   const tabs = [
@@ -12494,7 +12982,7 @@ function buildRealmsHtml() {
   else if (_realmsTab === 'commanders') content = buildRealmsCommandersTab();
   else if (_realmsTab === 'troops')     content = buildRealmsTroopsTab();
 
-  return `<div class="houses-sub-tabs">${tabsHtml}</div>${filterHtml}<div id="realms-content-wrap" style="overflow-x:auto;">${content}</div>`;
+  return `<div class="houses-sub-tabs">${tabsHtml}</div>${filterHtml}<div id="realms-content-wrap" style="overflow-x:auto;font-size:13px;">${content}</div>`;
 }
 
 function realmsPlayerIds() {
@@ -12523,100 +13011,133 @@ function realmsHouseColor(ownerId) {
 }
 
 function buildRealmsCastlesTab() {
-  const visible  = computeVisibleSlugs();
+  const visible   = computeVisibleSlugs();
   const playerIds = realmsPlayerIds();
-  const myId     = state.currentPlayer?.id;
-  const myGold   = state.currentPlayer?.gold || 0;
-  const isMine   = _realmsFilter === 'mine';
+  const myId      = state.currentPlayer?.id;
+  const myGold    = state.currentPlayer?.gold || 0;
 
   const lcLv    = state.councilSeats.find(s => s.seat === 'lord_commander')?.level || 1;
   const coinLv  = state.councilSeats.find(s => s.seat === 'coin')?.level || 1;
   const cycleLen = state.activeGame?.production_cycle_ticks ?? 12;
 
-  const castles = state.gameCastles
+  const gcList = state.gameCastles
     .filter(gc => gc.owner_player_id && playerIds.has(gc.owner_player_id))
-    .filter(gc => !visible || visible.has(gc.castle_slug) || gc.owner_player_id === myId)
-    .map(gc => {
-      const castle = state.castles.find(c => c.slug === gc.castle_slug);
-      const isMe   = gc.owner_player_id === myId;
-      const infl   = Math.max(1, gc.effective_influence || 1);
-      const color  = realmsHouseColor(gc.owner_player_id);
+    .filter(gc => !visible || visible.has(gc.castle_slug) || gc.owner_player_id === myId);
 
-      if (isMine) {
-        const gCost = infraUpgradeCost(gc.gold_level,     'gold',     infl);
-        const iCost = infraUpgradeCost(gc.industry_level, 'industry', infl);
-        const pCost = infraUpgradeCost(gc.prestige_level, 'prestige', infl);
-        const canG  = myGold >= gCost;
-        const canI  = myGold >= iCost;
-        const canP  = myGold >= pCost;
-        const goldPerCycle  = gc.gold_level * (10 + coinLv * 2);
-        const troopsPerTick = (gc.industry_level * (lcLv + 4) / cycleLen).toFixed(2);
-        return `<tr class="realm-castle-row" data-slug="${gc.castle_slug}">
-          <td class="house-bar" style="--row-house-color:${color};">
-            <div class="ht-name">${escapeHtml(castle?.name||gc.castle_slug)}
-              <button class="ht-eye" data-slug="${gc.castle_slug}" title="Locate">📍</button>
-            </div>
-            <div style="font-size:10px;color:var(--text-muted);padding:0 8px 2px;line-height:1.4;">${goldPerCycle}g/c · ${troopsPerTick}t/t</div>
-          </td>
-          <td style="text-align:right;">${gc.troops}</td>
-          <td style="text-align:right;">${gc.gold_level}</td>
-          <td style="text-align:right;">${gc.industry_level}</td>
-          <td style="text-align:right;">${gc.prestige_level}</td>
-          <td style="text-align:right;">${infl}</td>
-          <td style="text-align:right;padding:2px 4px;">
-            <button class="realm-upg-btn" data-slug="${gc.castle_slug}" data-type="gold" ${!canG ? 'disabled' : ''} style="font-size:11px;padding:2px 8px;min-width:44px;">${gCost}g</button>
-          </td>
-          <td style="text-align:right;padding:2px 4px;">
-            <button class="realm-upg-btn" data-slug="${gc.castle_slug}" data-type="industry" ${!canI ? 'disabled' : ''} style="font-size:11px;padding:2px 8px;min-width:44px;">${iCost}g</button>
-          </td>
-          <td style="text-align:right;padding:2px 4px;">
-            <button class="realm-upg-btn" data-slug="${gc.castle_slug}" data-type="prestige" ${!canP ? 'disabled' : ''} style="font-size:11px;padding:2px 8px;min-width:44px;">${pCost}g</button>
-          </td>
-        </tr>`;
-      } else {
-        return `<tr class="realm-castle-row" data-slug="${gc.castle_slug}">
-          <td class="house-bar" style="--row-house-color:${color};">
-            <div class="ht-name">${escapeHtml(castle?.name||gc.castle_slug)}
-              <button class="ht-eye" data-slug="${gc.castle_slug}" title="Locate">📍</button>
-            </div>
-          </td>
-          <td style="text-align:right;">${gc.troops}</td>
-          <td style="text-align:right;">${gc.gold_level}</td>
-          <td style="text-align:right;">${gc.industry_level}</td>
-          <td style="text-align:right;">${gc.prestige_level}</td>
-        </tr>`;
-      }
-    }).join('');
+  if (!gcList.length) return `<div style="padding:20px;color:var(--text-muted);font-size:13px;">No castles visible.</div>`;
 
-  if (!castles) return `<div style="padding:20px;color:var(--text-muted);font-size:12px;">No castles visible.</div>`;
+  const sortOpts = [
+    { v:'name',            l:'Name' },
+    { v:'troops',          l:'Troops' },
+    { v:'gold_level',      l:'Treasury Level' },
+    { v:'gold_cost',       l:'Treasury Cost' },
+    { v:'industry_level',  l:'Recruit Level' },
+    { v:'industry_cost',   l:'Recruit Cost' },
+    { v:'prestige_level',  l:'Prestige Level' },
+    { v:'prestige_cost',   l:'Prestige Cost' },
+    { v:'influence',       l:'Influence' },
+  ];
+  const sortBar = `<div class="realm-sort-bar">
+    <span>Sort:</span>
+    <select class="realm-sort-sel" id="realmSortSel">
+      ${sortOpts.map(o => `<option value="${o.v}"${_realmsCastleSort===o.v?' selected':''}>${o.l}</option>`).join('')}
+    </select>
+  </div>`;
 
-  if (isMine) {
-    return `<table class="houses-table">
-      <thead><tr>
-        <th>Castle</th>
-        <th style="text-align:right;" title="Garrison troops">Trp</th>
-        <th style="text-align:right;" title="Treasury level"><i class="ti ti-coin"></i></th>
-        <th style="text-align:right;" title="Recruitment level"><i class="ti ti-shield-half"></i></th>
-        <th style="text-align:right;" title="Prestige level">★</th>
-        <th style="text-align:right;" title="Effective influence">Infl</th>
-        <th style="text-align:right;" title="Cost to upgrade Treasury">+<i class="ti ti-coin"></i></th>
-        <th style="text-align:right;" title="Cost to upgrade Recruitment">+<i class="ti ti-shield-half"></i></th>
-        <th style="text-align:right;" title="Cost to upgrade Prestige">+★</th>
-      </tr></thead>
-      <tbody>${castles}</tbody>
-    </table>`;
-  } else {
-    return `<table class="houses-table">
-      <thead><tr>
-        <th>Castle</th>
-        <th style="text-align:right;" title="Garrison troops">Trp</th>
-        <th style="text-align:right;" title="Treasury level"><i class="ti ti-coin"></i></th>
-        <th style="text-align:right;" title="Recruitment level"><i class="ti ti-shield-half"></i></th>
-        <th style="text-align:right;" title="Prestige level">★</th>
-      </tr></thead>
-      <tbody>${castles}</tbody>
-    </table>`;
-  }
+  const sorted = [...gcList].sort((a, b) => {
+    const s = _realmsCastleSort;
+    const aInfl = Math.max(1, a.effective_influence||1);
+    const bInfl = Math.max(1, b.effective_influence||1);
+    if (s === 'name') {
+      const ca = state.castles.find(c => c.slug === a.castle_slug);
+      const cb = state.castles.find(c => c.slug === b.castle_slug);
+      return (ca?.name||'').localeCompare(cb?.name||'');
+    }
+    if (s === 'troops')         return b.troops - a.troops;
+    if (s === 'gold_level')     return b.gold_level - a.gold_level;
+    if (s === 'industry_level') return b.industry_level - a.industry_level;
+    if (s === 'prestige_level') return b.prestige_level - a.prestige_level;
+    if (s === 'influence')      return bInfl - aInfl;
+    if (s === 'gold_cost')      return infraUpgradeCost(a.gold_level,'gold',aInfl) - infraUpgradeCost(b.gold_level,'gold',bInfl);
+    if (s === 'industry_cost')  return infraUpgradeCost(a.industry_level,'industry',aInfl) - infraUpgradeCost(b.industry_level,'industry',bInfl);
+    if (s === 'prestige_cost')  return infraUpgradeCost(a.prestige_level,'prestige',aInfl) - infraUpgradeCost(b.prestige_level,'prestige',bInfl);
+    return 0;
+  });
+
+  const cards = sorted.map(gc => {
+    const castle = state.castles.find(c => c.slug === gc.castle_slug);
+    const infl   = Math.max(1, gc.effective_influence || 1);
+    const color  = realmsHouseColor(gc.owner_player_id);
+    const isMe   = gc.owner_player_id === myId;
+    const owner  = !isMe ? state.gamePlayers.find(p => p.id === gc.owner_player_id) : null;
+    const house  = owner ? state.houses.find(h => h.slug === owner.house_slug) : null;
+    const hName  = house?.name || owner?.name || '';
+    const goldPerCycle  = gc.gold_level * (10 + coinLv * 2);
+    const troopsPerTick = (gc.industry_level * (lcLv + 4) / cycleLen).toFixed(2);
+
+    let infraHtml;
+    if (isMe) {
+      const gCost = infraUpgradeCost(gc.gold_level,     'gold',     infl);
+      const iCost = infraUpgradeCost(gc.industry_level, 'industry', infl);
+      const pCost = infraUpgradeCost(gc.prestige_level, 'prestige', infl);
+      const canG  = myGold >= gCost;
+      const canI  = myGold >= iCost;
+      const canP  = myGold >= pCost;
+      infraHtml = `
+        <div class="realm-infra-cell">
+          <div class="realm-infra-label"><i class="ti ti-coin"></i> Treasury</div>
+          <div class="realm-infra-body">
+            <div><div class="realm-infra-level">${gc.gold_level}</div><div class="realm-infra-prod">${goldPerCycle}g/cycle</div></div>
+            <button class="realm-upg-btn" data-slug="${gc.castle_slug}" data-type="gold" ${!canG?'disabled':''}>${gCost}g</button>
+          </div>
+        </div>
+        <div class="realm-infra-cell">
+          <div class="realm-infra-label"><i class="ti ti-shield-half"></i> Recruit</div>
+          <div class="realm-infra-body">
+            <div><div class="realm-infra-level">${gc.industry_level}</div><div class="realm-infra-prod">${troopsPerTick}t/tick</div></div>
+            <button class="realm-upg-btn" data-slug="${gc.castle_slug}" data-type="industry" ${!canI?'disabled':''}>${iCost}g</button>
+          </div>
+        </div>
+        <div class="realm-infra-cell">
+          <div class="realm-infra-label">★ Prestige</div>
+          <div class="realm-infra-body">
+            <div><div class="realm-infra-level">${gc.prestige_level}</div><div class="realm-infra-prod">&nbsp;</div></div>
+            <button class="realm-upg-btn" data-slug="${gc.castle_slug}" data-type="prestige" ${!canP?'disabled':''}>${pCost}g</button>
+          </div>
+        </div>`;
+    } else {
+      infraHtml = `
+        <div class="realm-infra-cell">
+          <div class="realm-infra-label"><i class="ti ti-coin"></i> Treasury</div>
+          <div class="realm-infra-body"><div class="realm-infra-level">${gc.gold_level}</div></div>
+        </div>
+        <div class="realm-infra-cell">
+          <div class="realm-infra-label"><i class="ti ti-shield-half"></i> Recruit</div>
+          <div class="realm-infra-body"><div class="realm-infra-level">${gc.industry_level}</div></div>
+        </div>
+        <div class="realm-infra-cell">
+          <div class="realm-infra-label">★ Prestige</div>
+          <div class="realm-infra-body"><div class="realm-infra-level">${gc.prestige_level}</div></div>
+        </div>`;
+    }
+
+    return `<div class="realm-castle-card" data-slug="${gc.castle_slug}" style="--row-house-color:${color};">
+      <div class="realm-card-header">
+        <div>
+          <div class="realm-card-name">${escapeHtml(castle?.name || gc.castle_slug)}</div>
+          ${hName ? `<div class="realm-house-tag" style="padding:0;margin-top:1px;">${escapeHtml(hName)}</div>` : ''}
+        </div>
+        <div class="realm-card-actions">
+          <span class="realm-card-stat" title="Influence"><i class="ti ti-star"></i> ${infl}</span>
+          <span class="realm-card-stat" title="Garrison troops"><i class="ti ti-shield-half"></i> ${gc.troops}</span>
+          <button class="ht-eye" data-slug="${gc.castle_slug}" title="Locate on map"><i class="ti ti-map-pin"></i></button>
+        </div>
+      </div>
+      <div class="realm-card-infra">${infraHtml}</div>
+    </div>`;
+  }).join('');
+
+  return `${sortBar}<div class="realm-castles-list">${cards}</div>`;
 }
 
 function buildRealmsCommandersTab() {
@@ -12626,82 +13147,91 @@ function buildRealmsCommandersTab() {
   const curTick   = state.activeGame?.current_tick || 0;
   const handLv    = state.councilSeats.find(s => s.seat === 'hand')?.level || 1;
 
-  const rows = (state.commanders || [])
+  const cmds = (state.commanders || [])
     .filter(c => c.status !== 'dead' && playerIds.has(c.owner_player_id))
-    .map(cmd => {
-      const owner    = state.gamePlayers.find(p => p.id === cmd.owner_player_id);
-      const house    = owner ? state.houses.find(h => h.slug === owner.house_slug) : null;
-      const color    = house?.color || '#666';
-      const isMe     = cmd.owner_player_id === myId;
+    .filter(c => {
+      const isMe = c.owner_player_id === myId;
       const isAllied = !isMe && _realmsFilter === 'allied';
-      const move     = (state.movements || []).find(m => m.commander_id === cmd.id);
-      const route    = (state.routes || []).find(r => r.commander_id === cmd.id && r.status === 'active');
-
-      const isVisible = isMe || isAllied || !visible ||
-        (cmd.current_castle_slug && visible.has(cmd.current_castle_slug)) ||
+      const move = (state.movements || []).find(m => m.commander_id === c.id);
+      return isMe || isAllied || !visible ||
+        (c.current_castle_slug && visible.has(c.current_castle_slug)) ||
         (move?.to_castle_slug && visible.has(move.to_castle_slug));
-      if (!isVisible) return '';
+    });
 
-      const locSlug   = move ? move.to_castle_slug : cmd.current_castle_slug;
-      const locCastle = locSlug ? state.castles.find(c => c.slug === locSlug) : null;
-      const locName   = move
-        ? `→ ${escapeHtml(locCastle?.name || locSlug || '?')} (${Math.max(0, move.arrives_at_tick - curTick)}t)`
-        : cmd.status === 'sieging'
-          ? `<i class="ti ti-building-castle"></i> Besieging ${escapeHtml(locCastle?.name || locSlug || '?')}`
-          : escapeHtml(locCastle?.name || locSlug || '?');
+  if (!cmds.length) return `<div style="padding:20px;color:var(--text-muted);font-size:13px;">No commanders visible.</div>`;
 
-      const atk = Math.max(1, Math.round(handLv * (1 + cmd.level * 0.1)));
+  const sortOpts = [
+    { v:'troops', l:'Troops' },
+    { v:'level',  l:'Level' },
+    { v:'damage', l:'Damage' },
+    { v:'name',   l:'Name' },
+  ];
+  const sortBar = `<div class="realm-sort-bar">
+    <span>Sort:</span>
+    <select class="realm-sort-sel" id="realmCmdSortSel">
+      ${sortOpts.map(o => `<option value="${o.v}"${_realmsCommanderSort===o.v?' selected':''}>${o.l}</option>`).join('')}
+    </select>
+  </div>`;
 
-      let routeTag = '';
-      if (route && move)  routeTag = route.is_loop ? '↺' : '→';
-      else if (move)      routeTag = '↦';
+  const sorted = [...cmds].sort((a, b) => {
+    const s = _realmsCommanderSort;
+    if (s === 'troops') return (b.troops||0) - (a.troops||0);
+    if (s === 'level')  return b.level - a.level;
+    if (s === 'damage') return Math.round(handLv*(1+b.level*.1)) - Math.round(handLv*(1+a.level*.1));
+    if (s === 'name')   return (a.name||'').localeCompare(b.name||'');
+    return 0;
+  });
 
-      const locSlugForPin = cmd.current_castle_slug || move?.to_castle_slug;
+  const cards = sorted.map(cmd => {
+    const owner   = state.gamePlayers.find(p => p.id === cmd.owner_player_id);
+    const house   = owner ? state.houses.find(h => h.slug === owner.house_slug) : null;
+    const color   = house?.color || '#666';
+    const isMe    = cmd.owner_player_id === myId;
+    const hName   = !isMe ? (house?.name || owner?.name || '') : '';
+    const move    = (state.movements || []).find(m => m.commander_id === cmd.id);
+    const route   = (state.routes || []).find(r => r.commander_id === cmd.id && r.status === 'active');
+    const atk     = Math.max(1, Math.round(handLv * (1 + cmd.level * 0.1)));
+    const locSlug = cmd.current_castle_slug || move?.to_castle_slug;
 
-      if (isMe) {
-        const xpStr = `${cmd.experience || 0}/${cmd.level * 100}`;
-        return `<tr class="is-me realm-cmd-row" data-cmdid="${cmd.id}" data-locslug="${locSlugForPin||''}">
-          <td class="house-bar" style="--row-house-color:${color};">
-            <div class="ht-name">${escapeHtml(cmd.name||'Commander')}
-              ${locSlugForPin ? `<button class="ht-eye" data-slug="${locSlugForPin}" title="Locate">📍</button>` : ''}
-            </div>
-          </td>
-          <td style="text-align:right;">${cmd.troops || 0}</td>
-          <td style="text-align:right;color:var(--error);">${atk}</td>
-          <td style="text-align:right;">${cmd.level}</td>
-          <td style="text-align:right;font-size:10px;color:var(--text-muted);">${xpStr}</td>
-          <td style="font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px;">${locName}</td>
-          <td style="text-align:center;font-size:11px;color:var(--text-muted);">${routeTag}</td>
-        </tr>`;
-      } else {
-        return `<tr>
-          <td class="house-bar" style="--row-house-color:${color};">
-            <div class="ht-name">${escapeHtml(cmd.name||'Commander')}</div>
-          </td>
-          <td style="text-align:right;">${cmd.troops || 0}</td>
-          <td style="text-align:right;color:var(--error);">${atk}</td>
-          <td style="text-align:right;">${cmd.level}</td>
-          <td style="text-align:right;font-size:10px;color:var(--text-muted);">—</td>
-          <td style="font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px;">${locName}</td>
-          <td style="text-align:center;font-size:11px;color:var(--text-muted);">—</td>
-        </tr>`;
-      }
-    }).filter(Boolean).join('');
+    let locHtml = '';
+    if (move) {
+      const toCastle  = state.castles.find(c => c.slug === move.to_castle_slug);
+      const ticksLeft = Math.max(0, move.arrives_at_tick - curTick);
+      const routeTag  = route ? (route.is_loop ? ' ↺' : ' →') : ' ↦';
+      locHtml = `<div class="realm-cmd-loc marching"><i class="ti ti-route"></i> ${escapeHtml(toCastle?.name || '?')} (${ticksLeft}t)${routeTag}</div>`;
+    } else if (cmd.status === 'sieging' && cmd.current_castle_slug) {
+      const castle = state.castles.find(c => c.slug === cmd.current_castle_slug);
+      locHtml = `<div class="realm-cmd-loc besieging"><i class="ti ti-building-castle"></i> Besieging ${escapeHtml(castle?.name || cmd.current_castle_slug)}</div>`;
+    } else if (cmd.current_castle_slug) {
+      const castle = state.castles.find(c => c.slug === cmd.current_castle_slug);
+      locHtml = `<div class="realm-cmd-loc"><i class="ti ti-tower"></i> ${escapeHtml(castle?.name || cmd.current_castle_slug)}</div>`;
+    }
 
-  if (!rows) return `<div style="padding:20px;color:var(--text-muted);font-size:12px;">No commanders visible.</div>`;
+    const xpCell = isMe
+      ? `<div class="realm-stat-item"><div class="realm-stat-val">${cmd.experience||0}/${cmd.level*100}</div><div class="realm-stat-lbl">XP</div></div>`
+      : '';
 
-  return `<table class="houses-table">
-    <thead><tr>
-      <th>Commander</th>
-      <th style="text-align:right;" title="Troops carried">Trp</th>
-      <th style="text-align:right;" title="Damage per round (Hand × (1 + level×0.1))">Dmg</th>
-      <th style="text-align:right;" title="Level">Lv</th>
-      <th style="text-align:right;" title="XP / XP to next level">XP</th>
-      <th title="Current location or march destination">Location</th>
-      <th style="text-align:center;" title="Route type">Rte</th>
-    </tr></thead>
-    <tbody>${rows}</tbody>
-  </table>`;
+    return `<div class="realm-castle-card realm-cmd-card" data-cmdid="${cmd.id}" data-locslug="${locSlug||''}" style="--row-house-color:${color};">
+      <div class="realm-card-header">
+        <div>
+          <div class="realm-card-name">${escapeHtml(cmd.name || 'Commander')}</div>
+          ${hName ? `<div class="realm-house-tag" style="padding:0;margin-top:1px;">${escapeHtml(hName)}</div>` : ''}
+        </div>
+        <div class="realm-card-actions">
+          <span class="realm-card-stat" title="Level"><i class="ti ti-sword"></i> Lv ${cmd.level}</span>
+          ${locSlug ? `<button class="ht-eye" data-slug="${locSlug}" title="Locate"><i class="ti ti-map-pin"></i></button>` : ''}
+        </div>
+      </div>
+      <div class="realm-stat-row">
+        <div class="realm-stat-item"><div class="realm-stat-val">${cmd.troops||0}</div><div class="realm-stat-lbl">Troops</div></div>
+        <div class="realm-stat-item"><div class="realm-stat-val">${atk}</div><div class="realm-stat-lbl">Dmg/Round</div></div>
+        ${xpCell}
+      </div>
+      ${locHtml}
+    </div>`;
+  }).join('');
+
+  return `${sortBar}<div class="realm-castles-list">${cards}</div>`;
 }
 
 function buildRealmsTroopsTab() {
@@ -12711,12 +13241,28 @@ function buildRealmsTroopsTab() {
   const curTick   = state.activeGame?.current_tick || 0;
   const handLv    = state.councilSeats.find(s => s.seat === 'hand')?.level || 1;
 
-  const sectionHeader = (label) =>
-    `<tr><td colspan="4" style="padding:6px 8px 3px;font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);">${label}</td></tr>`;
+  const sortOpts = [
+    { v:'troops',   l:'Troops' },
+    { v:'strength', l:'Strength' },
+    { v:'name',     l:'Name' },
+  ];
+  const sortBar = `<div class="realm-sort-bar">
+    <span>Sort:</span>
+    <select class="realm-sort-sel" id="realmTroopsSortSel">
+      ${sortOpts.map(o => `<option value="${o.v}"${_realmsTroopsSort===o.v?' selected':''}>${o.l}</option>`).join('')}
+    </select>
+  </div>`;
 
-  // ── Castles section ───────────────────────────────────────────────────────
-  const castleEntries = [];
-  (state.gameCastles || [])
+  const sortFn = (a, b) => {
+    const s = _realmsTroopsSort;
+    if (s === 'troops')   return b.sortTroops - a.sortTroops;
+    if (s === 'strength') return b.sortStrength - a.sortStrength;
+    if (s === 'name')     return a.sortName.localeCompare(b.sortName);
+    return 0;
+  };
+
+  // ── Castle Garrisons ──────────────────────────────────────────────────────
+  const castleCards = (state.gameCastles || [])
     .filter(gc => {
       if (!gc.owner_player_id || !playerIds.has(gc.owner_player_id)) return false;
       if (gc.troops <= 0) return false;
@@ -12724,96 +13270,107 @@ function buildRealmsTroopsTab() {
       const isAllied = !isMe && _realmsFilter === 'allied';
       return isMe || isAllied || !visible || visible.has(gc.castle_slug);
     })
-    .forEach(gc => {
-      const castle  = state.castles.find(c => c.slug === gc.castle_slug);
-      const owner   = state.gamePlayers.find(p => p.id === gc.owner_player_id);
-      const house   = owner ? state.houses.find(h => h.slug === owner.house_slug) : null;
-      const color   = house?.color || '#666';
-      const isMe    = gc.owner_player_id === myId;
-      const defCmd  = (state.commanders || []).find(c =>
+    .map(gc => {
+      const castle = state.castles.find(c => c.slug === gc.castle_slug);
+      const owner  = state.gamePlayers.find(p => p.id === gc.owner_player_id);
+      const house  = owner ? state.houses.find(h => h.slug === owner.house_slug) : null;
+      const color  = house?.color || '#666';
+      const isMe   = gc.owner_player_id === myId;
+      const hName  = !isMe ? (house?.name || owner?.name || '') : '';
+      const defCmd = (state.commanders || []).find(c =>
         c.status !== 'dead' && c.current_castle_slug === gc.castle_slug && c.owner_player_id === gc.owner_player_id
       );
-      const defLv   = defCmd?.level || 0;
-      const defStr  = Math.round(gc.troops * (1 + defLv * 0.1) * 1.2);
-      const locName = escapeHtml(castle?.name || gc.castle_slug);
-      castleEntries.push({
-        sortKey: -(gc.troops),
-        html: `<tr class="${isMe?'is-me':''}">
-          <td class="house-bar" style="--row-house-color:${color};">
-            <div class="ht-name">${locName}
-              <button class="ht-eye" data-slug="${gc.castle_slug}" title="Locate">📍</button>
+      const defStr = Math.round(gc.troops * (1 + (defCmd?.level||0) * 0.1) * 1.2);
+      const name   = castle?.name || gc.castle_slug;
+      return {
+        sortTroops: gc.troops, sortStrength: defStr, sortName: name,
+        html: `<div class="realm-castle-card" data-slug="${gc.castle_slug}" style="--row-house-color:${color};">
+          <div class="realm-card-header">
+            <div>
+              <div class="realm-card-name">${escapeHtml(name)}</div>
+              ${hName ? `<div class="realm-house-tag" style="padding:0;margin-top:1px;">${escapeHtml(hName)}</div>` : ''}
             </div>
-          </td>
-          <td style="text-align:right;">${gc.troops}</td>
-          <td style="text-align:right;color:var(--success);">${defStr}</td>
-          <td style="font-size:10px;color:var(--text-muted);">${locName}</td>
-        </tr>`
-      });
-    });
-  castleEntries.sort((a, b) => a.sortKey - b.sortKey);
+            <div class="realm-card-actions">
+              <button class="ht-eye" data-slug="${gc.castle_slug}" title="Locate"><i class="ti ti-map-pin"></i></button>
+            </div>
+          </div>
+          <div class="realm-stat-row">
+            <div class="realm-stat-item"><div class="realm-stat-val">${gc.troops}</div><div class="realm-stat-lbl">Garrison</div></div>
+            <div class="realm-stat-item"><div class="realm-stat-val">${defStr}</div><div class="realm-stat-lbl">Def Strength</div></div>
+          </div>
+        </div>`
+      };
+    })
+    .sort(sortFn);
 
-  // ── Commanders section ────────────────────────────────────────────────────
-  const commanderEntries = [];
-  (state.commanders || [])
+  // ── Field Armies ──────────────────────────────────────────────────────────
+  const cmdCards = (state.commanders || [])
     .filter(c => c.status !== 'dead' && playerIds.has(c.owner_player_id))
-    .forEach(cmd => {
-      const owner    = state.gamePlayers.find(p => p.id === cmd.owner_player_id);
-      const house    = owner ? state.houses.find(h => h.slug === owner.house_slug) : null;
-      const color    = house?.color || '#666';
-      const isMe     = cmd.owner_player_id === myId;
+    .filter(c => {
+      const isMe = c.owner_player_id === myId;
       const isAllied = !isMe && _realmsFilter === 'allied';
-      const move     = (state.movements || []).find(m => m.commander_id === cmd.id);
-
-      const isVisible = isMe || isAllied || !visible ||
-        (cmd.current_castle_slug && visible.has(cmd.current_castle_slug)) ||
+      const move = (state.movements || []).find(m => m.commander_id === c.id);
+      return isMe || isAllied || !visible ||
+        (c.current_castle_slug && visible.has(c.current_castle_slug)) ||
         (move?.to_castle_slug && visible.has(move.to_castle_slug));
-      if (!isVisible) return;
+    })
+    .map(cmd => {
+      const owner  = state.gamePlayers.find(p => p.id === cmd.owner_player_id);
+      const house  = owner ? state.houses.find(h => h.slug === owner.house_slug) : null;
+      const color  = house?.color || '#666';
+      const isMe   = cmd.owner_player_id === myId;
+      const hName  = !isMe ? (house?.name || owner?.name || '') : '';
+      const move   = (state.movements || []).find(m => m.commander_id === cmd.id);
+      const atk    = Math.max(1, Math.round(handLv * (1 + cmd.level * 0.1)));
+      const locSlug = cmd.current_castle_slug || move?.to_castle_slug;
 
-      let locName;
-      const locPinSlug = cmd.current_castle_slug || move?.to_castle_slug;
+      let locHtml = '';
       if (move) {
         const toCastle  = state.castles.find(c => c.slug === move.to_castle_slug);
         const ticksLeft = Math.max(0, move.arrives_at_tick - curTick);
-        locName = `→ ${escapeHtml(toCastle?.name || move.to_castle_slug || '?')} (${ticksLeft}t)`;
-      } else {
-        const curCastle = cmd.current_castle_slug ? state.castles.find(c => c.slug === cmd.current_castle_slug) : null;
-        locName = escapeHtml(curCastle?.name || cmd.current_castle_slug || '—');
+        locHtml = `<div class="realm-cmd-loc marching"><i class="ti ti-route"></i> ${escapeHtml(toCastle?.name || '?')} (${ticksLeft}t)</div>`;
+      } else if (cmd.current_castle_slug) {
+        const castle = state.castles.find(c => c.slug === cmd.current_castle_slug);
+        const cls = cmd.status === 'sieging' ? 'besieging' : '';
+        const icon = cmd.status === 'sieging' ? 'ti-building-castle' : 'ti-tower';
+        locHtml = `<div class="realm-cmd-loc ${cls}"><i class="ti ${icon}"></i> ${escapeHtml(castle?.name || cmd.current_castle_slug)}</div>`;
       }
 
-      const atk = Math.max(1, Math.round(handLv * (1 + cmd.level * 0.1)));
-
-      commanderEntries.push({
-        sortKey: -(cmd.troops || 0),
-        html: `<tr class="${isMe?'is-me':''}">
-          <td class="house-bar" style="--row-house-color:${color};">
-            <div class="ht-name">${escapeHtml(cmd.name||'Commander')}
-              ${locPinSlug ? `<button class="ht-eye" data-slug="${locPinSlug}" title="Locate">📍</button>` : ''}
+      return {
+        sortTroops: cmd.troops||0, sortStrength: atk, sortName: cmd.name||'',
+        html: `<div class="realm-castle-card realm-cmd-card" data-cmdid="${cmd.id}" data-locslug="${locSlug||''}" style="--row-house-color:${color};">
+          <div class="realm-card-header">
+            <div>
+              <div class="realm-card-name">${escapeHtml(cmd.name || 'Commander')}</div>
+              ${hName ? `<div class="realm-house-tag" style="padding:0;margin-top:1px;">${escapeHtml(hName)}</div>` : ''}
             </div>
-          </td>
-          <td style="text-align:right;">${cmd.troops || 0}</td>
-          <td style="text-align:right;color:var(--error);">${atk}</td>
-          <td style="font-size:10px;color:${move?'var(--accent)':'var(--text-muted)'};">${locName}</td>
-        </tr>`
-      });
-    });
-  commanderEntries.sort((a, b) => a.sortKey - b.sortKey);
+            <div class="realm-card-actions">
+              <span class="realm-card-stat" title="Level"><i class="ti ti-sword"></i> Lv ${cmd.level}</span>
+              ${locSlug ? `<button class="ht-eye" data-slug="${locSlug}" title="Locate"><i class="ti ti-map-pin"></i></button>` : ''}
+            </div>
+          </div>
+          <div class="realm-stat-row">
+            <div class="realm-stat-item"><div class="realm-stat-val">${cmd.troops||0}</div><div class="realm-stat-lbl">Troops</div></div>
+            <div class="realm-stat-item"><div class="realm-stat-val">${atk}</div><div class="realm-stat-lbl">Atk/Round</div></div>
+          </div>
+          ${locHtml}
+        </div>`
+      };
+    })
+    .sort(sortFn);
 
-  if (!castleEntries.length && !commanderEntries.length) {
-    return `<div style="padding:20px;color:var(--text-muted);font-size:12px;">No troops visible.</div>`;
+  if (!castleCards.length && !cmdCards.length) {
+    return `${sortBar}<div style="padding:20px;color:var(--text-muted);font-size:13px;">No troops visible.</div>`;
   }
 
-  const castleBody    = castleEntries.length    ? sectionHeader('Castles')    + castleEntries.map(e => e.html).join('')    : '';
-  const commanderBody = commanderEntries.length ? sectionHeader('Commanders') + commanderEntries.map(e => e.html).join('') : '';
+  const castleSection = castleCards.length
+    ? `<div class="realm-section-hdr"><i class="ti ti-tower"></i> Castle Garrisons</div>${castleCards.map(e => e.html).join('')}`
+    : '';
+  const cmdSection = cmdCards.length
+    ? `<div class="realm-section-hdr"><i class="ti ti-sword"></i> Field Armies</div>${cmdCards.map(e => e.html).join('')}`
+    : '';
 
-  return `<table class="houses-table">
-    <thead><tr>
-      <th>Name</th>
-      <th style="text-align:right;" title="Troops">Trp</th>
-      <th style="text-align:right;" title="Effective strength">Str</th>
-      <th>Location</th>
-    </tr></thead>
-    <tbody>${castleBody}${commanderBody}</tbody>
-  </table>`;
+  return `${sortBar}<div class="realm-castles-list">${castleSection}${cmdSection}</div>`;
 }
 
 function wireRealmsTabs() {
@@ -12864,22 +13421,28 @@ function wireRealmsLocate() {
       await upgradeInfrastructure(slug, type);
     });
   });
-  el.sidebarContent.querySelectorAll('.realm-castle-row[data-slug]').forEach(row => {
-    row.addEventListener('click', () => {
-      const slug = row.dataset.slug;
+  const sortSel = el.sidebarContent.querySelector('#realmSortSel');
+  if (sortSel) sortSel.addEventListener('change', () => { _realmsCastleSort = sortSel.value; reRenderRealmsContent(); });
+  const cmdSortSel = el.sidebarContent.querySelector('#realmCmdSortSel');
+  if (cmdSortSel) cmdSortSel.addEventListener('change', () => { _realmsCommanderSort = cmdSortSel.value; reRenderRealmsContent(); });
+  const troopsSortSel = el.sidebarContent.querySelector('#realmTroopsSortSel');
+  if (troopsSortSel) troopsSortSel.addEventListener('change', () => { _realmsTroopsSort = troopsSortSel.value; reRenderRealmsContent(); });
+
+  el.sidebarContent.querySelectorAll('.realm-castle-card[data-slug]:not(.realm-cmd-card)').forEach(card => {
+    card.addEventListener('click', e => {
+      if (e.target.closest('button, select')) return;
+      const slug = card.dataset.slug;
       const castle = state.castles.find(c => c.slug === slug);
       if (castle) panToCastle(castle);
       openCastlePage(slug);
-      renderMarkers();
-      renderMovements();
     });
   });
-  el.sidebarContent.querySelectorAll('.realm-cmd-row[data-cmdid]').forEach(row => {
-    row.addEventListener('click', e => {
-      if (e.target.closest('button')) return;
-      const cmdId = Number(row.dataset.cmdid);
-      const locSlug = row.dataset.locslug;
-      const castle = locSlug ? state.castles.find(c => c.slug === locSlug) : null;
+  el.sidebarContent.querySelectorAll('.realm-cmd-card[data-cmdid]').forEach(card => {
+    card.addEventListener('click', e => {
+      if (e.target.closest('button, select')) return;
+      const cmdId   = Number(card.dataset.cmdid);
+      const locSlug = card.dataset.locslug;
+      const castle  = locSlug ? state.castles.find(c => c.slug === locSlug) : null;
       if (castle) panToCastle(castle);
       state.selectedCastle = null;
       state.selectedCommanderId = cmdId;
@@ -13129,14 +13692,7 @@ function buildIntelHtml() {
 }
 
 function intelVisiblePlayerIds() {
-  const myId   = state.currentPlayer?.id;
-  const visible = computeVisibleSlugs();
-  return new Set((state.gamePlayers || []).filter(p => {
-    if (p.id === myId) return true;
-    const house    = state.houses.find(h => h.slug === p.house_slug);
-    const seatSlug = house?.seat_castle_slug;
-    return seatSlug && (!visible || visible.has(seatSlug));
-  }).map(p => p.id));
+  return new Set((state.gamePlayers || []).map(p => p.id));
 }
 
 function buildLiveSnapshot() {
@@ -13175,8 +13731,10 @@ async function loadIntelSection() {
     .select('*').eq('game_id', state.activeGame.id)
     .order('tick', { ascending: true });
 
+  const live = buildLiveSnapshot();
+  const currentTick = state.activeGame.current_tick || 0;
+
   if (error || !snapshots?.length) {
-    const live = buildLiveSnapshot();
     if (live.length) {
       renderIntelDashboard(live, wrap);
     } else {
@@ -13185,7 +13743,12 @@ async function loadIntelSection() {
     return;
   }
 
-  renderIntelDashboard(snapshots, wrap);
+  // Replace any stored entries for the current tick with live data so upgrades
+  // made after the last snapshot are always reflected.
+  const historical = snapshots.filter(s => s.tick !== currentTick);
+  const merged = [...historical, ...live].sort((a, b) => a.tick - b.tick);
+
+  renderIntelDashboard(merged, wrap);
 }
 
 function renderIntelDashboard(snapshots, wrap) {
@@ -13203,7 +13766,6 @@ function renderIntelDashboard(snapshots, wrap) {
   // Latest and previous snapshots per visible player (snapshots are tick-asc)
   const latestSnap = {}, prevSnap = {};
   snapshots.forEach(s => {
-    if (!visibleIds.has(s.player_id)) return;
     if (latestSnap[s.player_id]) prevSnap[s.player_id] = latestSnap[s.player_id];
     latestSnap[s.player_id] = s;
   });
@@ -13223,7 +13785,7 @@ function renderIntelDashboard(snapshots, wrap) {
     const house  = player ? state.houses.find(h => h.slug === player.house_slug) : null;
     const color  = house?.color || '#888';
     const isMe   = topId === state.currentPlayer?.id;
-    const name   = isMe ? 'You' : (house?.name || '?').slice(0, 7);
+    const name   = isMe ? 'You' : (house?.name || '?').replace(/^House\s+/i, '');
     return `<div style="background:var(--bg-elevated);border:1px solid var(--border);border-left:3px solid ${color};border-radius:5px;padding:7px 8px;">
       <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">${icon} ${label}</div>
       <div style="font-size:17px;font-weight:700;color:${color};line-height:1;">${latestSnap[topId][key]||0}</div>
@@ -13254,7 +13816,7 @@ function renderIntelDashboard(snapshots, wrap) {
       const color  = house?.color || '#888';
       const on     = selectedIds.has(pid);
       const isMe   = pid === state.currentPlayer?.id;
-      const abbr   = isMe ? 'You' : (house?.name || '?').slice(0, 5);
+      const abbr   = isMe ? 'You' : (house?.name || '?').replace(/^House\s+/i, '');
       return `<button class="intel-player-btn" data-intel-pid="${pid}" title="${escapeHtml(house?.name||'')}"
         style="padding:2px 8px;font-size:10px;border-radius:10px;border:1px solid ${on?color:'var(--border)'};background:${on?color+'22':'transparent'};color:${on?color:'var(--text-muted)'};cursor:pointer;font-family:inherit;font-weight:${isMe?700:400};">${escapeHtml(abbr)}</button>`;
     }).join('')}
@@ -13265,9 +13827,7 @@ function renderIntelDashboard(snapshots, wrap) {
   const ML = 30, MR = 54, MT = 10, MB = 20;
   const PW = W - ML - MR, PH = H - MT - MB;
 
-  const ticks = [...new Set(
-    snapshots.filter(s => visibleIds.has(s.player_id)).map(s => s.tick)
-  )].sort((a, b) => a - b);
+  const ticks = [...new Set(snapshots.map(s => s.tick))].sort((a, b) => a - b);
 
   let maxVal = 1;
   snapshots.forEach(s => {
@@ -13332,7 +13892,7 @@ function renderIntelDashboard(snapshots, wrap) {
     const house  = player ? state.houses.find(h => h.slug === player.house_slug) : null;
     const color  = house?.color || '#888';
     const isMe   = pid === state.currentPlayer?.id;
-    const abbr   = isMe ? 'You' : (house?.name || '?').slice(0, 6);
+    const abbr   = isMe ? 'You' : (house?.name || '?').replace(/^House\s+/i, '');
 
     const pts = ticks.map((tick, i) => {
       const s = snapshots.find(s => s.player_id === pid && s.tick === tick);
