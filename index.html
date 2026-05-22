@@ -3499,6 +3499,36 @@
     padding: 1px 6px;
   }
 
+  /* Guide styles */
+  .guide-section { margin-bottom: 16px; }
+  .guide-section-title {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .guide-subsection-title {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin: 10px 0 4px;
+  }
+  .guide-body { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin: 0 0 6px; }
+  .guide-list { font-size: 12px; color: var(--text-muted); line-height: 1.7; margin: 0 0 6px; padding-left: 16px; }
+  .guide-list li { margin-bottom: 2px; }
+  .guide-rule { height: 1px; background: var(--border-gold); margin: 14px 0; opacity: 0.4; }
+  .guide-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 8px; }
+  .guide-table th { background: rgba(201,168,76,0.15); color: var(--accent); font-family: 'Cinzel', Georgia, serif; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 8px; text-align: left; border-bottom: 1px solid var(--border-gold); }
+  .guide-table td { padding: 4px 8px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  .guide-table tr:last-child td { border-bottom: none; }
+  .guide-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
   /* Join filter tabs */
   .lview-filter-tabs {
     display: flex;
@@ -3687,6 +3717,10 @@
       <button class="auth-tab" data-tab="signup">Sign Up</button>
     </div>
     <form id="authForm">
+      <div class="form-group" id="authDisplayNameGroup" style="display:none;">
+        <label>Display Name</label>
+        <input type="text" id="authDisplayName" placeholder="Lord of the realm" maxlength="24" autocomplete="nickname">
+      </div>
       <div class="form-group">
         <label>Email</label>
         <input type="email" id="authEmail" required autocomplete="email">
@@ -3821,6 +3855,7 @@
         </div>
         <button class="lnav-hdr lnav-solo" data-view="achievements">Achievements</button>
         <button class="lnav-hdr lnav-solo" data-view="account">Account Settings</button>
+        <button class="lnav-hdr lnav-solo" data-view="guide">New to Westeros?</button>
         <button class="lnav-hdr lnav-solo" data-view="help">Help</button>
       </nav>
 
@@ -4713,6 +4748,7 @@ const MAP_IMAGE_DATA = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDA
 
 const state = {
   user: null,
+  profile: null,
   castles: [],
   houses: [],
   games: [],
@@ -4962,6 +4998,8 @@ document.querySelectorAll('.auth-tab').forEach(tab => {
     el.authSubmit.textContent = state.currentTab === 'signup' ? 'Create Account' : 'Sign In';
     el.authError.textContent = '';
     el.authSuccess.textContent = '';
+    document.getElementById('authDisplayNameGroup').style.display =
+      state.currentTab === 'signup' ? '' : 'none';
   });
 });
 
@@ -4974,8 +5012,13 @@ el.authForm.addEventListener('submit', async (e) => {
   const password = el.authPassword.value;
   try {
     if (state.currentTab === 'signup') {
+      const displayName = (document.getElementById('authDisplayName')?.value || '').trim()
+        || email.split('@')[0];
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
+      if (data.user) {
+        await supabase.from('profiles').upsert({ user_id: data.user.id, display_name: displayName });
+      }
       if (data.user && !data.session) {
         el.authSuccess.textContent = 'Check your email to confirm your account, then sign in.';
       } else if (data.session) {
@@ -4996,6 +5039,7 @@ el.authForm.addEventListener('submit', async (e) => {
 el.signOutBtn.addEventListener('click', async () => {
   await supabase.auth.signOut();
   state.user = null;
+  state.profile = null;
   showAuthScreen();
   toast('Signed out');
 });
@@ -5009,8 +5053,12 @@ async function onAuthChange(session) {
   el.userEmail.textContent = session.user.email;
 
   // Load data while auth screen is still showing — no flash
-  // Both are independent; run in parallel
-  await Promise.all([loadReferenceData(), loadGames()]);
+  const [, , profileResult] = await Promise.all([
+    loadReferenceData(),
+    loadGames(),
+    supabase.from('profiles').select('display_name').eq('user_id', session.user.id).maybeSingle(),
+  ]);
+  state.profile = profileResult?.data || null;
 
   // Auto-open join modal if URL contains ?join=GAME_ID
   const joinId = new URLSearchParams(location.search).get('join');
@@ -6382,6 +6430,11 @@ function setLobbyView(view) {
     showStatic();
     renderLobbyAccount(staticView);
 
+  } else if (view === 'guide') {
+    hideGames();
+    showStatic();
+    renderLobbyGuide(staticView);
+
   } else if (view === 'help') {
     hideGames();
     showStatic();
@@ -6468,6 +6521,15 @@ function renderLobbyComingSoon(container, title, text) {
 function renderLobbyAccount(container) {
   container.innerHTML = `
     <div class="lview-section">
+      <div class="lview-section-title">Profile</div>
+      <div class="lview-form-row">
+        <label>Display Name</label>
+        <input type="text" id="acctDisplayName" placeholder="Lord of the realm" maxlength="24" value="${escapeHtml(state.profile?.display_name || '')}">
+      </div>
+      <button class="lview-save-btn" id="acctSaveProfile">Save Name</button>
+    </div>
+    <div class="lnav-divider"></div>
+    <div class="lview-section" style="margin-top:16px;">
       <div class="lview-section-title">Email</div>
       <div class="lview-form-row">
         <label>Current Email</label>
@@ -6493,6 +6555,17 @@ function renderLobbyAccount(container) {
       <button class="lview-save-btn" id="acctSavePassword">Update Password</button>
     </div>`;
 
+  document.getElementById('acctSaveProfile').addEventListener('click', async () => {
+    const name = document.getElementById('acctDisplayName').value.trim();
+    if (!name) { toast('Enter a display name', true); return; }
+    try {
+      const { error } = await supabase.from('profiles').upsert({ user_id: state.user.id, display_name: name });
+      if (error) throw error;
+      state.profile = { ...(state.profile || {}), display_name: name };
+      toast('Display name saved.');
+    } catch (err) { toast(`Failed: ${err.message}`, true); }
+  });
+
   document.getElementById('acctSaveEmail').addEventListener('click', async () => {
     const newEmail = document.getElementById('acctNewEmail').value.trim();
     if (!newEmail) { toast('Enter a new email address', true); return; }
@@ -6516,6 +6589,110 @@ function renderLobbyAccount(container) {
       document.getElementById('acctConfirmPassword').value = '';
     } catch (err) { toast(`Failed: ${err.message}`, true); }
   });
+}
+
+function renderLobbyGuide(container) {
+  container.innerHTML = `
+    <div style="font-family:'Cinzel',Georgia,serif;font-size:17px;font-weight:700;color:var(--accent);letter-spacing:0.06em;margin-bottom:2px;">From Neptune's Pride to Westeros</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:18px;font-style:italic;">A guide for NP veterans</div>
+
+    <div class="guide-section">
+      <div class="guide-section-title">The Short Version</div>
+      <p class="guide-body">Westeros is Neptune's Pride set in Westeros. Real-time, tick-based, territory control, diplomacy, and the same creeping dread when you log in after 8 hours and three of your castles are under siege. If you can play NP you can play Westeros. The systems map almost directly — the names have changed, the depth has increased.</p>
+    </div>
+
+    <div class="guide-rule"></div>
+
+    <div class="guide-section">
+      <div class="guide-section-title">What's the Same</div>
+      <ul class="guide-list">
+        <li><b>Real-time with ticks</b> — production and movement resolve on a cycle timer.</li>
+        <li><b>Territory control wins</b> — hold enough of the map and you win.</li>
+        <li><b>Fog of war</b> — you only see what your castles and moving commanders can see.</li>
+        <li><b>Diplomacy is everything</b> — the game is unwinnable alone.</li>
+        <li><b>Asymmetric starts</b> — no two houses start equal. Geography, proximity to high-value castles, and starting resources vary.</li>
+      </ul>
+    </div>
+
+    <div class="guide-rule"></div>
+
+    <div class="guide-section">
+      <div class="guide-section-title">Key Differences</div>
+
+      <div class="guide-subsection-title">Stars → Castles, Carriers → Commanders, Ships → Troops</div>
+      <table class="guide-table">
+        <thead><tr><th>Neptune's Pride</th><th>Westeros</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Stars</td><td>Castles</td><td>Territory you control and defend</td></tr>
+          <tr><td>Ships</td><td>Troops</td><td>Units that move and fight</td></tr>
+          <tr><td>Carriers</td><td>Commanders</td><td>Vehicles that carry troops across the map</td></tr>
+          <tr><td>Cash</td><td>Gold</td><td>Your income and spending currency</td></tr>
+        </tbody>
+      </table>
+      <p class="guide-body">Commanders are where the comparison breaks down. In NP, carriers are disposable transport. In Westeros, commanders are named characters who gain levels through combat. Losing a high-level commander is not like losing a carrier — it matters strategically and psychologically.</p>
+
+      <div class="guide-subsection-title" style="margin-top:14px;">Tech Tree → Small Council</div>
+      <table class="guide-table">
+        <thead><tr><th>NP Technology</th><th>Small Council Seat</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td>Manufacturing</td><td>Lord Commander</td><td>Troop production rate</td></tr>
+          <tr><td>Banking</td><td>Master of Coin</td><td>Gold income per tick</td></tr>
+          <tr><td>Terraforming</td><td>Master of Laws</td><td>Castle influence — reduces upgrade costs</td></tr>
+          <tr><td>Scanning</td><td>Master of Whisperers</td><td>Intel reports, fog of war vision</td></tr>
+          <tr><td>Range</td><td>Master of Horse</td><td>Commander march speed and range</td></tr>
+          <tr><td>Experimentation</td><td>Grand Maester</td><td>Accelerates all other seat upgrades</td></tr>
+          <tr><td>Weapons</td><td>Hand of the King</td><td>Combat strength in battle</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="guide-rule"></div>
+
+    <div class="guide-section">
+      <div class="guide-section-title">Combat — The Core Difference</div>
+      <p class="guide-body">NP combat is simple: more ships wins, resolved instantly. Westeros has two distinct combat modes and a commander layer on top of both.</p>
+
+      <div class="guide-subsection-title">Commanders</div>
+      <p class="guide-body">Every army is led by a named commander — Bronn, Davos, Brienne — who earns XP through combat. Each level adds <b>+10% attack strength</b>. A level 3 commander hits 30% harder than a level 1 with the same troop count. Unlike NP carriers, they are not expendable.</p>
+
+      <div class="guide-subsection-title">Field Battle</div>
+      <p class="guide-body">When two armies meet outside a castle, a field battle resolves. Both sides apply their commander's level bonus. Higher troop counts still matter, but a high-level commander can defeat a significantly larger force led by a low-level one.</p>
+
+      <div class="guide-subsection-title">Siege</div>
+      <p class="guide-body">When an attacker arrives at an occupied castle, the siege clock starts. The defender produces troops every tick and receives a flat fortification bonus. Friendly commanders arriving at an active siege merge in rather than opening a second fight. <b>Defense is genuinely viable</b> — a well-garrisoned castle can hold long enough for relief to arrive.</p>
+
+      <div class="guide-subsection-title">The Reinforcement Race</div>
+      <p class="guide-body">The siege clock creates a race. The most common NP-veteran mistake: committing your army to a siege while an enemy marches unopposed into your undefended castle behind you. In NP, sieges resolve instantly. In Westeros, they can run for many ticks.</p>
+    </div>
+
+    <div class="guide-rule"></div>
+
+    <div class="guide-section">
+      <div class="guide-section-title">Things NP Players Get Wrong at First</div>
+      <ul class="guide-list">
+        <li><b>Spreading too thin.</b> NP rewards racing to every star. In Westeros, consolidate before expanding.</li>
+        <li><b>Ignoring the council.</b> A house two levels ahead on Master of Coin or Hand of the King builds a compounding advantage that's very hard to overcome.</li>
+        <li><b>Treating commanders like carriers.</b> They are not expendable. Route them with care.</li>
+        <li><b>Forgetting the siege clock.</b> Committing your army to a siege while an enemy hits your rear is the most common way experienced players lose.</li>
+        <li><b>Underestimating commander level.</b> Sending a level 1 against a level 3 with equal troops is usually a loss.</li>
+      </ul>
+    </div>
+
+    <div class="guide-rule"></div>
+
+    <div class="guide-section">
+      <div class="guide-section-title">What NP Players Will Love</div>
+      <ul class="guide-list">
+        <li>The map is Westeros. Every castle name means something if you know the lore.</li>
+        <li>Diplomacy feels higher-stakes because alliance breaks are public knowledge.</li>
+        <li>Named commanders make victories and losses personal in a way carriers never did.</li>
+        <li>The Whispers system rewards investing in intelligence — NP never had anything like it.</li>
+      </ul>
+    </div>
+
+    <div style="margin-top:16px;padding:10px 12px;border:1px solid var(--border);border-radius:5px;font-size:11px;color:var(--text-muted);font-style:italic;text-align:center;line-height:1.6;">
+      Current version: Base game. Scenarios, seasons, and naval mechanics in development.
+    </div>`;
 }
 
 let _lobbyHelpPage = null;
@@ -6912,6 +7089,12 @@ function openJoinGameModal(gameId) {
 
   state.selectedHouseToJoin = null;
   el.confirmJoinGame.disabled = true;
+
+  // Pre-fill name from profile
+  const nameInput = document.getElementById('joinPlayerName');
+  if (nameInput && !nameInput.value && state.profile?.display_name) {
+    nameInput.value = state.profile.display_name;
+  }
 
   // Render house grid with player names for taken houses
   el.joinHouseGrid.innerHTML = state.houses.map(house => {
