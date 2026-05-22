@@ -12423,8 +12423,10 @@ function renderObjectiveBanner() {
     return;
   }
 
-  const holding = state.objectives.filter(o => o.objective_met && !o.completed_at);
-  if (!holding.length) {
+  const countdown = state.objectives.filter(o => o.win_countdown_started_tick != null && !o.completed_at);
+  const holding   = state.objectives.filter(o => o.objective_met && !o.completed_at && o.win_countdown_started_tick == null);
+
+  if (!countdown.length && !holding.length) {
     if (banner) banner.remove();
     return;
   }
@@ -12432,25 +12434,46 @@ function renderObjectiveBanner() {
   if (!banner) {
     banner = document.createElement('div');
     banner.id = 'objectiveBanner';
-    // Insert into map area so it floats above the map
     document.querySelector('.map-area')?.appendChild(banner);
   }
 
-  const items = holding.map(obj => {
-    const house = state.houses.find(h => h.slug === obj.house_slug);
-    const color = house?.color || '#C9A84C';
-    const left  = obj.required_cycles - obj.consecutive_cycles;
-    return `<div class="obj-banner-item" style="--banner-color:${color};">
-      <span class="obj-banner-house" style="color:${color};">${escapeHtml(house?.name || obj.house_slug)}</span>
-      <span class="obj-banner-sep">—</span>
-      <span class="obj-banner-cycles">${left} cycle${left !== 1 ? 's' : ''} remaining</span>
-    </div>`;
-  }).join('');
+  let inner = '';
 
-  banner.innerHTML = `<div class="obj-banner-inner">
-    <span class="obj-banner-icon">⚔</span>
-    <div class="obj-banner-items">${items}</div>
-  </div>`;
+  if (countdown.length) {
+    const items = countdown.map(obj => {
+      const house = state.houses.find(h => h.slug === obj.house_slug);
+      const color = house?.color || '#E82040';
+      const ticksLeft = Math.max(0, (obj.win_countdown_started_tick + (obj.win_countdown_ticks || 5)) - (state.activeGame?.current_tick || 0));
+      return `<div class="obj-banner-item" style="--banner-color:${color};">
+        <span class="obj-banner-house" style="color:${color};">${escapeHtml(house?.name || obj.house_slug)}</span>
+        <span class="obj-banner-sep"> has met all win conditions —</span>
+        <span class="obj-banner-cycles" style="color:#E82040;font-weight:700;"> game ends in ${ticksLeft} tick${ticksLeft !== 1 ? 's' : ''}</span>
+      </div>`;
+    }).join('');
+    inner += `<div class="obj-banner-inner" style="background:rgba(232,32,64,.18);border-color:rgba(232,32,64,.5);">
+      <span class="obj-banner-icon">⚠</span>
+      <div class="obj-banner-items">${items}</div>
+    </div>`;
+  }
+
+  if (holding.length) {
+    const items = holding.map(obj => {
+      const house = state.houses.find(h => h.slug === obj.house_slug);
+      const color = house?.color || '#C9A84C';
+      const left  = obj.required_cycles - obj.consecutive_cycles;
+      return `<div class="obj-banner-item" style="--banner-color:${color};">
+        <span class="obj-banner-house" style="color:${color};">${escapeHtml(house?.name || obj.house_slug)}</span>
+        <span class="obj-banner-sep">—</span>
+        <span class="obj-banner-cycles">${left} cycle${left !== 1 ? 's' : ''} remaining</span>
+      </div>`;
+    }).join('');
+    inner += `<div class="obj-banner-inner">
+      <span class="obj-banner-icon">⚔</span>
+      <div class="obj-banner-items">${items}</div>
+    </div>`;
+  }
+
+  banner.innerHTML = inner;
 }
 
 function buildDiplomacyHtml() {
@@ -12711,10 +12734,12 @@ function buildLeaderboardHtml() {
     if (_leaderboardSort === 'objectives' && isScenario) {
       const oa = state.objectives?.find(o => o.house_slug === a.player.house_slug);
       const ob = state.objectives?.find(o => o.house_slug === b.player.house_slug);
-      const ca = oa?.consecutive_cycles || 0, cb = ob?.consecutive_cycles || 0;
-      const ma = oa?.objective_met ? 1 : 0,   mb = ob?.objective_met ? 1 : 0;
-      if (ma !== mb) return mb - ma;
-      if (ca !== cb) return cb - ca;
+      const countA = oa?.win_countdown_started_tick != null ? 1 : 0;
+      const countB = ob?.win_countdown_started_tick != null ? 1 : 0;
+      if (countA !== countB) return countB - countA;
+      const pctA = (oa?.consecutive_cycles || 0) / Math.max(1, oa?.required_cycles || 1);
+      const pctB = (ob?.consecutive_cycles || 0) / Math.max(1, ob?.required_cycles || 1);
+      if (pctA !== pctB) return pctB - pctA;
     }
     if (_leaderboardSort === 'castles' || !_leaderboardSort) {
       if (a.castleCount !== b.castleCount) return b.castleCount - a.castleCount;
@@ -12745,12 +12770,17 @@ function buildLeaderboardHtml() {
     const pct   = Math.min(1, winAt > 0 ? castleCount / winAt : 0);
 
     // Scenario objective progress
-    const objRow      = isScenario ? state.objectives?.find(o => o.house_slug === player.house_slug) : null;
-    const objCfg      = isScenario ? state.scenario?.objectives?.[player.house_slug] : null;
-    const cyclesHeld  = objRow?.consecutive_cycles || 0;
-    const objMet      = objRow?.objective_met || false;
-    const objComplete = !!objRow?.completed_at;
-    const objPct      = Math.min(1, holdCycles > 0 ? cyclesHeld / holdCycles : 0);
+    const objRow        = isScenario ? state.objectives?.find(o => o.house_slug === player.house_slug) : null;
+    const objCfg        = isScenario ? state.scenario?.objectives?.[player.house_slug] : null;
+    const cyclesHeld    = objRow?.consecutive_cycles || 0;
+    const objMet        = objRow?.objective_met || false;
+    const objComplete   = !!objRow?.completed_at;
+    const objReqCycles  = objRow?.required_cycles || holdCycles;
+    const objPct        = Math.min(1, objReqCycles > 0 ? cyclesHeld / objReqCycles : 0);
+    const inCountdown   = !!objRow?.win_countdown_started_tick;
+    const countdownLeft = inCountdown
+      ? Math.max(0, (objRow.win_countdown_started_tick + (objRow.win_countdown_ticks || 5)) - (state.activeGame?.current_tick || 0))
+      : null;
 
     let dipBtns = '';
     if (!isYou && !elim && me && me.eliminated_at_tick == null) {
@@ -12778,11 +12808,19 @@ function buildLeaderboardHtml() {
     // Objective progress bar (scenario) or castle progress bar (standard)
     let progressHtml = '';
     if (isScenario && objCfg) {
-      const statusColor = objComplete ? '#f0c040' : objMet ? '#5cb85c' : 'var(--text-muted)';
-      const statusText  = objComplete ? 'Victory' : objMet ? `Holding — ${cyclesHeld}/${holdCycles} cycles` : cyclesHeld > 0 ? `${cyclesHeld} cycle${cyclesHeld !== 1 ? 's' : ''} held` : 'Objective not met';
+      const statusColor = objComplete ? '#f0c040' : inCountdown ? '#E82040' : objMet ? '#5cb85c' : 'var(--text-muted)';
+      const pctLabel    = Math.round(objPct * 100);
+      const statusText  = objComplete  ? 'Victory'
+        : inCountdown
+          ? `Winning — game ends in ${countdownLeft} tick${countdownLeft !== 1 ? 's' : ''}`
+          : objMet
+            ? `Holding — ${cyclesHeld}/${objReqCycles} cycles (${pctLabel}%)`
+            : cyclesHeld > 0
+              ? `${cyclesHeld}/${objReqCycles} cycles held (${pctLabel}%)`
+              : 'Objective not met';
       progressHtml = `
         <div style="font-size:10px;color:var(--text-muted);margin:3px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(objCfg.description)}</div>
-        <div class="castle-bar-track" style="background:var(--bg-deep);"><div class="castle-bar-fill" style="width:${Math.round(objPct * 100)}%;background:${objComplete ? '#f0c040' : objMet ? '#5cb85c' : color};"></div></div>
+        <div class="castle-bar-track" style="background:var(--bg-deep);"><div class="castle-bar-fill" style="width:${Math.round(objPct * 100)}%;background:${objComplete ? '#f0c040' : inCountdown ? '#E82040' : objMet ? '#5cb85c' : color};"></div></div>
         <div style="font-size:10px;color:${statusColor};margin-top:2px;">${statusText}</div>`;
     } else {
       progressHtml = `<div class="castle-bar-track"><div class="castle-bar-fill" style="width:${Math.round(pct * 100)}%"></div></div>`;

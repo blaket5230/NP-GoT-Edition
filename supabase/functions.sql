@@ -1700,7 +1700,16 @@ BEGIN
               ) THEN 20 ELSE 0 END
             + v_closing * 30.0
             - v_pressure * v_dist * 0.04
-            + (RANDOM() * 16.0 - 8.0);
+            + (RANDOM() * 16.0 - 8.0)
+            + CASE WHEN EXISTS (
+                SELECT 1 FROM pending_ai_actions paa
+                WHERE paa.game_id = p_game_id
+                  AND paa.ai_player_id = v_player.id
+                  AND paa.action_type = 'attack_castle'
+                  AND paa.castle_slug = v_target.slug
+                  AND NOT paa.fulfilled
+                  AND (paa.expires_tick IS NULL OR paa.expires_tick >= p_tick)
+              ) THEN 300 ELSE 0 END;
 
           IF v_score > v_best_score THEN
             v_best_score := v_score; v_best_slug := v_target.slug;
@@ -1734,6 +1743,10 @@ BEGIN
         departed_at_tick, arrives_at_tick, troops, march_type)
       VALUES (v_cmdr.cmdr_id, p_game_id, v_cmdr.at_castle, v_best_slug,
         p_tick, p_tick + v_ticks, v_march_troops, 'assault');
+
+      UPDATE pending_ai_actions SET fulfilled = true
+      WHERE game_id = p_game_id AND ai_player_id = v_player.id
+        AND action_type = 'attack_castle' AND castle_slug = v_best_slug AND NOT fulfilled;
 
     END LOOP;
 

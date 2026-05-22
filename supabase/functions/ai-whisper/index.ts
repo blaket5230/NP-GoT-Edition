@@ -33,6 +33,38 @@ interface Request {
   ctx:             Ctx;
 }
 
+interface IntentResult {
+  intent: 'form_alliance' | 'offer_peace' | 'declare_war' | 'coordinate_attack' | 'none';
+  castle_name?: string;
+}
+
+interface AiDecision {
+  stated:   IntentResult;
+  actual:   IntentResult;
+  scheming: boolean;
+}
+
+interface Personality {
+  diplo_honor:     number;
+  diplo_treachery: number;
+}
+
+interface FiveKingsCtx {
+  throne_holder:      string | null;
+  consecutive_cycles: number;
+  required_cycles:    number;
+}
+
+const THRONE_STANCE: Record<string, string> = {
+  baratheon_kings_landing: 'The Iron Throne is yours. Every claimant is a traitor and a rebel, and you treat them accordingly.',
+  baratheon_stannis:       'The throne is yours by every law that governs succession. You have named the truth and you will not unsay it.',
+  baratheon_renly:         'The realm chose you. A hundred thousand swords make better law than any maester\'s parchment.',
+  stark:                   'You seek no throne — only independence for the North and justice for your father\'s murder.',
+  greyjoy:                 'The Iron Throne is a kneeler concern. You want the North, the coastlines, and the open sea.',
+  arryn:                   'The Vale has declared for no king. That uncommitted silence is power, and you spend it with great care.',
+  martell:                 'Dorne watches. Every claimant has sent ravens. None has yet offered what Dorne requires.',
+};
+
 // ─── Scenario lore ─────────────────────────────────────────────────────────────
 
 const SCENARIO_LORE: Record<string, string> = {
@@ -312,23 +344,42 @@ function diplomaticFrame(state: string, humanHouse: string): string {
 
 // ─── Prompt builders ──────────────────────────────────────────────────────────
 
-function systemPrompt(ctx: Ctx): string {
+function systemPrompt(ctx: Ctx, fkCtx?: FiveKingsCtx | null): string {
   const houseLore    = (ctx.scenario_slug && HOUSE_LORE[ctx.scenario_slug]?.[ctx.ai_house_slug])
     ?? HOUSE_LORE['base']?.[ctx.ai_house_slug]
     ?? `You are a lord of ${ctx.ai_house_name}, a great house in the realm of Westeros.`;
   const scenarioLore = (ctx.scenario_slug && SCENARIO_LORE[ctx.scenario_slug]) || `The realm is at war.`;
   const dipFrame     = diplomaticFrame(ctx.diplomatic_state ?? 'neutral', ctx.human_house_name);
 
-  return [
-    scenarioLore,
-    houseLore,
-    dipFrame,
-    `You are writing a raven dispatch to ${ctx.human_house_name}.`,
-    `Rules: 2–4 sentences. No modern language. No markdown. No meta-references to games or simulations. Write as a medieval lord would — measured, political, occasionally veiled in courtesy or menace.`,
-  ].join('\n\n');
+  const parts = [scenarioLore, houseLore, dipFrame];
+
+  if (ctx.scenario_slug === 'war_of_five_kings' && fkCtx) {
+    const stance = THRONE_STANCE[ctx.ai_house_slug];
+    if (stance) parts.push(stance);
+
+    if (fkCtx.throne_holder) {
+      parts.push(fkCtx.throne_holder === ctx.ai_house_name
+        ? `You currently hold the Iron Throne. Every raven is written from that seat of power.`
+        : `The Iron Throne is currently held by ${fkCtx.throne_holder}.`);
+    }
+
+    const progress = fkCtx.required_cycles > 0
+      ? fkCtx.consecutive_cycles / fkCtx.required_cycles
+      : 0;
+    if (progress >= 0.75) {
+      parts.push(`You have held your position for ${fkCtx.consecutive_cycles} of ${fkCtx.required_cycles} required cycles. Victory is within reach — guard what you have.`);
+    } else if (progress >= 0.4) {
+      parts.push(`Your campaign has built momentum: ${fkCtx.consecutive_cycles} of ${fkCtx.required_cycles} cycles held.`);
+    }
+  }
+
+  parts.push(`You are writing a raven dispatch to ${ctx.human_house_name}.`);
+  parts.push(`Rules: 2–4 sentences. No modern language. No markdown. No meta-references to games or simulations. Write as a medieval lord would — measured, political, occasionally veiled in courtesy or menace.`);
+
+  return parts.join('\n\n');
 }
 
-function userPrompt(trigger: Request['trigger'], ctx: Ctx): string {
+function userPrompt(trigger: Request['trigger'], ctx: Ctx, decision?: AiDecision | null): string {
   const tick = ctx.current_tick;
   const ai   = ctx.ai_house_name;
   const them = ctx.human_house_name;
@@ -341,7 +392,28 @@ function userPrompt(trigger: Request['trigger'], ctx: Ctx): string {
         .slice(-6)
         .map(m => `${m.sender}: ${m.text}`)
         .join('\n');
-      return `Tick ${tick}. Respond to this raven exchange:\n\n${history}`;
+      let base = `Tick ${tick}. Respond to this raven exchange:\n\n${history}`;
+      const stated   = decision?.stated;
+      const honoring = decision != null && decision.actual.intent !== 'none';
+      if (stated?.intent === 'form_alliance') {
+        base += honoring
+          ? `\n\nYou have accepted their proposal of alliance. Your reply confirms this pact.`
+          : `\n\nYou entertain their proposal without binding yourself to it. Sound open — a lord still weighing his options.`;
+      } else if (stated?.intent === 'offer_peace') {
+        base += honoring
+          ? `\n\nYou have accepted their offer of peace. Your reply confirms the end of hostilities.`
+          : `\n\nYou do not intend to stop, but you do not say so plainly. Express careful consideration of their terms while closing nothing.`;
+      } else if (stated?.intent === 'declare_war') {
+        base += `\n\nThey have declared war upon you. Your reply is adversarial — cold, defiant, or threatening.`;
+      } else if (stated?.intent === 'coordinate_attack' && stated.castle_name) {
+        base += honoring
+          ? `\n\nYou have agreed to coordinate an assault on ${stated.castle_name}. Acknowledge the plan without naming it too plainly.`
+          : `\n\nYou listen with interest to their proposed assault on ${stated.castle_name} but commit nothing. You have your own arrangements already in motion.`;
+      }
+      if (decision?.scheming) {
+        base += `\n\nYou carry other commitments this house does not know about. Write as a man who keeps his own counsel — measured, careful, never fully open.`;
+      }
+      return base;
     }
     case 'combat': {
       if (ctx.combat_outcome === 'won') {
@@ -384,9 +456,226 @@ function threadSubject(trigger: Request['trigger'], ctx: Ctx): string {
   }
 }
 
+// ─── Intent extraction & execution ───────────────────────────────────────────
+
+async function extractIntent(lastPlayerMessage: string): Promise<IntentResult> {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key':         ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+      'content-type':      'application/json',
+    },
+    body: JSON.stringify({
+      model:      'claude-haiku-4-5-20251001',
+      max_tokens: 80,
+      system:     `You extract diplomatic or military intent from player messages in a medieval strategy game. Respond with ONLY valid JSON, no other text. Valid intents: form_alliance, offer_peace, declare_war, coordinate_attack, none.`,
+      messages:   [{ role: 'user', content: `Player message: "${lastPlayerMessage}"\n\nRespond with JSON only: {"intent": "...", "castle_name": "..." or null}` }],
+    }),
+  });
+  const json = await resp.json();
+  const text = json.content?.[0]?.text?.trim() ?? '{}';
+  try { return JSON.parse(text); } catch { return { intent: 'none' }; }
+}
+
+async function findCastleSlug(gameId: number, castleName: string): Promise<string | null> {
+  const { data: castle } = await supabase
+    .from('castles')
+    .select('slug')
+    .ilike('name', `%${castleName}%`)
+    .limit(1)
+    .single();
+  if (!castle?.slug) return null;
+  const { data: gc } = await supabase
+    .from('game_castles')
+    .select('castle_slug')
+    .eq('game_id', gameId)
+    .eq('castle_slug', castle.slug)
+    .single();
+  return gc?.castle_slug ?? null;
+}
+
+async function setDiplomacy(gameId: number, playerA: number, playerB: number, status: string, tick: number) {
+  const { data } = await supabase
+    .from('diplomacy')
+    .update({ status, status_changed_at_tick: tick })
+    .eq('game_id', gameId)
+    .or(`and(player_a_id.eq.${playerA},player_b_id.eq.${playerB}),and(player_a_id.eq.${playerB},player_b_id.eq.${playerA})`)
+    .select('id');
+  if (!data?.length) {
+    await supabase.from('diplomacy').insert({
+      game_id: gameId,
+      player_a_id: playerA,
+      player_b_id: playerB,
+      status,
+      status_changed_at_tick: tick,
+      proposed_by_player_id: playerB,
+    });
+  }
+}
+
+async function getPersonality(houseSlug: string): Promise<Personality> {
+  const { data } = await supabase
+    .from('house_ai_personality')
+    .select('diplo_honor, diplo_treachery')
+    .eq('house_slug', houseSlug)
+    .single();
+  return {
+    diplo_honor:     Number(data?.diplo_honor     ?? 0.5),
+    diplo_treachery: Number(data?.diplo_treachery ?? 0.3),
+  };
+}
+
+async function getSchemeContext(
+  gameId:        number,
+  aiPlayerId:    number,
+  humanPlayerId: number,
+): Promise<{ has_pending: boolean; against_player: boolean }> {
+  const { data: pending } = await supabase
+    .from('pending_ai_actions')
+    .select('id')
+    .eq('game_id', gameId)
+    .eq('ai_player_id', aiPlayerId)
+    .eq('fulfilled', false)
+    .limit(1);
+
+  const { data: aiAllies } = await supabase
+    .from('diplomacy')
+    .select('player_a_id, player_b_id')
+    .eq('game_id', gameId)
+    .eq('status', 'ally')
+    .or(`player_a_id.eq.${aiPlayerId},player_b_id.eq.${aiPlayerId}`);
+
+  let against_player = false;
+  const allyIds = (aiAllies ?? [])
+    .map(r => r.player_a_id === aiPlayerId ? r.player_b_id : r.player_a_id)
+    .filter(id => id !== humanPlayerId);
+
+  if (allyIds.length) {
+    const cond = allyIds.map(id =>
+      `and(player_a_id.eq.${id},player_b_id.eq.${humanPlayerId}),and(player_a_id.eq.${humanPlayerId},player_b_id.eq.${id})`
+    ).join(',');
+    const { data: conflicts } = await supabase
+      .from('diplomacy')
+      .select('id')
+      .eq('game_id', gameId)
+      .eq('status', 'enemy')
+      .or(cond)
+      .limit(1);
+    against_player = (conflicts?.length ?? 0) > 0;
+  }
+
+  return { has_pending: (pending?.length ?? 0) > 0, against_player };
+}
+
+function decideIntent(
+  extracted:       IntentResult,
+  personality:     Personality,
+  scheme:          { has_pending: boolean; against_player: boolean },
+  currentDipState: string,
+): AiDecision {
+  if (extracted.intent === 'declare_war' || extracted.intent === 'none') {
+    return {
+      stated:   extracted,
+      actual:   extracted,
+      scheming: scheme.has_pending || scheme.against_player,
+    };
+  }
+
+  let honorChance = personality.diplo_honor;
+  if (currentDipState === 'enemy') honorChance -= 0.25;
+  if (scheme.has_pending)          honorChance -= 0.15;
+  if (scheme.against_player)       honorChance -= 0.30;
+  if (currentDipState === 'ally')  honorChance += 0.15;
+  honorChance = Math.max(0.05, Math.min(0.95, honorChance));
+
+  const honoring = Math.random() < honorChance;
+  return {
+    stated:   extracted,
+    actual:   honoring ? extracted : { intent: 'none' },
+    scheming: scheme.has_pending || scheme.against_player || !honoring,
+  };
+}
+
+async function fetchFiveKingsCtx(
+  gameId:      number,
+  aiHouseSlug: string,
+): Promise<FiveKingsCtx> {
+  const [throneRes, objRes] = await Promise.all([
+    supabase
+      .from('game_castles')
+      .select('game_players(house_slug, houses(name))')
+      .eq('game_id', gameId)
+      .eq('castle_slug', 'red_keep')
+      .maybeSingle(),
+    supabase
+      .from('game_objectives')
+      .select('consecutive_cycles, required_cycles')
+      .eq('game_id', gameId)
+      .eq('house_slug', aiHouseSlug)
+      .maybeSingle(),
+  ]);
+  return {
+    throne_holder:      (throneRes.data as any)?.game_players?.houses?.name ?? null,
+    consecutive_cycles: objRes.data?.consecutive_cycles ?? 0,
+    required_cycles:    objRes.data?.required_cycles    ?? 8,
+  };
+}
+
+async function executeIntent(
+  intent: IntentResult,
+  gameId: number,
+  aiPlayerId: number,
+  humanPlayerId: number,
+  currentDipState: string,
+  currentTick: number,
+): Promise<IntentResult | null> {
+  switch (intent.intent) {
+    case 'form_alliance': {
+      if (currentDipState !== 'ally') {
+        await setDiplomacy(gameId, aiPlayerId, humanPlayerId, 'ally', currentTick);
+        return intent;
+      }
+      return null;
+    }
+    case 'offer_peace': {
+      if (currentDipState === 'enemy') {
+        await setDiplomacy(gameId, aiPlayerId, humanPlayerId, 'neutral', currentTick);
+        return intent;
+      }
+      return null;
+    }
+    case 'declare_war': {
+      if (currentDipState !== 'enemy') {
+        await setDiplomacy(gameId, aiPlayerId, humanPlayerId, 'enemy', currentTick);
+        return intent;
+      }
+      return null;
+    }
+    case 'coordinate_attack': {
+      if (intent.castle_name) {
+        const slug = await findCastleSlug(gameId, intent.castle_name);
+        if (slug) {
+          await supabase.from('pending_ai_actions').insert({
+            game_id:      gameId,
+            ai_player_id: aiPlayerId,
+            action_type:  'attack_castle',
+            castle_slug:  slug,
+            expires_tick: currentTick + 10,
+          });
+          return intent;
+        }
+      }
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
 // ─── Claude call ──────────────────────────────────────────────────────────────
 
-async function generateReply(trigger: Request['trigger'], ctx: Ctx): Promise<string> {
+async function generateReply(trigger: Request['trigger'], ctx: Ctx, decision?: AiDecision | null, fkCtx?: FiveKingsCtx | null): Promise<string> {
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -397,8 +686,8 @@ async function generateReply(trigger: Request['trigger'], ctx: Ctx): Promise<str
     body: JSON.stringify({
       model:      'claude-haiku-4-5-20251001',
       max_tokens: 250,
-      system:     systemPrompt(ctx),
-      messages:   [{ role: 'user', content: userPrompt(trigger, ctx) }],
+      system:     systemPrompt(ctx, fkCtx),
+      messages:   [{ role: 'user', content: userPrompt(trigger, ctx, decision) }],
     }),
   });
   const json = await resp.json();
@@ -420,7 +709,55 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
     }
 
-    const replyText = await generateReply(trigger, ctx);
+    const WATCHING_POWERS   = new Set(['arryn', 'martell']);
+    const PROACTIVE_TRIGGERS = new Set(['expansion_near', 'production_milestone']);
+    if (
+      ctx.scenario_slug === 'war_of_five_kings' &&
+      WATCHING_POWERS.has(ctx.ai_house_slug) &&
+      PROACTIVE_TRIGGERS.has(trigger)
+    ) {
+      return new Response(JSON.stringify({ ok: true, skipped: true }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
+    }
+
+    const fkCtx = ctx.scenario_slug === 'war_of_five_kings'
+      ? await fetchFiveKingsCtx(game_id, ctx.ai_house_slug)
+      : null;
+
+    let aiDecision: AiDecision | null = null;
+    if (trigger === 'player_message' && ctx.prior_messages?.length) {
+      const lastPlayerMsg = [...ctx.prior_messages]
+        .reverse()
+        .find(m => m.sender !== ctx.ai_house_name);
+      if (lastPlayerMsg) {
+        const extracted = await extractIntent(lastPlayerMsg.text);
+        if (extracted.intent !== 'none') {
+          const [personality, scheme] = await Promise.all([
+            getPersonality(ctx.ai_house_slug),
+            getSchemeContext(game_id, ai_player_id, human_player_id),
+          ]);
+          aiDecision = decideIntent(extracted, personality, scheme, ctx.diplomatic_state ?? 'neutral');
+          if (aiDecision.actual.intent !== 'none') {
+            await executeIntent(
+              aiDecision.actual, game_id, ai_player_id, human_player_id,
+              ctx.diplomatic_state ?? 'neutral', ctx.current_tick,
+            );
+          }
+          if (aiDecision.stated.intent !== 'none' && aiDecision.actual.intent === 'none') {
+            supabase.from('ai_deception_events').insert({
+              game_id,
+              ai_player_id,
+              human_player_id,
+              tick:           ctx.current_tick,
+              stated_intent:  aiDecision.stated.intent,
+              actual_intent:  'none',
+            }).then(() => {});
+          }
+        }
+      }
+    }
+    const replyText = await generateReply(trigger, ctx, aiDecision, fkCtx);
 
     if (thread_id) {
       const { error } = await supabase.rpc('ai_send_thread_message', {

@@ -19,11 +19,18 @@ function pick<T>(arr: T[]): T {
 // ── Category labels ────────────────────────────────────────────────────────────
 
 const CATEGORY_LABEL: Record<string, string> = {
-  general_briefing: 'general intelligence briefing',
-  combat_nearby:    'battle report',
-  army_movement:    'troop movement sighting',
-  castle_captured:  'castle change of hands',
-  diplomacy_shift:  'diplomatic intelligence',
+  general_briefing:      'general intelligence briefing',
+  combat_nearby:         'battle report',
+  army_movement:         'troop movement sighting',
+  castle_captured:       'castle change of hands',
+  diplomacy_shift:       'diplomatic intelligence',
+  scenario_briefing:     'opening intelligence briefing',
+  throne_changed_hands:  'throne intelligence',
+};
+
+const CATEGORY_MAX_TOKENS: Record<string, number> = {
+  scenario_briefing:    300,
+  throne_changed_hands: 250,
 };
 
 // ── Source types — injected randomly to give Claude textural variety ──────────
@@ -203,6 +210,31 @@ async function buildContext(
       return `${houseA} and ${houseB} have ${change}. ${coda}`;
     }
 
+    case 'throne_changed_hands': {
+      const newHolderHouse = body.new_holder_player_id
+        ? await houseName(body.new_holder_player_id as string)
+        : 'an unknown house';
+      const coda = pick([
+        `How the garrison was taken, and at what cost, is not yet confirmed.`,
+        `Whether this holds, or whether challengers are already marching, remains to be seen.`,
+        `The circumstances of the transfer — assault, surrender, or something darker — are not yet clear.`,
+        `What terms were offered and who was left standing inside those walls is unknown.`,
+      ]);
+      return `${newHolderHouse} now holds the Red Keep and sits upon the Iron Throne. ${coda}`;
+    }
+
+    case 'scenario_briefing': {
+      const enemies  = (body.starting_enemies as string[] ?? []);
+      const neutrals = (body.neutral_powers   as string[] ?? []);
+      const enemyLine = enemies.length
+        ? `Your known enemies at the outset: ${enemies.join(', ')}.`
+        : 'No houses have formally declared against you at the outset.';
+      const neutralLine = neutrals.length
+        ? `${neutrals.join(' and ')} have not committed to any claimant and watch from a distance.`
+        : '';
+      return `${myHouse} stands at the opening of the War of the Five Kings. ${enemyLine} ${neutralLine} The Iron Throne sits in King's Landing. Five kings press claims. The realm will not survive this intact.`.trim();
+    }
+
     default:
       return `Intelligence of category "${category}" was gathered at tick ${tick}.`;
   }
@@ -216,11 +248,12 @@ async function generateText(
   context: string,
   category: string,
 ): Promise<string> {
-  const label  = CATEGORY_LABEL[category] ?? 'intelligence report';
-  const source = pick(SOURCES);
-  const voice  = pick(VOICES);
-  const system = `${voice(myHouse, label, source)} ${confidenceInstruction(confidence)}`;
-  const user   = `${context} Write the dispatch now.`;
+  const label     = CATEGORY_LABEL[category] ?? 'intelligence report';
+  const source    = pick(SOURCES);
+  const voice     = pick(VOICES);
+  const system    = `${voice(myHouse, label, source)} ${confidenceInstruction(confidence)}`;
+  const user      = `${context} Write the dispatch now.`;
+  const maxTokens = CATEGORY_MAX_TOKENS[category] ?? 200;
 
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -231,7 +264,7 @@ async function generateText(
     },
     body: JSON.stringify({
       model:      'claude-haiku-4-5-20251001',
-      max_tokens: 200,
+      max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content: user }],
     }),
