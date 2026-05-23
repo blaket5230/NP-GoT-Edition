@@ -997,6 +997,29 @@
       drop-shadow(0 0 8px var(--owner-color, #c9a84c)88);
   }
   .marker:hover .castle-icon { filter: var(--kr-glow,) drop-shadow(0 0 6px rgba(255,255,255,0.6)) drop-shadow(0 1px 3px rgba(0,0,0,0.9)); }
+  /* Corrupted castle — fallen to the White Walkers */
+  .marker.corrupted .castle-icon { filter: grayscale(1) brightness(0.35) sepia(0.4) hue-rotate(180deg); opacity: 0.6; }
+  .marker.corrupted .marker-label { color: #3a5070; text-shadow: none; }
+  .marker.corrupted .troops { display: none !important; }
+  .marker.corrupted .shield-fan { display: none !important; }
+  /* Castle Black / The Wall — blue glow */
+  .marker.is-wall .castle-icon { filter: drop-shadow(0 0 10px #88ccff) drop-shadow(0 0 4px #2266bb); }
+  /* WW Army position marker */
+  .ww-army-marker {
+    position: absolute;
+    pointer-events: auto;
+    cursor: default;
+    text-align: center;
+    z-index: 10;
+  }
+  .ww-army-icon { font-size: 26px; line-height: 1; filter: drop-shadow(0 0 10px #88bbff) drop-shadow(0 0 4px #0044cc); }
+  .ww-army-count {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 10px; font-weight: 700;
+    color: #a8d8ff;
+    text-shadow: 0 0 6px #0066ff, 0 1px 2px rgba(0,0,0,0.95);
+    white-space: nowrap; margin-top: 1px;
+  }
   /* Troop count: positioned below the castle icon */
   .marker .troops {
     top: calc(50% + 7px);
@@ -4166,6 +4189,24 @@
         </div>
         <div class="form-row">
           <div class="form-group" style="flex:1;">
+            <label>Game Mode</label>
+            <select id="newGameMode">
+              <option value="standard">Standard</option>
+              <option value="coop">Co-Op — The Long Night</option>
+              <option value="hybrid">Hybrid — The Last War</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;display:none;" id="newGameWWDiffGroup">
+            <label>WW Difficulty</label>
+            <select id="newGameWWDifficulty">
+              <option value="standard">Standard</option>
+              <option value="hard">Hard</option>
+              <option value="nightmare">Nightmare</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
             <label>Tick Speed</label>
             <select id="newGameTickSpeed">
               <option value="normal">Normal (1 hr/tick)</option>
@@ -5575,7 +5616,9 @@ function renderMarkers() {
       }
       if (commanderCastles.has(castle.slug)) cls += ' has-commander';
       if (gc?.has_kings_road) cls += ' has-kings-road';
+      if (gc?.corrupted) cls += ' corrupted';
     }
+    if (castle.is_wall) cls += ' is-wall';
 
     if (isSelected) cls += ' selected';
 
@@ -5635,6 +5678,17 @@ function renderMarkers() {
     });
     el.markerLayer.appendChild(marker);
   });
+
+  // WW army position marker (co-op / hybrid games only)
+  el.markerLayer.querySelectorAll('.ww-army-marker').forEach(m => m.remove());
+  if (state.wwState && state.activeGame?.mode !== 'standard') {
+    const wwM = document.createElement('div');
+    wwM.className = 'marker ww-army-marker';
+    wwM.dataset.mapx = state.wwState.position_x;
+    wwM.dataset.mapy = state.wwState.position_y;
+    wwM.innerHTML = `<div class="ww-army-icon">❄</div><div class="ww-army-count">${state.wwState.army_size.toLocaleString()}</div>`;
+    el.markerLayer.appendChild(wwM);
+  }
 
   renderRegionLabels();
   applyZoomVisibility();
@@ -7190,6 +7244,9 @@ async function startSinglePlayerGame(houseSlug) {
     if (startErr) throw startErr;
     await supabase.rpc('apply_game_settings', { p_game_id: game.id }).then(null, () => {});
     await supabase.rpc('set_council_focus', { p_game_id: game.id, p_seat: 'hand', p_next_seat: null }).then(null, () => {});
+    if (['coop', 'hybrid'].includes(game.mode)) {
+      await supabase.rpc('setup_ww_game', { p_game_id: game.id }).then(null, () => {});
+    }
 
     // 4. Enter
     el.spHousePickerModal.classList.remove('open');
@@ -7314,6 +7371,8 @@ el.createGameForm.addEventListener('submit', async (e) => {
   const councilCost       = parseFloat(document.getElementById('newGameCouncilCost').value);
   const turnTimeoutMins   = parseInt(document.getElementById('newGameTurnDeadline')?.value || '1440');
   const ticksPerTurn      = parseInt(document.getElementById('newGameTicksPerTurn')?.value || '1');
+  const gameMode          = document.getElementById('newGameMode')?.value || 'standard';
+  const wwDifficulty      = document.getElementById('newGameWWDifficulty')?.value || 'standard';
 
   try {
     const { data, error } = await supabase
@@ -7329,6 +7388,7 @@ el.createGameForm.addEventListener('submit', async (e) => {
         production_cycle_ticks: cycleTicks, commander_speed_mult: cmdSpeed,
         infra_cost_mult: infraCost, council_cost_mult: councilCost,
         turn_timeout_minutes: turnTimeoutMins, ticks_per_turn: ticksPerTurn,
+        mode: gameMode, ww_difficulty: wwDifficulty,
       })
       .select().single();
     if (error) throw error;
@@ -7342,6 +7402,13 @@ el.createGameForm.addEventListener('submit', async (e) => {
   } catch (err) {
     toast(`Failed to create game: ${err.message}`, true);
   }
+});
+
+// Show/hide WW difficulty when mode changes
+document.getElementById('newGameMode')?.addEventListener('change', e => {
+  const isCoop = e.target.value !== 'standard';
+  const diffGroup = document.getElementById('newGameWWDiffGroup');
+  if (diffGroup) diffGroup.style.display = isCoop ? '' : 'none';
 });
 
 // =====================================================
@@ -7482,6 +7549,10 @@ el.startGameBtn.addEventListener('click', async () => {
     // Apply custom starting conditions (gold, garrison, infrastructure)
     await supabase.rpc('apply_game_settings', { p_game_id: gameId }).then(null, () => {});
     await supabase.rpc('set_council_focus', { p_game_id: gameId, p_seat: 'hand', p_next_seat: null }).then(null, () => {});
+    const startedGame = state.games.find(g => g.id === gameId);
+    if (['coop', 'hybrid'].includes(startedGame?.mode)) {
+      await supabase.rpc('setup_ww_game', { p_game_id: gameId }).then(null, () => {});
+    }
     el.joinGameModal.classList.remove('open');
     toast(`Game started with ${data.total_players} players (${data.ai_players} AI)`);
     await loadGames();
@@ -7745,6 +7816,19 @@ async function refreshGameState(gameId) {
   } else {
     state.objectives = [];
     state.scenario   = null;
+  }
+
+  // Load WW state for co-op / hybrid games
+  if (state.activeGame?.mode === 'coop' || state.activeGame?.mode === 'hybrid') {
+    const [wwResult, levyResult] = await Promise.all([
+      supabase.from('ww_state').select('*').eq('game_id', gameId).maybeSingle(),
+      supabase.from('ww_levy_columns').select('*').eq('game_id', gameId).eq('arrived', false).order('arrival_tick'),
+    ]);
+    state.wwState        = wwResult.data  || null;
+    state.wwLevyColumns  = levyResult.data || [];
+  } else {
+    state.wwState        = null;
+    state.wwLevyColumns  = [];
   }
 
   renderGameResources();
@@ -12161,6 +12245,7 @@ const SIDEBAR_SECTIONS = [
   { id: 'council',     icon: NAV_ICONS.council,     label: 'Small Council', help: 'council'   },
   { id: 'diplomacy',   icon: NAV_ICONS.intel,       label: 'Diplomacy',     help: null        },
   { id: 'objectives',  icon: '⚔',                   label: 'Objectives',    help: null, scenarioOnly: true },
+  { id: 'night_king',  icon: '❄',                   label: 'The Long Night', help: null, coopOnly: true },
   { id: 'realms',      icon: NAV_ICONS.realms,      label: 'Realms',        help: 'castles'   },
   { id: 'ledger',      icon: NAV_ICONS.ledger,      label: 'Ledger',        help: 'trade'     },
   { id: 'intel',       icon: NAV_ICONS.intel,       label: 'Intel',         help: 'intel'     },
@@ -12213,7 +12298,10 @@ function renderSidebarNav() {
   el.sidebarContent.innerHTML = `
     <div class="sidebar-nav-list">
       ${houseTopHtml}
-      ${SIDEBAR_SECTIONS.filter(s => !s.scenarioOnly || state.activeGame?.scenario_id).map(s => {
+      ${SIDEBAR_SECTIONS.filter(s =>
+        (!s.scenarioOnly || state.activeGame?.scenario_id) &&
+        (!s.coopOnly || ['coop', 'hybrid'].includes(state.activeGame?.mode))
+      ).map(s => {
         if (s.id === 'divider') return '<div class="sidebar-nav-divider"></div>';
         const holding = s.id === 'objectives' && state.objectives.some(o => o.objective_met && !o.completed_at);
         return `<div class="sidebar-nav-item${holding ? ' obj-holding' : ''}" data-section="${s.id}">
@@ -12236,6 +12324,84 @@ function renderSidebarNav() {
     });
   });
   renderInboxBadge();
+}
+
+function buildNightKingHtml() {
+  const ww   = state.wwState;
+  const mode = state.activeGame?.mode;
+  if (!ww) return `<div style="padding:20px;color:var(--text-muted);font-size:13px;">White Walker data unavailable.</div>`;
+
+  const tick          = state.activeGame?.current_tick || 0;
+  const wallCastle    = state.castles?.find(c => c.is_wall);
+  const wallGc        = wallCastle ? state.gameCastles?.find(gc => gc.castle_slug === wallCastle.slug) : null;
+  const wallGarrison  = wallGc?.troops ?? 0;
+  const allGc         = state.gameCastles || [];
+  const totalCastles  = allGc.length;
+  const corrupted     = allGc.filter(gc => gc.corrupted).length;
+  const corruptPct    = totalCastles > 0 ? Math.round(corrupted / totalCastles * 100) : 0;
+  const inTransit     = (state.wwLevyColumns || []).filter(l => !l.arrived);
+  const wallStatus    = ww.wall_broken ? 'BROKEN' : 'STANDING';
+  const wallColor     = ww.wall_broken ? '#E82040' : '#4fa35a';
+
+  const levyRowsHtml = inTransit.length === 0 ? `
+    <div style="font-size:12px;color:var(--text-muted);padding:4px 0;">No columns en route.</div>` :
+    inTransit.map(col => {
+      const ticksLeft = Math.max(0, col.arrival_tick - tick);
+      const gp = state.gamePlayers?.find(p => p.id === col.source_player_id);
+      const h  = state.houses?.find(h => h.slug === gp?.house_slug);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+        <div style="font-size:12px;color:${h?.color || 'var(--text-muted)'};">${escapeHtml(h?.name || 'Unknown')}</div>
+        <div style="font-size:12px;color:#a8d8ff;">${col.troops.toLocaleString()} — ${ticksLeft}t</div>
+      </div>`;
+    }).join('');
+
+  const modeNote = mode === 'hybrid' ? `
+    <div style="background:rgba(40,10,10,0.5);border:1px solid #662222;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);line-height:1.5;">
+      <strong style="color:#E82040;">Hybrid Mode</strong> — A house may seize the Red Keep and betray the alliance. If the Red Keep is taken, the Night King grows stronger and that house's levy stops.
+    </div>` : '';
+
+  return `
+    <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+      <div style="background:linear-gradient(135deg,#060e1c,#0a1a30);border:1px solid #1a3a6a;border-radius:8px;padding:16px;text-align:center;">
+        <div style="font-size:36px;line-height:1;filter:drop-shadow(0 0 14px #88bbff);">❄</div>
+        <div style="font-family:'Cinzel',Georgia,serif;font-size:10px;letter-spacing:2.5px;color:#3a6a9a;margin:8px 0 4px;text-transform:uppercase;">Army of the Dead</div>
+        <div style="font-family:'Cinzel',Georgia,serif;font-size:30px;font-weight:700;color:#a8d8ff;text-shadow:0 0 16px #0044bb;">
+          ${ww.army_size.toLocaleString()}
+        </div>
+        <div style="font-size:11px;color:#3a6a9a;margin-top:2px;">wights</div>
+      </div>
+
+      <div style="background:rgba(0,15,40,0.5);border:1px solid #1a3366;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px;">
+        <div style="font-family:'Cinzel',Georgia,serif;font-size:11px;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:2px;">The Wall</div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:13px;color:var(--text-primary);">Status</span>
+          <span style="font-size:13px;font-weight:700;color:${wallColor};">${wallStatus}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:13px;color:var(--text-primary);">Castle Black</span>
+          <span style="font-size:13px;color:#a8d8ff;">${wallGarrison.toLocaleString()} troops</span>
+        </div>
+      </div>
+
+      <div style="background:rgba(0,15,40,0.5);border:1px solid #1a3366;border-radius:8px;padding:12px;">
+        <div style="font-family:'Cinzel',Georgia,serif;font-size:11px;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:8px;">Corruption Spread</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+          <span style="font-size:13px;color:var(--text-primary);">${corrupted} / ${totalCastles} castles fallen</span>
+          <span style="font-size:12px;color:var(--text-muted);">${corruptPct}%</span>
+        </div>
+        <div style="background:#0a1428;border-radius:4px;height:6px;overflow:hidden;">
+          <div style="height:100%;background:linear-gradient(90deg,#1a44aa,#3366ff);width:${corruptPct}%;transition:width .4s;"></div>
+        </div>
+        ${ww.last_corrupted_castle_slug ? `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Last fallen: ${escapeHtml(ww.last_corrupted_castle_slug.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase()))}</div>` : ''}
+      </div>
+
+      <div style="background:rgba(0,15,40,0.5);border:1px solid #1a3366;border-radius:8px;padding:12px;">
+        <div style="font-family:'Cinzel',Georgia,serif;font-size:11px;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:8px;">Night's Watch Levy En Route</div>
+        ${levyRowsHtml}
+      </div>
+
+      ${modeNote}
+    </div>`;
 }
 
 function renderSidebarSection(section) {
@@ -12298,6 +12464,7 @@ function renderSidebarSection(section) {
     case 'council':     content = buildCouncilSidebarHtml(); break;
     case 'diplomacy':   content = buildDiplomacyHtml(); break;
     case 'objectives':  content = buildObjectivesHtml(); break;
+    case 'night_king':  content = buildNightKingHtml(); break;
     case 'analysis':    content = buildAnalysisHtml(); break;
     case 'help':        content = buildHelpHtml(); break;
     case 'options':     content = buildOptionsHtml(); break;
@@ -12436,6 +12603,44 @@ function buildObjectivesHtml() {
 
 function renderObjectiveBanner() {
   let banner = document.getElementById('objectiveBanner');
+
+  // WW banners for co-op / hybrid games
+  const isCoopMode = ['coop', 'hybrid'].includes(state.activeGame?.mode);
+  if (isCoopMode && state.wwState) {
+    const ww = state.wwState;
+    const totalGc = state.gameCastles?.length || 1;
+    const corrupted = state.gameCastles?.filter(gc => gc.corrupted).length || 0;
+    const corruptPct = Math.round(corrupted / totalGc * 100);
+    let wwInner = '';
+    if (ww.wall_broken) {
+      wwInner += `<div class="obj-banner-inner" style="background:rgba(0,60,160,.25);border-color:rgba(100,160,255,.6);">
+        <span class="obj-banner-icon">❄</span>
+        <div class="obj-banner-items"><div class="obj-banner-item">
+          <span style="color:#a8d8ff;font-family:'Cinzel',Georgia,serif;font-weight:700;">The Wall Has Fallen</span>
+          <span class="obj-banner-sep">— the dead march south</span>
+        </div></div>
+      </div>`;
+    } else if (corruptPct >= 40) {
+      wwInner += `<div class="obj-banner-inner" style="background:rgba(0,30,80,.2);border-color:rgba(60,120,200,.4);">
+        <span class="obj-banner-icon">❄</span>
+        <div class="obj-banner-items"><div class="obj-banner-item">
+          <span style="color:#88aadd;font-family:'Cinzel',Georgia,serif;font-weight:700;">${corruptPct}% of Westeros fallen</span>
+          <span class="obj-banner-sep">— reinforce the Wall</span>
+        </div></div>
+      </div>`;
+    }
+    if (wwInner) {
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'objectiveBanner';
+        document.querySelector('.map-area')?.appendChild(banner);
+      }
+      banner.innerHTML = wwInner;
+      return;
+    }
+    if (banner && !state.activeGame?.scenario_id) { banner.remove(); return; }
+  }
+
   if (!state.activeGame?.scenario_id || !state.objectives?.length) {
     if (banner) banner.remove();
     return;
