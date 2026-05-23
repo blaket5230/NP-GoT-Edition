@@ -4091,6 +4091,7 @@
     <button class="inbox-tab" data-tab="chat">The Hall</button>
     <button class="inbox-tab" data-tab="messages">Ravens</button>
     <button class="inbox-tab" data-tab="whispers">Whispers</button>
+    <button class="inbox-tab" data-tab="realm_news">Realm News</button>
   </div>
 
   <!-- DISPATCHES PANE -->
@@ -4161,6 +4162,11 @@
         <button class="chat-send-btn" id="composeSendBtn" style="align-self:flex-end;">Send Raven</button>
       </div>
     </div>
+  </div>
+
+  <!-- REALM NEWS PANE -->
+  <div class="rook-pane" id="rookNewsPane" style="display:none;flex-direction:column;overflow:hidden;flex:1;min-height:0;">
+    <div style="flex:1;overflow-y:auto;" id="realmNewsList"></div>
   </div>
 
   <!-- WHISPERS PANE -->
@@ -5006,6 +5012,7 @@ const el = {
   rookChatPane:     document.getElementById('rookChatPane'),
   rookMsgPane:      document.getElementById('rookMsgPane'),
   rookWhispersPane: document.getElementById('rookWhispersPane'),
+  rookNewsPane:     document.getElementById('rookNewsPane'),
   chatMessages:   document.getElementById('chatMessages'),
   chatInput:      document.getElementById('chatInput'),
   chatSendBtn:    document.getElementById('chatSendBtn'),
@@ -5337,6 +5344,7 @@ function applyTransform() {
   applyZoomVisibility();
   positionMarkers();
   renderMovements();
+  renderLevyColumns();
 }
 
 function positionMarkers() {
@@ -7569,6 +7577,7 @@ el.startGameBtn.addEventListener('click', async () => {
 // GAME MODE: enter, exit, load state, render UI
 // =====================================================
 async function enterGameMode(gameId, { reload = true } = {}) {
+  state._coopEndShown = false;
   const loadingEl = document.getElementById('gameLoadingOverlay');
   if (loadingEl) loadingEl.style.display = 'flex';
   try {
@@ -7831,10 +7840,30 @@ async function refreshGameState(gameId) {
     state.wwLevyColumns  = [];
   }
 
+  // Game moments feed (all games, last 40)
+  const momentsResult = await supabase.from('game_moments').select('*')
+    .eq('game_id', gameId).order('tick', { ascending: false }).limit(40);
+  state.gameMoments = momentsResult.data || [];
+
+  // Co-op end screen: if game just finished, check for coop/ww/betrayer win event
+  const isCoopGame = ['coop', 'hybrid'].includes(state.activeGame?.mode);
+  if (isCoopGame && state.activeGame?.status === 'finished') {
+    const { data: endEvt } = await supabase.from('game_events')
+      .select('event_type, data, player_id')
+      .eq('game_id', gameId)
+      .in('event_type', ['coop_victory', 'ww_victory', 'betrayer_win'])
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (endEvt && !state._coopEndShown) {
+      state._coopEndShown = true;
+      showCoopGameOver(endEvt);
+    }
+  }
+
   renderGameResources();
   renderScoreboard();
   renderMarkers();
   renderMovements();
+  renderLevyColumns();
   renderCastleInfo();
   renderInboxBadge();
   renderSidebar();
@@ -8581,10 +8610,12 @@ function showRookPane(tab) {
   el.rookChatPane.style.display        = tab === 'chat'          ? 'flex' : 'none';
   el.rookMsgPane.style.display         = tab === 'messages'      ? 'flex' : 'none';
   el.rookWhispersPane.style.display    = tab === 'whispers'      ? 'flex' : 'none';
+  el.rookNewsPane.style.display        = tab === 'realm_news'    ? 'flex' : 'none';
   if (tab === 'notifications') renderInboxList();
   if (tab === 'chat')          renderChatPane();
   if (tab === 'messages')      renderMessagesPane();
   if (tab === 'whispers')      renderWhispersPane();
+  if (tab === 'realm_news')    renderRealmNewsPane();
 }
 
 // =====================================================
@@ -8992,6 +9023,90 @@ async function loadRookeryData() {
 // =====================================================
 // WHISPERS PANE
 // =====================================================
+function renderRealmNewsPane() {
+  const list = document.getElementById('realmNewsList');
+  if (!list) return;
+  const moments = state.gameMoments || [];
+  if (!moments.length) {
+    list.innerHTML = '<div class="inbox-empty">No realm news yet.</div>';
+    return;
+  }
+  const playerMap = new Map((state.gamePlayers || []).map(p => [p.id, p]));
+  const houseMap  = new Map((state.houses || []).map(h => [h.slug, h]));
+  const tick      = state.activeGame?.current_tick || 0;
+
+  const MOMENT_ICONS = {
+    coop_victory:    '❄', ww_victory: '☠', betrayal: '🗡',
+    betrayer_win:    '👑', wall_fallen: '❄', castle_corrupted: '💀',
+    castle_captured: '🏰', war_declared: '⚔', default: '📜',
+  };
+  const MOMENT_COLORS = {
+    coop_victory: '#4fa35a', ww_victory: '#E82040', betrayal: '#E82040',
+    betrayer_win: '#C9A84C', wall_fallen: '#a8d8ff', castle_corrupted: '#4a6a8a',
+    castle_captured: '#C9A84C', war_declared: '#E87040', default: 'var(--text-muted)',
+  };
+
+  list.innerHTML = moments.map(m => {
+    const gp    = m.player_id ? playerMap.get(m.player_id) : null;
+    const house = gp ? houseMap.get(gp.house_slug) : null;
+    const icon  = MOMENT_ICONS[m.moment_type] || MOMENT_ICONS.default;
+    const color = MOMENT_COLORS[m.moment_type] || MOMENT_COLORS.default;
+    const ticksAgo = tick - (m.tick || 0);
+    return `<div style="display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);align-items:flex-start;">
+      <div style="font-size:18px;line-height:1.2;flex-shrink:0;">${icon}</div>
+      <div style="flex:1;min-width:0;">
+        ${house ? `<div style="font-size:11px;font-family:'Cinzel',Georgia,serif;color:${house.color};margin-bottom:2px;">${escapeHtml(house.name)}</div>` : ''}
+        <div style="font-size:12px;color:${color};line-height:1.4;">${escapeHtml(m.description)}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">Tick ${m.tick}${ticksAgo > 0 ? ` · ${ticksAgo} tick${ticksAgo !== 1 ? 's' : ''} ago` : ' · Now'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showCoopGameOver(evt) {
+  const myPlayer  = state.currentPlayer;
+  const myId      = myPlayer?.id;
+  const isBetrayer = myPlayer?.is_betrayer;
+  const mode       = state.activeGame?.mode;
+
+  let icon, title, sub, color, glow;
+
+  if (evt.event_type === 'coop_victory') {
+    icon  = `<span style="font-size:52px;filter:drop-shadow(0 0 20px #88bbff);">❄</span>`;
+    title = 'The Long Night Is Over';
+    sub   = 'The Army of the Dead has been shattered. Westeros endures.';
+    color = '#4fa35a'; glow = 'rgba(79,163,90,0.3)';
+  } else if (evt.event_type === 'ww_victory') {
+    icon  = `<span style="font-size:52px;">☠</span>`;
+    title = 'Westeros Has Fallen';
+    sub   = 'The White Walkers have consumed all of Westeros. The Long Night is eternal.';
+    color = '#4a6a8a'; glow = 'rgba(40,80,140,0.4)';
+  } else if (evt.event_type === 'betrayer_win') {
+    const betrayerPlayer = evt.player_id ? state.gamePlayers?.find(p => p.id === evt.player_id) : null;
+    const betrayerHouse  = betrayerPlayer ? state.houses?.find(h => h.slug === betrayerPlayer.house_slug) : null;
+    const isMe = evt.player_id === myId;
+    icon  = `<span style="font-size:52px;">👑</span>`;
+    title = isMe ? 'You Seized the Iron Throne' : `${betrayerHouse?.name || 'A House'} Betrayed the Realm`;
+    sub   = isMe
+      ? 'Your treachery was complete. The Iron Throne is yours.'
+      : `While Westeros burned, ${betrayerHouse?.name || 'a betrayer'} claimed the throne.`;
+    color = isMe ? '#C9A84C' : '#E82040';
+    glow  = isMe ? 'rgba(201,168,76,0.3)' : 'rgba(180,50,50,0.3)';
+  } else { return; }
+
+  el.gameOverIcon.innerHTML    = icon;
+  el.gameOverTitle.textContent = title;
+  el.gameOverSub.textContent   = sub;
+  el.gameOverStats.innerHTML   = '';
+  el.gameOverDetail.innerHTML  = '';
+  el.gameOverCard.style.borderColor = color;
+  el.gameOverCard.style.boxShadow   = `0 0 80px ${glow}`;
+  el.gameOverTitle.style.color      = color;
+  el.gameOverOverlay.classList.remove('hidden');
+  if (evt.event_type === 'coop_victory') SFX.victory();
+  else SFX.defeat();
+}
+
 function renderWhispersPane() {
   const el_list = document.getElementById('whispersList');
   if (!el_list) return;
@@ -10961,6 +11076,63 @@ function _startMovAnimation() {
     _movAnimRAF = requestAnimationFrame(frame);
   }
   _movAnimRAF = requestAnimationFrame(frame);
+}
+
+// ── Night's Watch levy column map markers ────────────────────────────────────
+function renderLevyColumns() {
+  // Remove stale levy markers
+  el.markerLayer?.querySelectorAll('.levy-column-marker').forEach(m => m.remove());
+  el.movementsOverlay?.querySelectorAll('.levy-column-line').forEach(l => l.remove());
+
+  const columns = state.wwLevyColumns?.filter(c => !c.arrived) || [];
+  if (!columns.length) return;
+
+  const iw = el.mapImage?.naturalWidth;
+  const ih = el.mapImage?.naturalHeight;
+  if (!iw || !ih) return;
+
+  const wallCastle = state.castles?.find(c => c.is_wall);
+  if (!wallCastle) return;
+
+  const tx = wallCastle.map_x * iw * state.zoom + state.panX;
+  const ty = wallCastle.map_y * ih * state.zoom + state.panY;
+  const tick = state.activeGame?.current_tick || 0;
+
+  columns.forEach(col => {
+    const origin = state.castles?.find(c => c.slug === col.origin_castle_slug);
+    if (!origin) return;
+
+    const fx = origin.map_x * iw * state.zoom + state.panX;
+    const fy = origin.map_y * ih * state.zoom + state.panY;
+    const progress = col.arrival_tick > col.departed_tick
+      ? Math.min(1, (tick - col.departed_tick) / (col.arrival_tick - col.departed_tick))
+      : 0;
+    const cx = fx + (tx - fx) * progress;
+    const cy = fy + (ty - fy) * progress;
+
+    // Dashed SVG line: origin → Castle Black
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('class', 'levy-column-line');
+    line.setAttribute('x1', fx); line.setAttribute('y1', fy);
+    line.setAttribute('x2', tx); line.setAttribute('y2', ty);
+    line.setAttribute('stroke', '#4488cc');
+    line.setAttribute('stroke-width', '1.5');
+    line.setAttribute('stroke-dasharray', '4 6');
+    line.setAttribute('opacity', '0.5');
+    el.movementsOverlay?.appendChild(line);
+
+    // Moving column icon at interpolated position
+    const player = state.gamePlayers?.find(p => p.id === col.source_player_id);
+    const house  = state.houses?.find(h => h.slug === player?.house_slug);
+    const dot = document.createElement('div');
+    dot.className = 'levy-column-marker';
+    dot.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;transform:translate(-50%,-50%);
+      background:${house?.color || '#4488cc'};width:8px;height:8px;border-radius:50%;
+      border:1.5px solid rgba(255,255,255,0.5);box-shadow:0 0 6px ${house?.color || '#4488cc'};
+      pointer-events:none;z-index:8;`;
+    dot.title = `${house?.name || 'Unknown'} levy: ${col.troops} troops`;
+    el.markerLayer?.appendChild(dot);
+  });
 }
 
 // Castle capture flash
