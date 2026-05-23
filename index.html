@@ -5036,6 +5036,7 @@ const el = {
   councilPrestigeDisplay: document.getElementById('councilPrestigeDisplay'),
   combatScreenOverlay: document.getElementById('combatScreenOverlay'),
   gameOverOverlay: document.getElementById('gameOverOverlay'),
+  gameOverCard:    document.getElementById('gameOverCard'),
   gameOverIcon:    document.getElementById('gameOverIcon'),
   gameOverTitle:   document.getElementById('gameOverTitle'),
   gameOverSub:     document.getElementById('gameOverSub'),
@@ -5344,7 +5345,6 @@ function applyTransform() {
   applyZoomVisibility();
   positionMarkers();
   renderMovements();
-  renderLevyColumns();
 }
 
 function positionMarkers() {
@@ -7416,7 +7416,10 @@ el.createGameForm.addEventListener('submit', async (e) => {
 document.getElementById('newGameMode')?.addEventListener('change', e => {
   const isCoop = e.target.value !== 'standard';
   const diffGroup = document.getElementById('newGameWWDiffGroup');
-  if (diffGroup) diffGroup.style.display = isCoop ? '' : 'none';
+  if (diffGroup) {
+    diffGroup.style.display = isCoop ? '' : 'none';
+    diffGroup.style.flex = isCoop ? '1' : '';
+  }
 });
 
 // =====================================================
@@ -8610,7 +8613,7 @@ function showRookPane(tab) {
   el.rookChatPane.style.display        = tab === 'chat'          ? 'flex' : 'none';
   el.rookMsgPane.style.display         = tab === 'messages'      ? 'flex' : 'none';
   el.rookWhispersPane.style.display    = tab === 'whispers'      ? 'flex' : 'none';
-  el.rookNewsPane.style.display        = tab === 'realm_news'    ? 'flex' : 'none';
+  if (el.rookNewsPane) el.rookNewsPane.style.display = tab === 'realm_news' ? 'flex' : 'none';
   if (tab === 'notifications') renderInboxList();
   if (tab === 'chat')          renderChatPane();
   if (tab === 'messages')      renderMessagesPane();
@@ -11076,13 +11079,14 @@ function _startMovAnimation() {
     _movAnimRAF = requestAnimationFrame(frame);
   }
   _movAnimRAF = requestAnimationFrame(frame);
+  // Levy columns drawn after movements so lines survive the SVG clear
+  renderLevyColumns();
 }
 
 // ── Night's Watch levy column map markers ────────────────────────────────────
 function renderLevyColumns() {
-  // Remove stale levy markers
+  // Remove stale levy markers (SVG lines already cleared by renderMovements innerHTML reset)
   el.markerLayer?.querySelectorAll('.levy-column-marker').forEach(m => m.remove());
-  el.movementsOverlay?.querySelectorAll('.levy-column-line').forEach(l => l.remove());
 
   const columns = state.wwLevyColumns?.filter(c => !c.arrived) || [];
   if (!columns.length) return;
