@@ -6604,18 +6604,10 @@ function renderLobbyCreateView(container) {
         <div class="lview-mode-name">Base Game</div>
         <div class="lview-mode-desc">All 9 houses start equal and compete for territory</div>
       </div>
-      <div class="lview-mode-card" id="modePickScenarios">
-        <div class="lview-mode-icon">📜</div>
-        <div class="lview-mode-name">Scenarios</div>
-        <div class="lview-mode-desc">Historical moments with preset territories and objectives</div>
-      </div>
     </div>`;
   document.getElementById('modePickBaseGame').addEventListener('click', () => {
     if (isSP) { openSpHousePicker(); return; }
     el.createGameBtn.click();
-  });
-  document.getElementById('modePickScenarios').addEventListener('click', () => {
-    renderLobbyScenarioPicker(container);
   });
 }
 
@@ -7040,9 +7032,7 @@ function openSpHousePicker(prebuiltGameId = null, scenarioConfig = null) {
 
   const modalTitle = el.spHousePickerModal.querySelector('h2');
   if (modalTitle) {
-    modalTitle.textContent = isScenario
-      ? 'War of the Five Kings — Choose Your House'
-      : 'Single Player — New Game';
+    modalTitle.textContent = 'Single Player — New Game';
   }
 
   const visibleHouses = state.houses.filter(h => {
@@ -12278,7 +12268,7 @@ const CASTLE_ICONS = {
 
 
 // ── House shields — marker for armies on the map ─────────────────────────────
-const SUBFACTION_HOUSES = new Set(['baratheon_kings_landing', 'baratheon_stannis', 'baratheon_renly']);
+const SUBFACTION_HOUSES = new Set();
 
 // Files should be in /Shields/{slug}.png on GitHub
 // Tries lowercase first, then Title case, as a fallback
@@ -14090,9 +14080,6 @@ const HOUSE_TRAITS = {
   greyjoy:                 { strength: { label: 'The Iron Price',                seat: 'lord_commander' }, weakness: { label: 'We Do Not Bow',               seat: 'laws'          } },
   arryn:                   { strength: { label: 'As High as Honor',              seat: 'laws'           }, weakness: { label: 'Vale Isolation',              seat: 'coin'          } },
   tully:                   { strength: { label: 'Rivers of Information',         seat: 'whisperers'     }, weakness: { label: 'Practical, Not Scholarly',    seat: 'grand_maester' } },
-  baratheon_kings_landing: { strength: { label: 'Lannister Gold Holds the Throne', seat: 'coin'        }, weakness: { label: 'The Whole Realm is Your Enemy', seat: 'whisperers'  } },
-  baratheon_stannis:       { strength: { label: 'Iron Discipline, Iron Will',   seat: 'lord_commander' }, weakness: { label: 'No Friends, No Gold',          seat: 'coin'          } },
-  baratheon_renly:         { strength: { label: 'The Reach Feeds an Army',      seat: 'coin'           }, weakness: { label: 'Numbers Without Hardening',   seat: 'hand'          } },
 };
 
 const HOUSE_DATA = {
@@ -14150,24 +14137,6 @@ const HOUSE_DATA = {
     pros: ["Master of Whisperers strength — wide scan range, early fog advantage", "Central map position — project power toward any border", "Natural broker of peace; high alliance value with all houses"],
     cons: ["Practical, Not Scholarly — Grand Maester weakness, slowest research growth", "Surrounded position means multi-front wars are common", "Politically obligated; hard to stay neutral when neighbors clash"],
     commanders: ["Hoster Tully", "Brynden Tully", "Edmure Tully", "Jason Mallister", "Tytos Blackwood"],
-  },
-  baratheon_kings_landing: {
-    bio: "The Iron Throne sits in King's Landing, and the real power behind it is Tywin Lannister. The Westerlands pour gold into the crown's coffers, and Lannister armies are the most feared on the continent. You begin with the widest territorial base and the deepest treasury — and three claimants marching against you on every flank.",
-    pros: ["Richest starting position — Lannister treasury and King's Landing trade income", "Tywin Lannister starts as your head commander, the realm's most feared general", "11 castles from day one; widest territorial base of any faction"],
-    cons: ["Every other claimant is your enemy from the start — the most isolated faction diplomatically", "Whisperers weakness leaves you blind to enemy movements across a very wide front", "Hardest win condition: must hold Red Keep, Casterly Rock, and 35% of the realm simultaneously"],
-    commanders: ["Tywin Lannister", "Jaime Lannister", "Gregor Clegane", "Sandor Clegane", "Tyrion Lannister"],
-  },
-  baratheon_stannis: {
-    bio: "Stannis Baratheon holds the strongest legal claim and the coldest resolve. Dragonstone gives him a defensible sea fortress and a small but fanatically disciplined army. He has no wealth, few friends, and enemies on every side — but Stannis does not know how to quit, and the law is on his side.",
-    pros: ["Disciplined army — Lord Commander strength makes each soldier count for more", "Tight, defensible starting position on Dragonstone; difficult to siege from sea", "Eastern start gives first access to unclaimed Crownlands castles near the Narrow Sea"],
-    cons: ["Weakest economy of any claimant — Dragonstone produces stone, not gold", "At war with both King's Landing and Renly from the start; no natural allies", "Simple but demanding win condition — must seize the Red Keep away from heavily defended King's Landing"],
-    commanders: ["Stannis Baratheon", "Davos Seaworth", "Melisandre", "Axell Florent", "Salladhor Saan"],
-  },
-  baratheon_renly: {
-    bio: "Renly Baratheon declared himself king and backed it with the largest army Westeros had seen in a generation. The Reach stands behind him — the most populous and wealthy region of the continent, with the Tyrell family and their gold bound to his cause. He has numbers, charm, and a crown. What he lacks is time.",
-    pros: ["Reach wealth behind him — strongest economy among the southern claimants", "Largest potential garrison; overwhelming numbers make up for inexperience", "At war only with Stannis; best diplomatic starting hand of any claimant"],
-    cons: ["Hand weakness — vast armies without hardened commanders mean slow combat power scaling", "Win condition requires both Storm's End and Highgarden held alongside the Red Keep; wide geography to defend", "Delay is fatal — every tick spent feasting lets the other claimants consolidate"],
-    commanders: ["Renly Baratheon", "Loras Tyrell", "Randyll Tarly", "Brienne of Tarth", "Garlan Tyrell"],
   },
 };
 
