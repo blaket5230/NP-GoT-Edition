@@ -6358,6 +6358,14 @@ function renderGamesList() {
       if (game.status === 'cancelled' || game.status === 'finished') return game.created_by === state.user?.id && soloHuman;
       return false;
     }
+    if (_lobbyNavMode === 'coop') {
+      const isCoopGame = ['coop', 'hybrid'].includes(game.mode);
+      if (!isCoopGame) return false;
+      if (game.status === 'lobby')    return userIn;
+      if (game.status === 'active')   return userIn;
+      if (game.status === 'cancelled' || game.status === 'finished') return game.created_by === state.user?.id;
+      return false;
+    }
     // 'mp-my': me + at least one other human
     if (game.status === 'lobby')    return userIn && multiHuman;
     if (game.status === 'active')   return multiHuman;
@@ -6368,6 +6376,7 @@ function renderGamesList() {
   if (visibleGames.length === 0) {
     const msg = _lobbyNavMode === 'join'   ? 'No open games to join right now.'
               : _lobbyNavMode === 'sp-my'  ? 'No single player games yet. Create one to get started.'
+              : _lobbyNavMode === 'coop'   ? 'No Co-Op games yet. Create one to defend the realm together.'
               : 'No multiplayer games yet. Create or join one to get started.';
     el.gamesList.innerHTML = `<div class="empty-state">${msg}</div>`;
     return;
@@ -6552,9 +6561,13 @@ function setLobbyView(view) {
     renderLobbyCreateView(staticView);
 
   } else if (view.endsWith('-coop')) {
-    hideGames();
-    showStatic();
-    renderLobbyComingSoon(staticView, 'Co-Op Mode', 'Defend the realm together against the White Walker invasion beyond the Wall. Co-Op Mode is currently in development.');
+    hideStatic();
+    gamesHeader.style.display = 'flex';
+    gamesTitle.textContent = 'Co-Op — The Long Night';
+    createBtn.style.display = '';
+    gamesList.style.display = '';
+    _lobbyNavMode = 'coop';
+    renderGamesList();
 
   } else if (view === 'achievements') {
     hideGames();
@@ -7300,6 +7313,13 @@ document.getElementById('cancelSpHousePicker').addEventListener('click', () => {
 el.createGameBtn.addEventListener('click', () => {
   if (_lobbyNavMode === 'sp-my') { openSpHousePicker(); return; }
   el.createGameModal.classList.add('open');
+  if (_lobbyNavMode === 'coop') {
+    const modeSelect = document.getElementById('newGameMode');
+    if (modeSelect) {
+      modeSelect.value = 'coop';
+      modeSelect.dispatchEvent(new Event('change'));
+    }
+  }
 });
 document.getElementById('cancelCreateGame').addEventListener('click', () => {
   el.createGameModal.classList.remove('open');
