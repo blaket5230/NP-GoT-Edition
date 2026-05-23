@@ -5127,7 +5127,7 @@ async function onAuthChange(session) {
   const [, , profileResult] = await Promise.all([
     loadReferenceData(),
     loadGames(),
-    supabase.from('profiles').select('display_name').eq('user_id', session.user.id).maybeSingle(),
+    supabase.from('profiles').select('display_name, honor, infamy, selected_title, total_games, total_wins').eq('user_id', session.user.id).maybeSingle(),
   ]);
   state.profile = profileResult?.data || null;
 
@@ -5184,14 +5184,16 @@ window.addEventListener('resize', () => {
 // =====================================================
 async function loadReferenceData() {
   try {
-    const [castlesResult, housesResult] = await Promise.all([
+    const [castlesResult, housesResult, achResult] = await Promise.all([
       supabase.from('castles').select('*').order('tier').order('name'),
       supabase.from('houses').select('*'),
+      supabase.from('achievements').select('*').order('sort_order'),
     ]);
     if (castlesResult.error) throw castlesResult.error;
     if (housesResult.error) throw housesResult.error;
-    state.castles = castlesResult.data;
-    state.houses = housesResult.data;
+    state.castles      = castlesResult.data;
+    state.houses       = housesResult.data;
+    state.achievements = achResult.data || [];
 
     // ── House color system: primary + secondary ─────────────────────────────────
     // Primary  = castle icon fill + inner glow
@@ -7714,6 +7716,22 @@ async function refreshGameState(gameId) {
     state.intelSnapshots  = snapshotsResult.data || [];
     // Trigger AI generation for any whispers that arrived while client was offline
     state.whispers.filter(w => w.text === null).forEach(w => triggerMowWhisper(w.id));
+  }
+
+  // Load player profiles (for titles/reputation) and own achievement slugs
+  const humanUserIds = state.gamePlayers.filter(p => !p.is_ai && p.user_id).map(p => p.user_id);
+  if (humanUserIds.length) {
+    const [profResult, myAchResult] = await Promise.all([
+      supabase.from('profiles').select('user_id, honor, infamy, selected_title, total_games, total_wins').in('user_id', humanUserIds),
+      state.currentPlayer
+        ? supabase.from('player_achievements').select('achievement_slug').eq('user_id', state.user.id)
+        : Promise.resolve({ data: [] }),
+    ]);
+    state.playerProfiles  = Object.fromEntries((profResult.data || []).map(p => [p.user_id, p]));
+    state.myAchievements  = [...new Set((myAchResult.data || []).map(r => r.achievement_slug))];
+  } else {
+    state.playerProfiles = {};
+    state.myAchievements = [];
   }
 
   // Load objectives + scenario config for scenario games
@@ -12834,7 +12852,7 @@ function buildLeaderboardHtml() {
         <div class="house-sigil-sm" style="color:${color};width:44px;height:44px;flex-shrink:0;">${house ? `<img src="${shieldSrc(house.slug)}" style="width:100%;height:100%;object-fit:contain;" onerror="shieldFallback(this,'${house.slug}',0)">` : ''}</div>
         <div style="flex:1;min-width:0;">
           <div class="name" style="color:${color};">${escapeHtml(house ? house.name : player.house_slug)}${isYou ? ' <span style="color:var(--text-muted);font-size:12px;font-weight:400;">(you)</span>' : ''}</div>
-          <div class="meta">${escapeHtml(player.display_name || (player.is_ai ? 'AI' : 'Player'))}</div>
+          <div class="meta">${escapeHtml(player.display_name || (player.is_ai ? 'AI' : 'Player'))}${(() => { const prof = state.playerProfiles?.[player.user_id]; const titleSlug = prof?.selected_title; const titleText = titleSlug ? (state.achievements?.find(a => a.slug === titleSlug)?.title_text || null) : null; return titleText ? ` <span style="color:var(--text-muted);font-style:italic;font-size:10px;">· ${escapeHtml(titleText)}</span>` : ''; })()}</div>
           ${progressHtml}
           <div class="lb-stats">
             <span class="lb-stat-val">${castleCount}</span><span class="lb-stat-label">castles</span>
@@ -12996,10 +13014,18 @@ async function renderPlayerDetailAsync(targetPlayerId) {
   const house = target ? state.houses.find(h => h.slug === target.house_slug) : null;
   if (!target) { container.innerHTML = '<div style="padding:20px;color:var(--error)">Player not found.</div>'; return; }
 
-  const [{ data: targetSeats }] = await Promise.all([
+  // Fetch target's achievements and profile
+  const targetUserId = target.user_id;
+  const [{ data: targetSeats }, , { data: targetAchRows }] = await Promise.all([
     supabase.from('council_seats').select('*').eq('game_id', state.activeGame.id).eq('player_id', targetPlayerId),
     reloadDiplomacy(),
+    targetUserId && !target.is_ai
+      ? supabase.from('player_achievements').select('achievement_slug').eq('user_id', targetUserId)
+      : Promise.resolve({ data: [] }),
   ]);
+  const targetAchSlugs = [...new Set((targetAchRows || []).map(r => r.achievement_slug))];
+  const targetProfile  = state.playerProfiles?.[targetUserId] || null;
+  const isViewingSelf  = target.user_id === state.user?.id;
 
   const dipStatus = getDiplomacyStatus(targetPlayerId);
   const dipRow = state.diplomacy?.find(d =>
@@ -13065,6 +13091,54 @@ async function renderPlayerDetailAsync(targetPlayerId) {
   const visible = computeVisibleSlugs();
   const canLocate = tSeatSlug && (!visible || visible.has(tSeatSlug));
 
+  // Build reputation / achievement block
+  const reputationHtml = (() => {
+    if (target.is_ai || !targetProfile) return '';
+    const honor  = targetProfile.honor  || 0;
+    const infamy = targetProfile.infamy || 0;
+    const games  = targetProfile.total_games || 0;
+    const wins   = targetProfile.total_wins  || 0;
+    const titleSlug = targetProfile.selected_title;
+    const titleText = titleSlug ? (state.achievements?.find(a => a.slug === titleSlug)?.title_text || null) : null;
+
+    const rarityColor = { common: 'var(--text-muted)', rare: '#7b6dd9', legendary: '#f0c040' };
+    const badgesHtml = (state.achievements || [])
+      .filter(a => targetAchSlugs.includes(a.slug))
+      .map(a => `<div title="${escapeHtml(a.name)}: ${escapeHtml(a.description)}"
+        style="display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:12px;
+               border:1px solid ${rarityColor[a.rarity]||'var(--border)'};font-size:10px;
+               color:${rarityColor[a.rarity]||'var(--text-muted)'};background:var(--bg-deep);cursor:default;">
+        ${a.icon || '◆'} ${escapeHtml(a.name)}
+      </div>`).join('');
+
+    const titleSelect = isViewingSelf ? `
+      <select id="titleSelect" style="margin-top:6px;width:100%;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-family:inherit;font-size:11px;">
+        <option value="">— No title —</option>
+        ${(state.achievements || []).filter(a => a.title_text && targetAchSlugs.includes(a.slug))
+          .map(a => `<option value="${a.slug}" ${a.slug === titleSlug ? 'selected' : ''}>${escapeHtml(a.title_text)}</option>`).join('')}
+      </select>` : '';
+
+    return `<div style="border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:10px;">
+      ${titleText ? `<div style="font-size:11px;color:var(--text-muted);font-style:italic;margin-bottom:6px;">${escapeHtml(titleText)}</div>` : ''}
+      <div style="display:flex;gap:16px;margin-bottom:8px;">
+        <div style="text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:#5cb85c;">${honor}</div>
+          <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;">Honor</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:#E82040;">${infamy}</div>
+          <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;">Infamy</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:var(--text);">${wins}/${games}</div>
+          <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;">W/Games</div>
+        </div>
+      </div>
+      ${badgesHtml ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px;">${badgesHtml}</div>` : `<div style="font-size:11px;color:var(--text-muted);font-style:italic;">No achievements yet.</div>`}
+      ${titleSelect}
+    </div>`;
+  })();
+
   container.innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:10px;">
       ${shieldBadgeHtml(house?.slug||'', house?.color||'var(--border)', 52)}
@@ -13077,6 +13151,8 @@ async function renderPlayerDetailAsync(targetPlayerId) {
         <button class="sidebar-tool-btn" id="pdLocateBtn" title="Locate on map" style="width:32px;height:32px;${!canLocate?'opacity:0.35;':''}" ${!canLocate?'disabled':''}><i class="ti ti-map-pin"></i></button>
       </div>
     </div>
+
+    ${reputationHtml}
 
     <table class="combat-table" style="margin-bottom:12px;">
       <thead><tr><th></th><th style="text-align:center;color:${house?.color||'var(--text-muted)'}">Them</th><th style="text-align:center;color:var(--accent)">You</th></tr></thead>
@@ -13121,6 +13197,16 @@ async function renderPlayerDetailAsync(targetPlayerId) {
 
     ${buildDipHistory(target)}
   `;
+
+  // Wire title selector (own profile only)
+  document.getElementById('titleSelect')?.addEventListener('change', async (e) => {
+    const slug = e.target.value || null;
+    const { error } = await supabase.from('profiles').update({ selected_title: slug, updated_at: new Date().toISOString() }).eq('user_id', state.user.id);
+    if (error) { toast('Could not save title', true); return; }
+    state.profile = { ...state.profile, selected_title: slug };
+    if (state.playerProfiles?.[state.user.id]) state.playerProfiles[state.user.id].selected_title = slug;
+    toast('Title updated');
+  });
 
   // Wire all buttons
   document.getElementById('pdRavenBtn')?.addEventListener('click', () => {
