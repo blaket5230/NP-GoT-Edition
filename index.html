@@ -5691,7 +5691,7 @@ function renderMarkers() {
   el.markerLayer.querySelectorAll('.ww-army-marker').forEach(m => m.remove());
   const _wwTick = state.activeGame?.current_tick ?? 0;
   if (state.wwState && state.activeGame?.mode !== 'standard' &&
-      _wwTick >= (state.wwState.march_start_tick ?? 0)) {
+      _wwTick >= (state.wwState.march_start_tick ?? 30)) {
     const wwM = document.createElement('div');
     wwM.className = 'marker ww-army-marker';
     wwM.dataset.mapx = state.wwState.position_x;
@@ -7680,12 +7680,96 @@ function _showFtueIfFirst(gameId) {
     return;
   }
 
+  if (['coop', 'hybrid'].includes(state.activeGame?.mode)) {
+    _showCoopIntro(gameId);
+    return;
+  }
+
   const overlay = document.getElementById('ftueOverlay');
   if (!overlay) return;
   overlay.style.display = 'flex';
   document.getElementById('ftueCloseBtn')?.addEventListener('click', () => {
     overlay.style.display = 'none';
     localStorage.setItem(key, '1');
+  }, { once: true });
+}
+
+function _showCoopIntro(gameId) {
+  const key     = `westeros_ftue_${gameId}`;
+  const mode    = state.activeGame?.mode;
+  const diff    = state.activeGame?.ww_difficulty || 'standard';
+  const isHybrid = mode === 'hybrid';
+  const marchTicks = diff === 'nightmare' ? 10 : diff === 'hard' ? 20 : 30;
+
+  const existing = document.getElementById('coopIntroOverlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'coopIntroOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9990;background:rgba(4,6,14,.92);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;';
+
+  overlay.innerHTML = `
+    <div style="background:linear-gradient(160deg,#060e1c,#040810);border:1px solid #1a3a6a;border-top:3px solid #4488cc;border-radius:12px;padding:0;max-width:560px;width:94%;box-shadow:0 0 100px #1144aa33;overflow:hidden;max-height:92vh;overflow-y:auto;">
+
+      <div style="background:linear-gradient(135deg,#060f22,#0a1830);padding:28px 32px 22px;text-align:center;border-bottom:1px solid #1a3a6a;">
+        <div style="font-family:'Cinzel Decorative','Cinzel',Georgia,serif;font-size:10px;text-transform:uppercase;letter-spacing:0.22em;color:#3a6a9a;margin-bottom:6px;">${isHybrid ? 'Hybrid Mode' : 'Co-Op Mode'}</div>
+        <div style="font-size:48px;line-height:1;filter:drop-shadow(0 0 20px #4488ff);margin-bottom:10px;">${isHybrid ? '❄⚔' : '❄'}</div>
+        <div style="font-family:'Cinzel Decorative','Cinzel',Georgia,serif;font-size:22px;font-weight:700;color:#a8d8ff;letter-spacing:0.06em;line-height:1.2;margin-bottom:6px;">${isHybrid ? 'The Last War' : 'The Long Night'}</div>
+        <div style="font-size:13px;color:#4a7aaa;font-style:italic;">"The dead do not sleep. They do not tire. They do not stop."</div>
+      </div>
+
+      <div style="padding:24px 32px;display:flex;flex-direction:column;gap:14px;">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div style="background:rgba(0,15,40,0.6);border:1px solid #1a3366;border-radius:8px;padding:14px;">
+            <div style="font-family:'Cinzel',Georgia,serif;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#4488cc;margin-bottom:6px;">The Threat</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">An army of the dead gathers beyond the Wall. It grows stronger every production cycle — and it does not negotiate.</div>
+          </div>
+          <div style="background:rgba(0,15,40,0.6);border:1px solid #1a3366;border-radius:8px;padding:14px;">
+            <div style="font-family:'Cinzel',Georgia,serif;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#4488cc;margin-bottom:6px;">Castle Black</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">The Wall is your first line of defense. Every house sends 5% of their troops north each cycle. Garrison it — or the dead march south.</div>
+          </div>
+          <div style="background:rgba(0,15,40,0.6);border:1px solid #1a3366;border-radius:8px;padding:14px;">
+            <div style="font-family:'Cinzel',Georgia,serif;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#4488cc;margin-bottom:6px;">The Levy</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Each production cycle, 5% of your total garrison is conscripted and marched north automatically. You cannot stop this. Build your economy accordingly.</div>
+          </div>
+          <div style="background:rgba(0,15,40,0.6);border:1px solid #1a3366;border-radius:8px;padding:14px;">
+            <div style="font-family:'Cinzel',Georgia,serif;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#4488cc;margin-bottom:6px;">Victory</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Shatter the Army of the Dead before Westeros is consumed. Every castle lost to corruption weakens your position — and the dead convert fallen troops into wights.</div>
+          </div>
+        </div>
+
+        <div style="background:rgba(0,10,30,0.7);border:1px solid #0d2244;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:12px;">
+          <div style="font-size:24px;flex-shrink:0;">⏳</div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">
+            <strong style="color:#a8d8ff;">The march begins in ${marchTicks} ticks.</strong> Use this time to grow your armies, secure territory, and send reinforcements north. Watch the Long Night panel for the countdown.
+          </div>
+        </div>
+
+        ${isHybrid ? `
+        <div style="background:rgba(60,5,5,0.5);border:1px solid #6a1a1a;border-top:2px solid #cc2222;border-radius:8px;padding:16px;">
+          <div style="font-family:'Cinzel',Georgia,serif;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#cc4444;margin-bottom:8px;">⚠ Beware the Betrayer</div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;">
+            One house among you is not what they appear. While you fight the dead, they scheme for the Iron Throne. If they hold the Red Keep for <strong style="color:#E82040;">3 consecutive production cycles</strong> after the march begins — they win alone, and you all lose together.
+          </div>
+          <div style="background:rgba(180,20,20,0.15);border:1px solid #6a1a1a;border-radius:6px;padding:10px 14px;">
+            <div style="font-family:'Cinzel',Georgia,serif;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#cc4444;margin-bottom:4px;">The Red Keep</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">The Red Keep starts vacant and heavily fortified — rich with gold, industry, and prestige beyond any starting seat. It is the ultimate prize, and the greatest danger. Every house can see it. Every house wants it. Only one will use it to betray you.</div>
+          </div>
+        </div>` : ''}
+
+        <button id="coopIntroCloseBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#1a4a8a,#0d2a5a);color:#a8d8ff;border:1px solid #2a5a9a;border-radius:6px;font-family:'Cinzel',Georgia,serif;font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;">
+          ${isHybrid ? 'Defend the Realm — Trust No One' : 'The Night is Dark and Full of Terrors'}
+        </button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  overlay.querySelector('#coopIntroCloseBtn').addEventListener('click', () => {
+    overlay.remove();
+    localStorage.setItem(key, '1');
+    _sidebarSection = 'night_king';
+    renderSidebarSection('night_king');
   }, { once: true });
 }
 
