@@ -5687,9 +5687,11 @@ function renderMarkers() {
     el.markerLayer.appendChild(marker);
   });
 
-  // WW army position marker (co-op / hybrid games only)
+  // WW army position marker (co-op / hybrid, only after march begins)
   el.markerLayer.querySelectorAll('.ww-army-marker').forEach(m => m.remove());
-  if (state.wwState && state.activeGame?.mode !== 'standard') {
+  const _wwTick = state.activeGame?.current_tick ?? 0;
+  if (state.wwState && state.activeGame?.mode !== 'standard' &&
+      _wwTick >= (state.wwState.march_start_tick ?? 0)) {
     const wwM = document.createElement('div');
     wwM.className = 'marker ww-army-marker';
     wwM.dataset.mapx = state.wwState.position_x;
@@ -12528,6 +12530,45 @@ function buildNightKingHtml() {
   if (!ww) return `<div style="padding:20px;color:var(--text-muted);font-size:13px;">White Walker data unavailable.</div>`;
 
   const tick          = state.activeGame?.current_tick || 0;
+  const marchStart    = ww.march_start_tick ?? 0;
+  const marching      = tick >= marchStart;
+  const ticksUntil    = Math.max(0, marchStart - tick);
+
+  if (!marching) {
+    const wallCastle  = state.castles?.find(c => c.is_wall);
+    const wallGc      = wallCastle ? state.gameCastles?.find(gc => gc.castle_slug === wallCastle.slug) : null;
+    const wallGarr    = wallGc?.troops ?? 0;
+    const inTransit   = (state.wwLevyColumns || []).filter(l => !l.arrived);
+    return `
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+        <div style="background:linear-gradient(135deg,#060e1c,#0a1a30);border:1px solid #1a3a6a;border-radius:8px;padding:20px;text-align:center;">
+          <div style="font-size:40px;line-height:1;opacity:0.5;">❄</div>
+          <div style="font-family:'Cinzel',Georgia,serif;font-size:11px;letter-spacing:2px;color:#3a6a9a;margin:10px 0 4px;text-transform:uppercase;">The March Has Not Yet Begun</div>
+          <div style="font-family:'Cinzel',Georgia,serif;font-size:28px;font-weight:700;color:#a8d8ff;text-shadow:0 0 16px #0044bb;">${ticksUntil}</div>
+          <div style="font-size:11px;color:#3a6a9a;margin-top:2px;">ticks until the dead march</div>
+        </div>
+        <div style="background:rgba(0,15,40,0.5);border:1px solid #1a3366;border-radius:8px;padding:12px;font-size:12px;color:var(--text-muted);line-height:1.6;">
+          Use this time to send troops north. When the march begins, the Army of the Dead will assault Castle Black.
+        </div>
+        <div style="background:rgba(0,15,40,0.5);border:1px solid #1a3366;border-radius:8px;padding:12px;display:flex;justify-content:space-between;">
+          <span style="font-size:13px;color:var(--text-primary);">Castle Black garrison</span>
+          <span style="font-size:13px;color:#a8d8ff;">${wallGarr.toLocaleString()} troops</span>
+        </div>
+        ${inTransit.length > 0 ? `
+        <div style="background:rgba(0,15,40,0.5);border:1px solid #1a3366;border-radius:8px;padding:12px;">
+          <div style="font-family:'Cinzel',Georgia,serif;font-size:11px;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:8px;">Levy Columns En Route</div>
+          ${inTransit.map(col => {
+            const ticksLeft = Math.max(0, col.arrival_tick - tick);
+            const gp = state.gamePlayers?.find(p => p.id === col.source_player_id);
+            const h  = state.houses?.find(h => h.slug === gp?.house_slug);
+            return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+              <span style="font-size:12px;color:${h?.color || 'var(--text-muted)'};">${escapeHtml(h?.name || 'Unknown')}</span>
+              <span style="font-size:12px;color:#a8d8ff;">${col.troops.toLocaleString()} — ${ticksLeft}t</span>
+            </div>`;
+          }).join('')}
+        </div>` : ''}
+      </div>`;
+  }
   const wallCastle    = state.castles?.find(c => c.is_wall);
   const wallGc        = wallCastle ? state.gameCastles?.find(gc => gc.castle_slug === wallCastle.slug) : null;
   const wallGarrison  = wallGc?.troops ?? 0;
